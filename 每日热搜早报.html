@@ -1,0 +1,2028 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>每日热搜早报</title>
+<style>
+/* ================= 基础 ================= */
+:root{
+  --paper:#f6f2e9;
+  --paper-2:#fffdf8;
+  --ink:#1c1a17;
+  --ink-2:#4a4540;
+  --ink-3:#8a8377;
+  --line:#e2dbcb;
+  --line-2:#cfc6b2;
+  --gold:#b8860b;
+  --accent:#9c2b1f;
+  --shadow:0 1px 2px rgba(60,50,30,.06),0 6px 18px rgba(60,50,30,.06);
+  --radius:12px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Segoe UI",Roboto,sans-serif;
+  font-size:15px;
+  line-height:1.65;
+  background-image:
+    radial-gradient(circle at 12% 8%,rgba(184,134,11,.05),transparent 42%),
+    radial-gradient(circle at 88% 2%,rgba(156,43,31,.05),transparent 40%);
+  background-attachment:fixed;
+}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;font-size:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select{font-family:inherit;font-size:inherit;color:inherit}
+.wrap{max-width:1200px;margin:0 auto;padding:0 16px 72px}
+
+/* ================= 报头 ================= */
+.masthead{padding:26px 0 0}
+.masthead-inner{
+  border:1px solid var(--line-2);
+  border-bottom:3px double var(--line-2);
+  border-radius:var(--radius) var(--radius) 0 0;
+  background:linear-gradient(180deg,#fffdf8,#fbf7ee);
+  padding:20px 18px 16px;
+  position:relative;
+  overflow:hidden;
+}
+.masthead-inner::before{
+  content:"";position:absolute;inset:6px;border:1px solid rgba(207,198,178,.55);
+  border-radius:8px;pointer-events:none;
+}
+.brand{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brand h1{
+  margin:0;font-size:30px;letter-spacing:2px;font-weight:800;
+  font-family:"Songti SC","STSong","SimSun",Georgia,serif;
+  color:var(--ink);
+}
+.brand .seal{
+  font-size:11px;line-height:1.25;color:#fff;background:var(--accent);
+  padding:5px 7px;border-radius:5px;letter-spacing:1px;text-align:center;font-weight:700;
+  transform:rotate(-2deg);
+}
+.brand-sub{margin:6px 0 0;color:var(--ink-3);font-size:12.5px;letter-spacing:.4px}
+.headline-bar{
+  display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;
+  margin-top:14px;padding-top:12px;border-top:1px dashed var(--line-2);
+  font-size:12.5px;color:var(--ink-2);
+}
+.headline-bar b{font-weight:700;color:var(--ink)}
+.state-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;
+  border:1px solid transparent;
+}
+.state-live{background:#e9f6ec;color:#1c7a3e;border-color:#bfe3cb}
+.state-mixed{background:#fdf4e3;color:#8a5a00;border-color:#edd9ac}
+.state-demo{background:#fdecea;color:#9c2b1f;border-color:#f0c5bf}
+.state-loading{background:#eef2fb;color:#2b4c9c;border-color:#c6d3ef}
+
+/* ================= 工具栏 ================= */
+.toolbar{
+  position:sticky;top:0;z-index:40;
+  background:rgba(246,242,233,.94);
+  backdrop-filter:saturate(1.4) blur(8px);
+  border-bottom:1px solid var(--line);
+  margin-top:14px;padding:10px 0;
+}
+.toolbar-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.search{
+  flex:1 1 220px;min-width:180px;display:flex;align-items:center;gap:7px;
+  background:var(--paper-2);border:1px solid var(--line-2);border-radius:999px;padding:0 12px;height:38px;
+}
+.search:focus-within{border-color:var(--gold);box-shadow:0 0 0 3px rgba(184,134,11,.12)}
+.search input{border:none;background:none;outline:none;flex:1;height:100%;min-width:0}
+.search .clr{color:var(--ink-3);font-size:16px;padding:2px 4px;display:none}
+.search .clr.on{display:block}
+.btn{
+  height:38px;padding:0 14px;border-radius:999px;border:1px solid var(--line-2);
+  background:var(--paper-2);color:var(--ink-2);font-weight:600;font-size:13.5px;
+  display:inline-flex;align-items:center;gap:6px;white-space:nowrap;transition:.15s;
+}
+.btn:hover{border-color:var(--gold);color:var(--ink)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn.primary:hover{background:#000;color:#fff}
+.btn.ghost{background:transparent}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{
+  flex:0 0 auto;padding:5px 12px;border-radius:999px;border:1px solid var(--line-2);
+  background:var(--paper-2);font-size:12.5px;color:var(--ink-2);white-space:nowrap;transition:.15s;
+}
+.chip:hover{border-color:var(--gold)}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700}
+.chip .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.filters-label{font-size:12px;color:var(--ink-3);flex:0 0 auto;padding-top:6px;letter-spacing:1px}
+.view-tabs{display:flex;gap:4px;background:#eee7d8;border-radius:999px;padding:3px}
+.view-tabs button{padding:5px 14px;border-radius:999px;font-size:13px;font-weight:600;color:var(--ink-2)}
+.view-tabs button.on{background:var(--paper-2);color:var(--ink);box-shadow:var(--shadow)}
+
+/* ================= 通用区块 ================= */
+.section{margin-top:26px}
+.section-title{
+  display:flex;align-items:center;gap:10px;margin:0 0 12px;
+  font-size:17px;font-weight:800;letter-spacing:1px;
+  font-family:"Songti SC","STSong","SimSun",Georgia,serif;
+}
+.section-title::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line-2),transparent)}
+.section-title .sub{font-size:12px;font-weight:500;color:var(--ink-3);letter-spacing:0;font-family:inherit}
+
+/* 今日要闻 */
+.flash{
+  border:1px solid var(--line-2);border-radius:var(--radius);
+  background:linear-gradient(180deg,#fffdf8,#fdfaf2);box-shadow:var(--shadow);
+  padding:14px 16px;
+}
+.flash-list{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.flash-list li{display:flex;gap:9px;align-items:baseline;font-size:14px;padding:3px 0;border-bottom:1px dotted rgba(207,198,178,.6)}
+.flash-list li:last-child{border-bottom:none}
+.flash-list .idx{color:var(--accent);font-weight:800;font-size:12px;font-family:Georgia,serif;min-width:16px}
+.flash-list .tt{flex:1;font-weight:600}
+.flash-list .src{font-size:11.5px;color:var(--ink-3);white-space:nowrap}
+
+/* 卡片网格 */
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}
+.card{
+  border:1px solid var(--line);border-radius:var(--radius);background:var(--paper-2);
+  box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;
+}
+.card-head{
+  display:flex;align-items:center;gap:9px;padding:11px 14px;
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(90deg,color-mix(in srgb,var(--c) 10%,#fff) 0%,var(--paper-2) 62%);
+}
+.card-head .ico{
+  width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:15px;
+  background:color-mix(in srgb,var(--c) 16%,#fff);border:1px solid color-mix(in srgb,var(--c) 35%,#fff);
+}
+.card-head .nm{font-weight:800;font-size:14.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card-head .nm .cnt{font-weight:500;color:var(--ink-3);font-size:12px;margin-left:6px}
+.card-head .badge{
+  font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;white-space:nowrap;
+  border:1px solid transparent;
+}
+.b-ok{background:#e9f6ec;color:#1c7a3e;border-color:#bfe3cb}
+.b-demo{background:#fdecea;color:#9c2b1f;border-color:#f0c5bf}
+.b-err{background:#f1efea;color:#8a8377;border-color:#ddd6c6}
+.b-wait{background:#eef2fb;color:#2b4c9c;border-color:#c6d3ef}
+.card-body{padding:6px 6px 10px;flex:1}
+.card-foot{padding:8px 14px;border-top:1px dashed var(--line);font-size:12px;color:var(--ink-3);display:flex;justify-content:space-between;gap:8px;align-items:center}
+
+/* 榜单条目 */
+.list{list-style:none;margin:0;padding:0}
+.item{display:flex;gap:10px;padding:9px 9px;border-radius:9px;transition:background .15s}
+.item+.item{border-top:1px solid rgba(226,219,203,.75)}
+.item:hover{background:#faf7ef}
+.rank{
+  flex:0 0 auto;width:22px;height:22px;border-radius:6px;display:grid;place-items:center;
+  font-size:12px;font-weight:800;font-family:Georgia,serif;margin-top:2px;
+  background:#f0ece1;color:var(--ink-3);
+}
+.rank-1{background:linear-gradient(135deg,#e8b93c,#c8901a);color:#fff;box-shadow:0 1px 4px rgba(184,134,11,.35)}
+.rank-2{background:linear-gradient(135deg,#c3c9d1,#98a1ac);color:#fff}
+.rank-3{background:linear-gradient(135deg,#dba471,#b57a45);color:#fff}
+.item-main{flex:1;min-width:0}
+.item-title{font-size:14.5px;font-weight:600;line-height:1.5;word-break:break-word}
+.item.emphasis .item-title{font-weight:800}
+.item-title:hover{color:var(--accent)}
+.item-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:4px;font-size:11.5px;color:var(--ink-3)}
+.hot{color:var(--accent);font-weight:700}
+.hot::before{content:"🔥";margin-right:2px;font-size:10px}
+.tag{
+  padding:1px 7px;border-radius:999px;font-size:11px;font-weight:700;
+  background:color-mix(in srgb,var(--tg) 12%,#fff);color:var(--tg);
+  border:1px solid color-mix(in srgb,var(--tg) 26%,#fff);
+}
+.tag.plain{background:#f2efe6;color:var(--ink-2);border-color:var(--line-2);font-weight:600}
+.item-sum{
+  margin-top:6px;font-size:13px;color:var(--ink-2);line-height:1.62;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  border-left:3px solid var(--line-2);padding-left:9px;
+}
+.item-sum.open{-webkit-line-clamp:unset}
+.item-sum.none{color:var(--ink-3);font-style:italic;border-left-color:#e8e2d4}
+/* 展开全文时内联展示的原文正文：不跳出页面即可读原文 */
+.item-art{
+  margin-top:7px;padding:7px 9px;border-radius:8px;max-height:320px;overflow:auto;
+  background:#fbf9f3;border:1px solid var(--line);border-left:3px solid var(--gold);
+  font-size:12.5px;line-height:1.68;color:var(--ink-2);
+}
+.item-art .hd{font-size:11.5px;font-weight:700;color:var(--ink-3);margin-bottom:4px}
+.item-art .tx{white-space:pre-wrap;word-break:break-word}
+.item-art .tip{color:var(--ink-3);font-style:italic}
+.item-acts{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap}
+.mini{
+  font-size:11.5px;padding:3px 9px;border-radius:6px;border:1px solid var(--line-2);
+  background:#fdfbf5;color:var(--ink-2);font-weight:600;
+}
+.mini:hover{border-color:var(--gold);color:var(--ink)}
+.mini.done{border-color:#bfe3cb;background:#eef9f1;color:#1c7a3e}
+.more{
+  width:100%;text-align:center;font-size:12.5px;color:var(--ink-2);padding:8px;
+  border-top:1px dashed var(--line);font-weight:600;
+}
+.more:hover{color:var(--accent)}
+.empty{padding:34px 12px;text-align:center;color:var(--ink-3);font-size:13.5px}
+
+/* ================= 底部说明 ================= */
+.foot{margin-top:34px;border-top:3px double var(--line-2);padding-top:16px;font-size:13px;color:var(--ink-2)}
+details{border:1px solid var(--line);border-radius:10px;background:var(--paper-2);padding:10px 14px;margin-top:10px}
+details>summary{cursor:pointer;font-weight:700;list-style:none;outline:none}
+details>summary::-webkit-details-marker{display:none}
+details>summary::before{content:"▸ ";color:var(--gold)}
+details[open]>summary::before{content:"▾ "}
+details .body{padding-top:8px;font-size:13px;color:var(--ink-2)}
+details .body h4{margin:12px 0 4px;font-size:13px;color:var(--ink)}
+details .body ul{margin:4px 0;padding-left:20px}
+details .body li{margin:2px 0}
+code{
+  background:#f2eee3;border:1px solid var(--line);border-radius:5px;padding:1px 5px;
+  font-family:Consolas,Menlo,monospace;font-size:12px;word-break:break-all;
+}
+.src-table{width:100%;border-collapse:collapse;margin-top:6px;font-size:12.5px}
+.src-table th,.src-table td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left}
+.src-table th{color:var(--ink-3);font-weight:600}
+
+/* ================= 弹窗 ================= */
+.mask{
+  position:fixed;inset:0;background:rgba(30,25,15,.42);backdrop-filter:blur(2px);
+  z-index:80;display:none;align-items:center;justify-content:center;padding:16px;
+}
+.mask.on{display:flex}
+.modal{
+  width:100%;max-width:560px;max-height:86vh;overflow:auto;background:var(--paper-2);
+  border:1px solid var(--line-2);border-radius:14px;box-shadow:0 20px 60px rgba(40,30,10,.3);
+}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--paper-2)}
+.modal-head h3{margin:0;font-size:16px;font-family:"Songti SC","STSong",Georgia,serif;letter-spacing:1px}
+.modal-body{padding:16px 18px}
+.modal-foot{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;position:sticky;bottom:0;background:var(--paper-2)}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12.5px;font-weight:700;margin-bottom:5px}
+.field .hint{font-size:11.5px;color:var(--ink-3);margin-top:4px;line-height:1.5}
+.field input[type=text],.field input[type=number],.field select{
+  width:100%;height:36px;padding:0 10px;border-radius:8px;border:1px solid var(--line-2);
+  background:#fff;outline:none;
+}
+.field input:focus,.field select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(184,134,11,.12)}
+.switches{display:grid;gap:6px;grid-template-columns:repeat(auto-fill,minmax(168px,1fr))}
+.sw{display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-size:12.5px;background:#fdfbf5}
+.sw input{width:15px;height:15px;accent-color:var(--accent)}
+.row2{display:flex;gap:10px}
+.row2 .field{flex:1}
+
+/* 提示条 */
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);
+  background:var(--ink);color:#fff;padding:10px 18px;border-radius:999px;font-size:13px;
+  z-index:120;opacity:0;pointer-events:none;transition:.25s;max-width:86vw;text-align:center;
+  box-shadow:0 8px 30px rgba(0,0,0,.3);
+}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.rot{display:inline-block;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.skel{height:14px;border-radius:6px;background:linear-gradient(90deg,#eee8db,#f7f3ea,#eee8db);background-size:200% 100%;animation:sk 1.2s infinite}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ================= 响应式 ================= */
+@media (max-width:720px){
+  body{font-size:14.5px}
+  .brand h1{font-size:23px;letter-spacing:1px}
+  .masthead-inner{padding:16px 13px 13px}
+  .wrap{padding:0 12px 60px}
+  .grid{grid-template-columns:1fr;gap:13px}
+  .toolbar{padding:8px 0}
+  .search{flex:1 1 100%;order:-1}
+  .btn{height:36px;padding:0 12px;font-size:13px}
+  .view-tabs button{padding:5px 11px;font-size:12.5px}
+  .item{padding:9px 6px}
+  .section-title{font-size:15.5px}
+}
+@media print{
+  .toolbar,.item-acts,.mini,.more{display:none!important}
+  body{background:#fff}
+  .card{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ 报头 ============ -->
+  <header class="masthead">
+    <div class="masthead-inner">
+      <div class="brand">
+        <div class="seal">晨间<br>速览</div>
+        <h1>每日热搜早报</h1>
+        <span id="stateBadge" class="state-badge state-loading">准备中</span>
+      </div>
+      <p class="brand-sub">聚合全网热榜 · 一页读完今日热点 · 无需登录 · 本地运行</p>
+      <div class="headline-bar">
+        <span>📅 <b id="dateText">--</b></span>
+        <span>🕘 最后更新：<b id="updateText">--</b></span>
+        <span>📊 条目：<b id="countText">0</b></span>
+        <span>🛰️ 数据源：<b id="srcText">--</b></span>
+      </div>
+      <div class="headline-bar" style="border-top:none;padding-top:2px">
+        <span> 数据来源：<b id="sourceNote">正在连接公开热榜接口…</b></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ 工具栏 ============ -->
+  <div class="toolbar">
+    <div class="toolbar-row">
+      <div class="search">
+        <span>🔍</span>
+        <input id="q" type="text" placeholder="搜索热搜标题或摘要关键词…" autocomplete="off">
+        <button class="clr" id="qClear" title="清空">✕</button>
+      </div>
+      <div class="view-tabs" id="viewTabs">
+        <button data-view="category" class="on">按分类</button>
+        <button data-view="platform">按平台</button>
+      </div>
+      <button class="btn primary" id="btnRefresh">↻ 一键刷新</button>
+      <button class="btn" id="btnSettings">⚙ 设置</button>
+      <button class="btn" id="btnCopyAll">📋 复制早报</button>
+      <button class="btn" id="btnTxt">⬇ TXT</button>
+      <button class="btn" id="btnJson">⬇ JSON</button>
+    </div>
+    <div class="chips" id="platformChips"></div>
+    <div class="chips" id="categoryChips"></div>
+  </div>
+
+  <!-- ============ 今日要闻 ============ -->
+  <section class="section">
+    <h2 class="section-title">今日要闻 <span class="sub">跨平台热度最高的 10 条</span></h2>
+    <div class="flash"><ul class="flash-list" id="flashList"></ul></div>
+  </section>
+
+  <!-- ============ 主体 ============ -->
+  <main id="main"></main>
+
+  <!-- ============ 说明 ============ -->
+  <footer class="foot">
+    <h2 class="section-title">数据源状态与使用说明</h2>
+    <div id="srcStatus"></div>
+
+    <details>
+      <summary>使用说明（打开 / 刷新 / 换数据源 / 新增平台）</summary>
+      <div class="body">
+        <h4>1. 如何打开</h4>
+        <ul>
+          <li>双击本文件，用 Chrome / Edge / Firefox 打开即可。无需服务器、无需安装、无需登录。</li>
+          <li>首次打开会自动拉取实时数据；若网络不可用，会自动降级为内置示例数据并给出提示。</li>
+        </ul>
+        <h4>2. 如何刷新</h4>
+        <ul>
+          <li>点右上角「↻ 一键刷新」重新抓取全部平台。抓取过程会显示进度（如「抓取中 3/8」），每个平台抓到数据后立即替换示例内容，无需等全部完成。</li>
+          <li>若某个平台显示红色「示例数据」，把鼠标移到卡片底部可看到失败原因（限流 / 服务端错误 / 超时），稍后再点刷新即可。</li>
+          <li>启用的数据源越少、抓取越快。默认开启 8 个平台；可在「设置 → 启用的数据源」里增减（关掉一个约省 2 秒）。</li>
+          <li>数据会缓存到浏览器 <code>localStorage</code>（键名 <code>hot_daily_brief_v1</code>），下次打开先秒显缓存、再按「缓存时长」判断是否自动刷新。</li>
+          <li>「设置」里可以调整每平台条数、缓存时长、数据源开关，以及「清空缓存」。</li>
+        </ul>
+        <h4>3. 如何替换 / 增加真实数据源</h4>
+        <ul>
+          <li>默认使用免费开源的 <b>60s API</b>（<code>https://60s.viki.moe</code>，MIT 协议，已开启 CORS，可直接被本地页面调用）。</li>
+          <li>在脚本里的 <code>SOURCES</code> 数组新增一项即可，例如：
+            <br><code>{id:'xxx', name:'平台名', short:'简称', icon:'🆕', color:'#1e88e5', path:'/v2/xxx', kind:'list', defaultOn:true}</code>
+          </li>
+          <li><code>path</code> 换成别家接口的完整地址（以 <code>http</code> 开头时会直接使用，不再拼接 API 基地址）。</li>
+          <li><b>限流说明</b>：60s 公共实例约「每 2 秒只允许 1 次请求」（超限返回 <code>429</code> + <code>Retry-After</code>）。页面已把所有请求排队串行发送，保证间隔不小于 <code>REQ_GAP</code>（初始 2000 毫秒，被限流时自动放慢、恢复正常后自动提速）；遇 429 会按服务端要求等待后重试，整轮结束后还会对失败平台自动补抓一轮。</li>
+          <li><b>备用接口</b>：一个数据源可写多个候选地址，例如 <code>path:['/v2/zhihu','https://你的镜像/zhihu']</code>，或加一项 <code>altPaths:['https://备用地址']</code>；主地址失败会自动顺延到下一个。B站接口（<code>/v2/bili</code>）目前服务端 500（B站反爬致使上游解析失败），页面会自动降级为示例数据；待上游修复后无需改动即可自动恢复。</li>
+          <li><code>kind</code> 说明：<code>list</code>=返回数组；<code>newsItems</code>=<code>data.news</code> 为对象数组；<code>news</code>=<code>data.news</code> 为字符串数组。</li>
+          <li>若某接口不提供摘要，可在设置里为它加 <code>summaryField</code> 指定摘要字段名（如 <code>description</code>）。</li>
+          <li>若目标站点不允许跨域，在「设置 → 代理模式」中选择「自动」：先直连（含限流重试），仍失败才用 1 个公共 CORS 代理兜底；若接口本身返回 5xx（上游挂了），换代理也没用，会直接降级省时间。也可以填自建代理（如 Cloudflare Worker）。</li>
+        </ul>
+        <h4>4. 关于「原文内容」</h4>
+        <ul>
+          <li>知乎、百度、IT之家、AI 新闻等数据源本身提供正文摘要，页面会直接内联展示。</li>
+          <li>点条目里的「展开全文」，会就地抓取该条的原文页面并抽出正文，直接显示在条目内，不需要跳出去；抓取结果按链接记忆，重复展开不再请求。</li>
+          <li>抓取先直连（部分源站开了 CORS），跨域失败再依次换「代理模式」里的公共 CORS 代理；全部失败会在条目里写明原因。</li>
+          <li>微博、抖音、头条等榜单接口只提供标题与热度值，它们的原文/搜索页多为脚本渲染或需登录，能否抓到正文取决于源站；抓不到时仍可点「原文 ↗」跳转查看，跳转始终保留。</li>
+          <li>单条正文最多展示 4000 字，超出会截断并提示；点「复制此条」可单独复制该条的标题、摘要与链接。</li>
+        </ul>
+        <h4>5. 快捷键</h4>
+        <ul>
+          <li><code>R</code> 刷新　<code>/</code> 聚焦搜索　<code>Esc</code> 关闭弹窗或清空搜索</li>
+        </ul>
+      </div>
+    </details>
+
+    <details>
+      <summary>免责声明</summary>
+      <div class="body">
+        本页面为个人效率小工具，热搜数据来自第三方公开接口，版权归原平台所有，仅用于个人学习与快速浏览，不作为商业用途或事实认定依据。若某个接口返回失败，页面会自动降级，不影响其他平台展示。
+      </div>
+    </details>
+  </footer>
+</div>
+
+<!-- ============ 设置弹窗 ============ -->
+<div class="mask" id="mask">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-head">
+      <h3>⚙ 设置</h3>
+      <button class="btn ghost" id="btnCloseSet">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>API 基地址</label>
+        <input type="text" id="setApiBase" placeholder="https://60s.viki.moe">
+        <div class="hint">默认使用 60s API。可换成你自己的反向代理地址，例如 <code>https://your-worker.workers.dev</code>。</div>
+      </div>
+      <div class="field">
+        <label>代理模式</label>
+        <select id="setProxyMode">
+          <option value="auto">自动（直连失败时自动尝试公共 CORS 代理，推荐）</option>
+          <option value="off">关闭（仅直连）</option>
+          <option value="custom">自定义（优先使用下面的代理地址）</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>自定义代理前缀</label>
+        <input type="text" id="setProxy" placeholder="https://api.allorigins.win/raw?url=">
+        <div class="hint">代理会把目标地址拼在其后。常见免费代理：<code>https://api.allorigins.win/raw?url=</code>、<code>https://api.codetabs.com/v1/proxy?quest=</code>、<code>https://corsproxy.io/?url=</code>。</div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>每平台条数</label>
+          <input type="number" id="setLimit" min="5" max="50" step="1">
+        </div>
+        <div class="field">
+          <label>缓存时长（分钟）</label>
+          <input type="number" id="setCache" min="1" max="720" step="1">
+        </div>
+      </div>
+      <div class="field">
+        <label>启用的数据源</label>
+        <div class="switches" id="setSources"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="btnClearCache">🗑 清空缓存</button>
+      <button class="btn" id="btnReset">恢复默认</button>
+      <button class="btn primary" id="btnSaveSet">保存并刷新</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<noscript><div class="wrap"><p>本页面需要启用 JavaScript 才能运行。</p></div></noscript>
+
+<script>
+(function(){
+'use strict';
+
+/* =========================================================
+   0. 常量
+   ========================================================= */
+var STORAGE_KEY = 'hot_daily_brief_v1';
+var APP_VERSION = '1.1.0';
+var WEEK = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+
+var DEFAULT_SETTINGS = {
+  apiBase: 'https://60s.viki.moe',
+  proxyMode: 'auto',
+  proxy: '',
+  perSourceLimit: 15,
+  cacheMinutes: 30,
+  autoRefresh: true,
+  enabled: {}
+};
+
+/* 公共 CORS 代理（自动模式下的备用通道） */
+var PROXY_PRESETS = [
+  { label: 'allorigins', wrap: function (u) { return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u); } },
+  { label: 'codetabs',   wrap: function (u) { return 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u); } },
+  { label: 'corsproxy',  wrap: function (u) { return 'https://corsproxy.io/?url=' + encodeURIComponent(u); } },
+  { label: 'isomorphic', wrap: function (u) { return 'https://cors.isomorphic-git.org/' + u; } }
+];
+
+/* 60s 公共实例的限流实测约为「每 2 秒 1 次请求」（429 响应带 Retry-After: 2），
+   并发或密集请求必然被限流。因此所有出网请求统一走串行闸门，保证间隔不小于 REQ_GAP。 */
+var REQ_GAP = 2000;
+var REQ_GAP_MIN = 1800;
+var REQ_GAP_MAX = 6000;
+var REQ_MAX_RETRY = 2;
+var RETRY_WAIT_MAX = 6000;   // 单个平台最多等 6 秒，避免拖住后面所有平台
+
+/* 原文正文抓取：单条最多展示字数 / 单次抓取超时；结果按 URL 记忆，重复展开不再请求 */
+var ART_MAX = 4000;
+var ART_TIMEOUT = 12000;
+var _artCache = {};
+
+/* 被限流就自动放慢节奏，连续正常则慢慢提速：不同时间段公共实例的额度并不一样 */
+function bumpGap() { REQ_GAP = Math.min(REQ_GAP_MAX, Math.round(REQ_GAP * 1.5)); }
+function easeGap() { REQ_GAP = Math.max(REQ_GAP_MIN, REQ_GAP - 200); }
+
+/* ---------------------------------------------------------
+   数据源定义：新增平台只需在这里加一项
+   --------------------------------------------------------- */
+var SOURCES = [
+  { id:'weibo',    name:'微博热搜',      short:'微博',   icon:'🔥', color:'#e6162d', path:'/v2/weibo',              kind:'list', defaultOn:true,  fallbackCat:'society', searchUrl:'https://s.weibo.com/weibo?q=' },
+  { id:'baidu',    name:'百度热搜榜',    short:'百度',   icon:'🔎', color:'#2932e1', path:'/v2/baidu/hot',          kind:'list', defaultOn:true,  fallbackCat:'society', searchUrl:'https://www.baidu.com/s?wd=' },
+  { id:'zhihu',    name:'知乎热榜',      short:'知乎',   icon:'💡', color:'#0084ff', path:'/v2/zhihu',              kind:'list', defaultOn:true,  fallbackCat:'society', searchUrl:'https://www.zhihu.com/search?type=content&q=' },
+  { id:'douyin',   name:'抖音热点榜',    short:'抖音',   icon:'🎵', color:'#fe2c55', path:'/v2/douyin',             kind:'list', defaultOn:true,  fallbackCat:'life',    searchUrl:'https://www.douyin.com/search/' },
+  { id:'bili',     name:'B站热门',       short:'B站',    icon:'📺', color:'#fb7299', path:'/v2/bili',               kind:'list', defaultOn:true,  fallbackCat:'game',    searchUrl:'https://search.bilibili.com/all?keyword=' },
+  { id:'toutiao',  name:'今日头条热榜',  short:'头条',   icon:'📰', color:'#f04142', path:'/v2/toutiao',            kind:'list', defaultOn:true,  fallbackCat:'society', searchUrl:'https://so.toutiao.com/search?keyword=' },
+  { id:'itnews',   name:'IT之家 · 科技快讯', short:'IT之家', icon:'💻', color:'#c62f2f', path:'/v2/it-news',    kind:'list', defaultOn:true,  fallbackCat:'tech', summaryField:'description' },
+  { id:'ainews',   name:'AI 新闻',       short:'AI新闻', icon:'🤖', color:'#7c3aed', path:'/v2/ai-news',            kind:'newsItems', defaultOn:true, fallbackCat:'ai' },
+  { id:'hn',       name:'Hacker News（海外）', short:'HN', icon:'🌐', color:'#ff6600', path:'/v2/hacker-news/top', kind:'list', defaultOn:false, fallbackCat:'tech', searchUrl:'https://www.bing.com/search?q=' },
+  { id:'world60s', name:'60秒读懂世界',  short:'60秒',   icon:'⏱️', color:'#0ea5e9', path:'/v2/60s',                kind:'news', defaultOn:false, fallbackCat:'world' },
+  { id:'rednote',  name:'小红书热点',    short:'小红书', icon:'📕', color:'#ff2442', path:'/v2/rednote',            kind:'list', defaultOn:false, fallbackCat:'life',    searchUrl:'https://www.xiaohongshu.com/search_result?keyword=' },
+  { id:'tieba',    name:'百度贴吧热议',  short:'贴吧',   icon:'💬', color:'#3385ff', path:'/v2/baidu/tieba',        kind:'list', defaultOn:false, fallbackCat:'society', searchUrl:'https://tieba.baidu.com/f/search/res?qw=' },
+  { id:'douban',   name:'豆瓣电影口碑榜', short:'豆瓣',  icon:'🎬', color:'#2e963d', path:'/v2/douban/weekly/movie',kind:'list', defaultOn:false, fallbackCat:'culture', searchUrl:'https://search.douban.com/movie/subject_search?search_text=' }
+];
+
+/* ---------------------------------------------------------
+   内容分类（关键词规则，命中最多者胜出）
+   --------------------------------------------------------- */
+var CATEGORIES = [
+  { id:'ai', name:'AI 前沿', icon:'🤖', color:'#7c3aed',
+    kw:'人工智能|大模型|AIGC|生成式|GPT|ChatGPT|OpenAI|DeepSeek|Claude|Gemini|Llama|豆包|通义|文心|混元|星火|智能体|多模态|算力|英伟达|Nvidia|机器学习|深度学习|神经网络|\\bLLM\\b|推理|训练模型|语料|具身智能|机器人|\\brobot|自动驾驶|\\bAI\\b|算法模型|提示词' },
+  { id:'tech', name:'科技数码', icon:'💻', color:'#0f766e',
+    kw:'芯片|半导体|光刻|晶圆|手机|iPhone|华为|小米|荣耀|OPPO|vivo|骁龙|天玑|麒麟|显卡|\\bGPU\\b|\\bCPU\\b|\\bNPU\\b|笔记本|平板|耳机|鸿蒙|安卓|Android|iOS|操作系统|开源|Linux|GitHub|Rust|Python|\\bJava\\b|代码|开发者|程序员|软件|硬件|相机|电池|快充|特斯拉|无人机|\\b.NET\\b|数据库|服务器|固态|路由器|量子计算|卫星|火箭|航天' },
+  { id:'biz', name:'互联网与商业', icon:'🏢', color:'#1d4ed8',
+    kw:'字节|腾讯|阿里|美团|京东|拼多多|百度|快手|小红书|滴滴|网易|京东|创业|融资|上市|\\bIPO\\b|电商|直播带货|双11|618|平台经济|反垄断|收购|并购|估值|裁员|招聘|大厂|产品发布|订阅|会员|外卖|快递|商家|品牌|门店' },
+  { id:'finance', name:'财经宏观', icon:'📈', color:'#b45309',
+    kw:'股市|\\bA股\\b|港股|美股|涨停|跌停|汇率|人民币|美元|加息|降息|美联储|通胀|通缩|\\bGDP\\b|经济|财政|央行|房价|楼市|地产|税|利率|黄金|金价|油价|失业率|财报|营收|利润|市值|债券|基金|消费|社零|进出口|关税' },
+  { id:'academic', name:'学术科研', icon:'🔬', color:'#0369a1',
+    kw:'大学|高校|论文|实验室|科研|院士|研究所|\\bnature\\b|\\bscience\\b|\\bcell\\b|arXiv|诺贝尔|诺奖|考研|博士|硕士|导师|学科|研究成果|技术突破|首创|首次实现|基因|疫苗|临床试验|\\bCERN\\b|探月|深空|天文' },
+  { id:'world', name:'国际时事', icon:'🌍', color:'#4338ca',
+    kw:'美国|白宫|特朗普|拜登|俄罗斯|乌克兰|以色列|伊朗|欧盟|联合国|外交|制裁|谈判|峰会|冲突|战争|选举|日本|韩国|朝鲜|英国|法国|德国|中东|北约|移民|海外|国际|全球|外媒|驻华|使馆|边境|停火' },
+  { id:'society', name:'社会民生', icon:'🏙️', color:'#525252',
+    kw:'教育|高考|中考|招生|就业|求职|医疗|医保|养老|退休|社保|警方|通报|事故|坠亡|法院|判决|立法|政策|地震|台风|暴雨|洪水|天气|救援|公益|消费者|维权|工资|假期|放假|景区|通航|铁路|地铁|公交|涨价|补贴|社区|乡村|县城' },
+  { id:'life', name:'健康生活', icon:'🌿', color:'#15803d',
+    kw:'健康|养生|睡眠|熬夜|减肥|运动|健身|跑步|马拉松|心理|焦虑|抑郁|情绪|内耗|饮食|食谱|癌|病毒|流感|医生|医院|作息|体检|炎症|痴呆|血压|血糖|吸烟|喝酒|皮肤|护肤|咖啡|茶|减肥' },
+  { id:'culture', name:'文化体育', icon:'🏆', color:'#9d174d',
+    kw:'球|比赛|夺冠|冠军|奥运|亚运|世界杯|\\bNBA\\b|中超|国乒|男篮|女排|国足|破纪录|演唱会|电影|票房|演员|导演|综艺|电视剧|首映|歌手|音乐|专辑|展览|博物馆|文物|非遗|读书|小说|作家|票房|颁奖' },
+  { id:'game', name:'游戏动漫', icon:'🎮', color:'#7e22ce',
+    kw:'游戏|手游|端游|主机|\\bSteam\\b|王者荣耀|原神|英雄联盟|\\bLOL\\b|电竞|选手|赛季|版本更新|开服|联机|动漫|番剧|漫画|二次元|声优|手办|\\bcos\\b|\\bUP主\\b|攻略|副本|画师' }
+];
+
+/* =========================================================
+   1. 内置示例数据（当接口不可用时降级显示，会明确标注）
+   格式：[标题, 热度值, 摘要(可空), 附加信息(可空)]
+   ========================================================= */
+var SAMPLE_RAW = {
+  weibo: [
+    ['平陆运河今日正式通航', 2874154, '西南地区货物出海少走560公里，每年可节约运输费用超50亿元，西南出海通道正式形成。'],
+    ['美联储宣布加息25个基点', 341444, '将联邦基金利率目标区间上调至3.75%-4.00%，为2023年7月以来首次加息。'],
+    ['引力一号遥三运载火箭一箭九星', 268000, '刷新海上发射载荷重量纪录，9颗卫星顺利进入预定轨道。'],
+    ['43岁张一鸣首次成为亚洲首富', 215000, '财富达1050亿美元，7年增长约7倍，全球排名第18位。'],
+    ['我国将制定全国统一的医保医疗服务项目目录', 198000, '首批覆盖心血管、呼吸、眼科、妇科、放疗等13个类别。'],
+    ['广州拟立法处罚地铁外放手机声音', 176000, '搭乘地铁外放手机声音最高处罚1000元，草案正在征求意见。'],
+    ['中国男足2比1逆转朝鲜取亚运开门红', 164921, '同日中国女排3比0战胜菲律宾队，同样取得开门红。'],
+    ['研究发现AI冲击计算机专业就业', 152000, '美国研究显示电脑相关专业毕业生初次就业概率下降5个百分点，起薪下降13%。']
+  ],
+  baidu: [
+    ['时隔3年多 美联储加息25个基点', 7808993, '当地时间9月16日，美联储宣布将联邦基金利率目标区间上调25个基点，使基准基金利率从3.50%至3.75%上调到3.75%至4%。政策声明指出，顽固的通胀压力以及地缘政治冲突导致的能源价格走高，使货币政策在压制通胀上仍显不足。', '热'],
+    ['一车人都买错票车站 12306有新显示', 7714541, '记者发现在12306客户端购买前往泸州东站车票时新增弹窗，提示该站位于泸县云锦镇。此前因泸州站与泸州东站相距约30公里，多名旅客买错票。'],
+    ['平陆运河“全能管家”有多硬核', 7616594, '平陆运河16日正式通航，青年调度中心作为国内首个全生命周期智慧运河数字孪生平台，实现一屏观全线、一脑统江海。'],
+    ['中国十大消费县排行出炉', 6500000, '4个县域社零总额超千亿元，义乌以2153.8亿元居首，昆山、晋江、常熟紧随其后。'],
+    ['香港特区首个五年规划公布', 5200000, '拟加强上市制度竞争力，吸引内地及海外龙头赴港IPO。'],
+    ['社保缴费基数调整', 4800000, '多地公布2026年度社保缴费基数上下限，灵活就业人员可自主选择缴费档次。'],
+    ['AI兴起后计算机专业就业率下降', 4100000, '研究显示AI兴起后，电脑相关专业毕业生初次就业概率下降五个百分点。'],
+    ['8月新能源车渗透率再创新高', 3800000, '新能源汽车零售渗透率超过55%，多家车企交付量创单月新高。']
+  ],
+  zhihu: [
+    ['美联储3年来首次加息，会对市场有哪些影响？', 41620000, '美联储宣布将联邦基金利率目标区间上调25个基点，这是自2023年7月以来时隔三年多的首次加息。政策声明指出，顽固的通胀压力以及地缘政治冲突导致的全球能源价格持续走高，使当前货币政策在压制通胀至2%的目标上仍显不足。点阵图显示，18位官员中有12位预计今年还将加息25个基点。', '252 个回答'],
+    ['如何评价国产大模型集体降价？', 12000000, '多家厂商宣布主力模型 API 价格下调，推理成本大幅下降，行业进入价格战阶段，中小开发者受益明显。', '186 个回答'],
+    ['计算机专业还值得报吗？', 9800000, 'AI 冲击下初级岗位需求收缩，但系统、底层、安全、芯片方向依然紧缺，关键是能否形成不可替代的能力。', '431 个回答'],
+    ['如何看“AI 面试官”在秋招中普及？', 7600000, '越来越多企业用 AI 做初面，候选人反馈评价标准不透明，也有人认为能减少人为偏见。', '98 个回答'],
+    ['平陆运河通航到底意味着什么？', 6400000, '西南出海通道形成，物流成本下降，沿线产业布局与港口分工都将发生变化。', '120 个回答'],
+    ['考研报名人数连续两年下降说明了什么？', 5200000, '学历回报率下降、就业导向变化、专硕扩招是主要原因，也有人认为是理性回归。', '205 个回答'],
+    ['为什么现在年轻人开始“反内耗”？', 4300000, '心理健康意识提升，社交平台流行“低耗能生活”，主动降低无效社交与情绪消耗。', '77 个回答'],
+    ['大一新生该怎样规划四年？', 3900000, '绩点、竞赛、科研、实习、英语是五条主线，建议先做加法再做减法，尽早确定方向。', '163 个回答']
+  ],
+  douyin: [
+    ['美联储宣布加息25个基点', 11432445, '', '09-17 07:04'],
+    ['各地已进入秋季最佳赏味期', 11417548, '', '09-16 16:20'],
+    ['平陆运河究竟有多“夯”', 11384764, '', '09-17 10:02'],
+    ['全国铁路完成固定资产投资5118亿', 11272824, '', '09-16 20:10'],
+    ['AI面试官上线秋招', 9800000, '', '09-17 08:30'],
+    ['开学第一课', 8700000, '', '09-16 19:00'],
+    ['秋季流感高发如何预防', 7200000, '', '09-17 06:40'],
+    ['亚运赛场名场面', 6800000, '', '09-17 09:15']
+  ],
+  bili: [
+    ['我花了一个月，把宿舍改造成了极客工位', 3200000, 'UP主用3D打印与自制支架完成桌面改造，成本控制在500元以内。'],
+    ['【硬核科普】一颗芯片是怎么被造出来的', 2800000, '从光刻、蚀刻到封装测试，完整拆解28纳米工艺产线流程。'],
+    ['AI 辅助写代码一年后，我的真实感受', 2100000, '效率提升明显，但调试能力与架构能力仍是不可替代的核心。'],
+    ['中国航天2026高光时刻合集', 1900000, ''],
+    ['用文言文写程序会是什么体验', 1500000, ''],
+    ['新版本剧情解析：这段伏笔埋了两年', 1400000, ''],
+    ['大学四年，我劝你早点学会这些', 1200000, ''],
+    ['第一次坐平陆运河货船是什么体验', 1000000, '']
+  ],
+  toutiao: [
+    ['时隔3年多美联储加息25个基点', 18893027, ''],
+    ['男子酒驾发生事故主动报警“自首”', 17095118, ''],
+    ['夏粮收购总量超1亿吨', 15468302, ''],
+    ['美联储突然加息意味着什么', 13996298, '加息落地后全球资产价格波动，市场关注后续加息路径与点阵图变化。'],
+    ['拆迁查户口发现父亲有个16岁私生子', 12664374, ''],
+    ['全国统一医保目录将首次制定', 11000000, '首批覆盖13个类别，将统一各省医疗服务项目名称与内涵。'],
+    ['第一批大学生已经开学了', 9400000, ''],
+    ['新能源车下乡政策再加码', 8200000, '']
+  ],
+  itnews: [
+    ['特斯拉 Cybercab 全国巡展首秀亮相京沪', 0, '9月17日至21日在上海兴业太古汇静态展出，北京华贸特斯拉体验店展至9月27日。官方明确此次活动仅作静态展示，不涉及国内上市销售或无人驾驶网约车商业运营安排。Cybercab 取消方向盘、踏板与后视镜，面向无人驾驶网约车场景设计。'],
+    ['华为发布新一代昇腾算力集群方案', 0, '面向大模型训练场景，单集群支持万卡互联，配套推出新版算子库与通信优化方案。'],
+    ['英伟达开源 CUDA Rust 两套 GPU 内核编写路径', 0, '开发者可用 Rust 编写 GPU 内核，借助语言特性降低内存安全问题，目前提供两条接入路线。'],
+    ['.NET 11 性能改进公布', 0, 'JIT 与 GC 均有明显优化，官方给出多组基准测试数据，涉及启动时间与内存占用。'],
+    ['国产 3nm 手机芯片进入流片阶段', 0, '消息称良率爬坡顺利，预计明年上半年量产，将用于旗舰机型。'],
+    ['开源项目 OpenSpec 发布：轻量 AI 规格框架', 0, '用于约束 AI 编码行为，让生成结果更符合工程规范，支持自定义规格文件。']
+  ],
+  ainews: [
+    ['生数科技推出实时交互与编辑视频模型 Vidu S2', 0, '含 Vidu S2-Avatar 与 Vidu S2-Editing 两款模型。Avatar 支持对话互动中动态更新参考图，实时输出从540P提升至720P；Editing 支持风格迁移、虚拟试穿、人物替换、背景替换四类实时编辑任务。', '生数科技 · 09-16'],
+    ['科大讯飞推出全场景 AI 生产力工作台 AStudio', 0, '以模型为核心，搭载 ACode Harness Agent 运行框架，支持多模型切换、Plan 规划与目标模式、多智能体协作，可连接本地文件与真实项目并验证结果。', '讯飞开放平台 · 09-16'],
+    ['谷歌推出原生实时语音对话模型 Gemini 3.8 Live', 0, '支持97种语言自动切换、近实时视觉理解及后台工具调用；Extended Thinking 版强化多步推理，推理与发言可同步进行，语音质量基准测试排名第一。', 'IT之家 · 09-16'],
+    ['豆包工作模型上新，同时推出“豆包工作伙伴”', 0, '模型完成0915小版本升级并同步上线，API 全量上架火山方舟；工作伙伴以独立身份入驻飞书群聊、文档和会议。', '豆包工作 · 09-16'],
+    ['美研究：AI 使计算机相关专业就业概率下降', 0, 'AI 兴起后电脑相关专业毕业生初次就业概率下降五个百分点，起薪下降13%，研究建议加强系统与工程能力训练。', '学术观察 · 09-16'],
+    ['三元量化研究突破 1.58-bit 精度壁垒', 0, '在保持精度的前提下大幅压缩显存占用，相关论文已上传 arXiv，可显著降低推理成本。', 'arXiv · 09-16']
+  ],
+  hn: [
+    ['Nvidia announces native GPU programming in Rust', 304, '', 'nonmaskable · 09-16 11:15'],
+    ['Training a 4B model to produce 81% faster query plans than Postgres', 406, '', 'polyphilz · 09-16 18:50'],
+    ['Breaking the 1.58-bit Barrier for Ternary LLMs', 145, '', 'matt_d · 09-16 20:59'],
+    ['Small programming tricks', 406, '', 'signa11 · 09-16 15:56'],
+    ['Performance Improvements in .NET 11', 180, '', 'soheilpro · 09-15 12:18'],
+    ['Developing provably correct Rust code with Verus', 17, '', 'Betelbuddy · 09-14 16:57']
+  ],
+  world60s: [
+    ['中国十大消费县排行出炉：4个县域社零总额超千亿元，义乌以2153.8亿元居首', 0, ''],
+    ['我国已办成世界上规模最大的法学教育体系，每年培养输送10万余名法治专门人才', 0, ''],
+    ['平陆运河16日正式通航：西南地区货物出海少走560公里，每年可节约运输费用超50亿元', 0, ''],
+    ['引力一号遥三运载火箭发射成功，一箭九星，刷新海上发射载荷重量纪录', 0, ''],
+    ['我国将首次制定全国统一的医保医疗服务项目目录，首批覆盖13个类别', 0, ''],
+    ['美国“星舰”计划22日进行首次地球轨道试飞，同时计划部署26颗第三代星链卫星', 0, ''],
+    ['美国防部通报美对伊军事行动耗资已超420亿美元，多家美媒称实际支出或更高', 0, ''],
+    ['韩国法院判决朝鲜就炸毁联络办公室大楼赔偿约446亿韩元，系韩首次起诉朝鲜胜诉', 0, '']
+  ],
+  rednote: [
+    ['秋日通勤穿搭公式', 0, ''], ['宿舍改造好物清单', 0, ''],
+    ['大一新生避坑指南', 0, ''], ['学会这招期末不熬夜', 0, ''],
+    ['北京周边一日游推荐', 0, '']
+  ],
+  tieba: [
+    ['如何评价今年的秋招形势', 0, ''], ['大学室友相处有什么经验', 0, ''],
+    ['显卡价格还会降吗', 0, ''], ['每天坚持跑步一年后的变化', 0, ''],
+    ['计算机专业学习路线求推荐', 0, '']
+  ],
+  douban: [
+    ['《星际穿越》重映版', 0, '经典科幻重登大银幕，IMAX 版本一票难求。'],
+    ['《漫长的季节》', 0, '国产悬疑剧口碑之作，细腻呈现时代变迁下的小人物命运。'],
+    ['《奥本海默》', 0, '诺兰执导，围绕原子弹之父的抉择展开三小时叙事。'],
+    ['《宇宙探索编辑部》', 0, '伪纪录片式科幻喜剧，以荒诞包裹浪漫。'],
+    ['《长安三万里》', 0, '以唐诗为线索的动画长片，展现盛唐气象。']
+  ]
+};
+
+/* =========================================================
+   2. 状态
+   ========================================================= */
+var settings = clone(DEFAULT_SETTINGS);
+var state = {
+  view: 'category',
+  query: '',
+  fSource: 'all',
+  fCategory: 'all',
+  expanded: {},        // 展开的条目 id
+  art: {},             // 条目 id -> 原文正文抓取状态 {st:'loading'|'ok'|'err', text, err, via}
+  moreOpen: {},        // 分类/平台卡片「展开更多」
+  items: [],
+  status: {},          // sourceId -> {ok,count,via,error,demo}
+  mode: 'demo',        // live | mixed | demo
+  updatedAt: 0,
+  loading: false,
+  booting: true,
+  progress: { done: 0, total: 0 }
+};
+
+/* =========================================================
+   3. 工具函数
+   ========================================================= */
+function $(id) { return document.getElementById(id); }
+function clone(o) { return JSON.parse(JSON.stringify(o)); }
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function firstStr() {
+  for (var i = 0; i < arguments.length; i++) {
+    var v = arguments[i];
+    if (v === null || v === undefined) continue;
+    if (typeof v === 'number' && !isFinite(v)) continue;
+    var s = String(v).trim();
+    if (s) return s;
+  }
+  return '';
+}
+function firstNum() {
+  for (var i = 0; i < arguments.length; i++) {
+    var n = Number(arguments[i]);
+    if (isFinite(n) && n > 0) return n;
+  }
+  return 0;
+}
+function fmtNum(n) {
+  n = Number(n);
+  if (!isFinite(n) || n <= 0) return '';
+  if (n >= 1e8) return trimZero((n / 1e8).toFixed(1)) + '亿';
+  if (n >= 1e4) return trimZero((n / 1e4).toFixed(1)) + '万';
+  return String(Math.round(n));
+}
+function trimZero(s) { return s.replace(/\.0$/, ''); }
+function pad(n) { return n < 10 ? '0' + n : '' + n; }
+function fmtDate(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function fmtTime(d) { return fmtDate(d) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()); }
+function fmtShort(ts) {
+  if (!ts) return '--';
+  var d = new Date(ts);
+  return pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+}
+function ago(ts) {
+  if (!ts) return '--';
+  var s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return '刚刚';
+  if (s < 3600) return Math.floor(s / 60) + ' 分钟前';
+  if (s < 86400) return Math.floor(s / 3600) + ' 小时前';
+  return Math.floor(s / 86400) + ' 天前';
+}
+var toastTimer = null;
+function toast(msg) {
+  var t = $('toast');
+  t.textContent = msg;
+  t.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { t.classList.remove('on'); }, 2200);
+}
+function sourceById(id) {
+  for (var i = 0; i < SOURCES.length; i++) if (SOURCES[i].id === id) return SOURCES[i];
+  return null;
+}
+function categoryById(id) {
+  for (var i = 0; i < CATEGORIES.length; i++) if (CATEGORIES[i].id === id) return CATEGORIES[i];
+  return null;
+}
+
+/* =========================================================
+   4. 本地存储
+   ========================================================= */
+var memStore = {};
+function stGet(k) {
+  try { return localStorage.getItem(k); } catch (e) { return memStore[k] || null; }
+}
+function stSet(k, v) {
+  try { localStorage.setItem(k, v); } catch (e) { memStore[k] = v; }
+}
+function stDel(k) {
+  try { localStorage.removeItem(k); } catch (e) { delete memStore[k]; }
+}
+function saveStore() {
+  var payload = {
+    v: APP_VERSION,
+    settings: settings,
+    updatedAt: state.updatedAt,
+    mode: state.mode,
+    status: state.status,
+    items: state.items
+  };
+  stSet(STORAGE_KEY, JSON.stringify(payload));
+}
+function loadStore() {
+  var raw = stGet(STORAGE_KEY);
+  if (!raw) return false;
+  try {
+    var d = JSON.parse(raw);
+    if (d && d.settings) {
+      settings = mergeSettings(d.settings);
+    }
+    if (d && Array.isArray(d.items) && d.items.length) {
+      state.items = d.items.filter(function (it) { return it && it.title; });
+      state.status = d.status || {};
+      state.mode = d.mode || 'demo';
+      state.updatedAt = Number(d.updatedAt) || 0;
+      return true;
+    }
+  } catch (e) { /* 忽略损坏缓存 */ }
+  return false;
+}
+function mergeSettings(s) {
+  var out = clone(DEFAULT_SETTINGS);
+  if (s) {
+    for (var k in DEFAULT_SETTINGS) {
+      if (Object.prototype.hasOwnProperty.call(s, k) && s[k] !== undefined && s[k] !== null) out[k] = s[k];
+    }
+    if (!out.enabled || typeof out.enabled !== 'object') out.enabled = {};
+  }
+  out.perSourceLimit = Math.min(50, Math.max(5, Number(out.perSourceLimit) || 15));
+  out.cacheMinutes = Math.min(720, Math.max(1, Number(out.cacheMinutes) || 30));
+  out.apiBase = String(out.apiBase || '').trim() || DEFAULT_SETTINGS.apiBase;
+  if (['auto', 'off', 'custom'].indexOf(out.proxyMode) < 0) out.proxyMode = 'auto';
+  return out;
+}
+function isSourceOn(id) {
+  var s = sourceById(id);
+  var def = s ? !!s.defaultOn : false;
+  return settings.enabled[id] === undefined ? def : !!settings.enabled[id];
+}
+function activeSources() {
+  return SOURCES.filter(function (s) { return isSourceOn(s.id); });
+}
+
+/* =========================================================
+   5. 网络请求（直连 → 代理 → 降级）
+   ========================================================= */
+function fetchJson(url, ms) {
+  var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  var timer = null;
+  if (ctrl) timer = setTimeout(function () { ctrl.abort(); }, ms || 9000);
+  var opt = { cache: 'no-store', headers: { 'Accept': 'application/json, text/plain, */*' } };
+  if (ctrl) opt.signal = ctrl.signal;
+  return fetch(url, opt).then(function (res) {
+    if (!res.ok) {
+      var e1 = new Error('HTTP ' + res.status);
+      e1.status = res.status;
+      /* 429 会带 Retry-After，按服务端要求的间隔重试最有效 */
+      var ra = res.headers && res.headers.get ? parseInt(res.headers.get('Retry-After'), 10) : NaN;
+      e1.retryAfter = (isFinite(ra) && ra > 0) ? ra : 0;
+      throw e1;
+    }
+    return res.text();
+  }).then(function (txt) {
+    if (!txt) throw new Error('空响应');
+    try { return JSON.parse(txt); }
+    catch (e) {
+      var e2 = new Error('返回非 JSON（接口可能被限流）');
+      e2.badBody = true;
+      throw e2;
+    }
+  }).then(function (j) {
+    if (timer) clearTimeout(timer);
+    return j;
+  }, function (err) {
+    if (timer) clearTimeout(timer);
+    throw err;
+  });
+}
+function sleep(ms) {
+  return new Promise(function (r) { setTimeout(r, ms); });
+}
+
+/* 一个数据源可配置多个候选地址：path 写成数组，或用 altPaths 追加备用地址，
+   主接口挂掉时自动顺延到下一个，不需要人工干预 */
+function buildTargets(src) {
+  var base = String(settings.apiBase || '').replace(/\/+$/, '');
+  var list = Array.isArray(src.path) ? src.path : [src.path];
+  var alt = Array.isArray(src.altPaths) ? src.altPaths : [];
+  return list.concat(alt).map(function (p) {
+    return /^https?:/i.test(p) ? p : base + p;
+  });
+}
+
+/* ---------- 全局串行闸门 ----------
+   保证同一时刻只有 1 个请求在飞、且相邻请求间隔不小于 REQ_GAP，
+   从根本上避免「自己把自己限流」导致的批量 429。 */
+var _lastReqAt = 0;
+var _chain = Promise.resolve();
+function netGate(fn) {
+  var run = _chain.then(function () {
+    var wait = REQ_GAP - (Date.now() - _lastReqAt);
+    return wait > 0 ? sleep(wait) : null;
+  }).then(function () {
+    _lastReqAt = Date.now();
+    return fn();
+  });
+  _chain = run.then(function () {}, function () {});
+  return run;
+}
+
+/* 把失败原因翻译成中文，直接显示在卡片底部，便于判断是限流还是接口本身挂了 */
+function errText(err) {
+  if (!err) return '请求失败';
+  if (err.status === 429) return '被接口限流（429），稍后重试';
+  if (err.status >= 500) return '接口服务端错误（' + err.status + '）';
+  if (err.status >= 400) return 'HTTP ' + err.status;
+  if (err.badBody) return '返回非 JSON（接口可能被限流）';
+  if (err.name === 'AbortError') return '请求超时';
+  if (!err.status && /fetch|network/i.test(err.message || '')) return '网络请求失败（断网或被拦截）';
+  return err.message || '网络异常';
+}
+
+/* 哪些失败值得再试：限流、网关抖动、超时、网络中断都属于「等一下就好」；
+   500 / 404 这类是上游真挂了，再试只会白耗配额、拖慢其他平台 */
+function isRetryable(err) {
+  if (!err) return false;
+  if (err.status) return (err.status === 429 || err.status === 502 || err.status === 503 || err.status === 504);
+  return true;   /* 没有状态码 = 网络中断 / 超时 / 返回非 JSON */
+}
+
+/* 单通道请求：遇到可恢复错误会等待后重试「同一通道」——
+   换代理并不能绕过按 IP 的限流，只会让请求数翻倍、情况更糟 */
+function tryChannel(url, via, tries) {
+  var attempt = 0;
+  function once() {
+    attempt++;
+    return netGate(function () { return fetchJson(url, 9000); }).then(function (json) {
+      var badCode = json && typeof json.code === 'number' && json.code !== 200 && json.code !== 0;
+      var hasData = json && (json.data !== undefined || Array.isArray(json));
+      if (json && !badCode && hasData) { easeGap(); return { ok: true, data: json, via: via }; }
+      var e = new Error(badCode ? ('接口返回 code ' + json.code) : '接口返回异常');
+      e.status = badCode ? Number(json.code) : 0;
+      if (e.status === 429) e.retryAfter = 2;
+      throw e;
+    }).catch(function (err) {
+      if (!isRetryable(err)) throw err;
+      if (err.status === 429) bumpGap();
+      /* 限流按服务端要求等足时间可多试几次；网络抖动只再试一次，避免拖慢整体 */
+      var maxTries = (err.status === 429) ? tries : 1;
+      if (attempt > maxTries) throw err;
+      var wait = Math.min((err.retryAfter ? err.retryAfter * 1000 : 0) || 2200, RETRY_WAIT_MAX);
+      return sleep(wait).then(once);
+    });
+  }
+  return once();
+}
+
+/* 依次尝试：主地址（失败顺延备用地址）→ 代理（仅当直连彻底失败时兜底） */
+function requestSource(src) {
+  var targets = buildTargets(src);
+  var lastErr = null;
+  function tryTargets(i) {
+    if (i >= targets.length) return Promise.reject(lastErr || new Error('无可用地址'));
+    return tryChannel(targets[i], '直连', REQ_MAX_RETRY).catch(function (err) {
+      lastErr = err;
+      return tryTargets(i + 1);
+    });
+  }
+  return tryTargets(0).catch(function (err) {
+    /* 上游 5xx 说明该接口自己挂了（代理也是同一个上游），直接降级，省下时间给其他平台 */
+    if (err && err.status >= 500 && err.status < 600) throw err;
+    var mode = settings.proxyMode;
+    var plan = null;
+    if (mode === 'custom' && settings.proxy) plan = { via: '自定义代理', url: wrapProxy(settings.proxy, targets[0]) };
+    else if (mode === 'auto') plan = { via: '代理:' + PROXY_PRESETS[0].label, url: PROXY_PRESETS[0].wrap(targets[0]) };
+    if (!plan) throw err;
+    return tryChannel(plan.url, plan.via, 1);
+  }).then(function (r) {
+    return r;
+  }, function (err) {
+    return { ok: false, error: errText(err), retryable: isRetryable(err) };
+  });
+}
+function wrapProxy(prefix, target) {
+  prefix = String(prefix || '').trim();
+  if (!prefix) return target;
+  if (prefix.indexOf('{url}') >= 0) return prefix.replace('{url}', encodeURIComponent(target));
+  if (/[?&]$/.test(prefix) || /[?&](url|quest|target)=$/i.test(prefix)) return prefix + encodeURIComponent(target);
+  if (/=$/.test(prefix)) return prefix + encodeURIComponent(target);
+  return prefix + target;
+}
+
+/* =========================================================
+   5.5 原文正文内联阅读（展开全文时直接在本页读原文）
+   =========================================================
+   与榜单接口不同，这里不经过 netGate——那个串行闸门是为 60s 接口
+   「每 2 秒 1 次」的限流准备的，源站不吃这套，走闸门只会白白拖慢。
+   直连拿不到（跨域）再依次换公共 CORS 代理，谁先解析出正文用谁。 */
+
+var _BLOCK_TAG = /^(P|DIV|LI|TR|TD|TH|H[1-6]|SECTION|ARTICLE|BLOCKQUOTE|PRE|DD|DT|FIGCAPTION|TABLE|UL|OL|MAIN|BODY|CENTER)$/;
+
+function cleanText(s) {
+  return String(s == null ? '' : s)
+    .replace(/[ \t\u00a0\u3000]+/g, ' ')
+    .replace(/ *\n */g, '\n')
+    .replace(/\n{2,}/g, '\n')
+    .trim();
+}
+
+/* 递归取文本：块级元素前后补换行，避免整页文字挤成一坨 */
+function nodeText(root) {
+  var buf = [];
+  (function walk(n) {
+    for (var c = n.firstChild; c; c = c.nextSibling) {
+      if (c.nodeType === 3) { buf.push(c.nodeValue); continue; }
+      if (c.nodeType !== 1) continue;
+      var tag = c.tagName;
+      if (tag === 'BR') { buf.push('\n'); continue; }
+      if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT') continue;
+      var blk = _BLOCK_TAG.test(tag);
+      if (blk) buf.push('\n');
+      walk(c);
+      if (blk) buf.push('\n');
+    }
+  })(root);
+  return cleanText(buf.join(''));
+}
+
+function metaContent(doc, sel) {
+  var m = doc.querySelector(sel);
+  return m ? (m.getAttribute('content') || '') : '';
+}
+
+/* 从源站 HTML 抽正文：先去噪，再在候选容器里挑文字最多的那个；
+   正文太少就退回整页文本，仍然没有才用 og:description / description */
+function htmlToText(html) {
+  var doc;
+  try { doc = new DOMParser().parseFromString(html, 'text/html'); } catch (e) { return ''; }
+  if (!doc || !doc.body) return '';
+  var junk = doc.querySelectorAll('script,style,noscript,svg,iframe,canvas,form,input,select,textarea,button,nav,header,footer,aside');
+  for (var i = junk.length - 1; i >= 0; i--) {
+    if (junk[i].parentNode) junk[i].parentNode.removeChild(junk[i]);
+  }
+  var sels = ['article', '[role="main"]', 'main', '#content', '.content', '.article',
+              '.article-content', '.rich_media_content', '.post', '.detail', '.text'];
+  var best = '', j, k;
+  for (j = 0; j < sels.length; j++) {
+    var list = doc.querySelectorAll(sels[j]);
+    for (k = 0; k < list.length; k++) {
+      var t = nodeText(list[k]);
+      if (t.length > best.length) best = t;
+    }
+  }
+  if (best.length < 200) {
+    var all = nodeText(doc.body);
+    if (all.length > best.length) best = all;
+  }
+  if (best.length < 60) {
+    best = firstStr(metaContent(doc, 'meta[property="og:description"]'),
+                    metaContent(doc, 'meta[name="description"]'),
+                    metaContent(doc, 'meta[name="twitter:description"]'),
+                    best);
+  }
+  if (best.length > ART_MAX) best = best.slice(0, ART_MAX) + '\n…（正文过长已截断，完整内容请点「原文 ↗」）';
+  return best;
+}
+
+function fetchText(url, ms) {
+  var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  var timer = null;
+  if (ctrl) timer = setTimeout(function () { ctrl.abort(); }, ms || ART_TIMEOUT);
+  var opt = { cache: 'no-store', redirect: 'follow', headers: { 'Accept': 'text/html,application/xhtml+xml,*/*' } };
+  if (ctrl) opt.signal = ctrl.signal;
+  return fetch(url, opt).then(function (res) {
+    if (!res.ok) { var e = new Error('HTTP ' + res.status); e.status = res.status; throw e; }
+    return res.text();
+  }).then(function (t) {
+    if (timer) clearTimeout(timer);
+    if (!t) throw new Error('空响应');
+    return t;
+  }, function (err) {
+    if (timer) clearTimeout(timer);
+    throw err;
+  });
+}
+
+/* 直连 → 公共 CORS 代理（或自定义代理），逐个试到拿到可读正文为止 */
+function articleText(url) {
+  var targets = [url], vias = ['直连'], i;
+  if (settings.proxyMode === 'custom' && settings.proxy) {
+    targets.push(wrapProxy(settings.proxy, url)); vias.push('自定义代理');
+  } else if (settings.proxyMode !== 'off') {
+    for (i = 0; i < PROXY_PRESETS.length; i++) {
+      targets.push(PROXY_PRESETS[i].wrap(url)); vias.push('代理:' + PROXY_PRESETS[i].label);
+    }
+  }
+  var lastErr = null;
+  function attempt(idx) {
+    if (idx >= targets.length) return Promise.reject(lastErr || new Error('无可用通道'));
+    return fetchText(targets[idx]).then(function (html) {
+      var txt = htmlToText(html);
+      if (txt.length < 30) throw new Error('源站未返回可读正文（多为脚本渲染或需登录）');
+      return { text: txt, via: vias[idx] };
+    }).catch(function (err) {
+      lastErr = err;
+      return attempt(idx + 1);
+    });
+  }
+  return attempt(0);
+}
+
+function artHtml(id) {
+  var r = state.art[id];
+  if (!r || r.st === 'loading') {
+    return '<div class="item-art"><div class="hd">原文正文</div>' +
+      '<div class="tip"><span class="rot">↻</span> 正在抓取原文正文…</div></div>';
+  }
+  if (r.st === 'err') {
+    return '<div class="item-art"><div class="hd">原文正文</div>' +
+      '<div class="tip">抓取失败：' + esc(r.err) + '。可点右侧「原文 ↗」跳转查看</div></div>';
+  }
+  return '<div class="item-art">' +
+    '<div class="hd">原文正文' + (r.via ? ' · ' + esc(r.via) : '') + (r.cached ? ' · 已有缓存' : '') + '</div>' +
+    '<div class="tx">' + esc(r.text) + '</div></div>';
+}
+
+/* 只补这一条的原文档位：整块重绘会打断正在读正文的人，也会抖掉滚动位置 */
+function patchArt(id) {
+  var list = document.querySelectorAll('#main li.item');
+  for (var i = 0; i < list.length; i++) {
+    if (list[i].getAttribute('data-id') !== id) continue;
+    var box = list[i].querySelector('.item-art');
+    if (box) box.outerHTML = artHtml(id);
+    return;
+  }
+}
+
+function loadArticle(it) {
+  var r = state.art[it.id];
+  if (r && (r.st === 'loading' || r.st === 'ok')) return;
+  if (_artCache[it.url]) {
+    state.art[it.id] = { st: 'ok', text: _artCache[it.url].text, via: _artCache[it.url].via, cached: true };
+    patchArt(it.id);
+    return;
+  }
+  state.art[it.id] = { st: 'loading' };
+  patchArt(it.id);
+  articleText(it.url).then(function (res) {
+    _artCache[it.url] = res;
+    state.art[it.id] = { st: 'ok', text: res.text, via: res.via };
+    patchArt(it.id);
+  }, function (err) {
+    state.art[it.id] = { st: 'err', err: errText(err) };
+    patchArt(it.id);
+  });
+}
+
+/* =========================================================
+   6. 归一化与分类
+   ========================================================= */
+function extractItems(json, src) {
+  if (!json) return [];
+  var d = (json.data !== undefined) ? json.data : json;
+  if (src.kind === 'news') {
+    var arr = (d && Array.isArray(d.news)) ? d.news : (Array.isArray(d) ? d : []);
+    var commonLink = (d && d.link) ? d.link : '';
+    return arr.map(function (t) {
+      if (typeof t === 'string') return { title: t, link: commonLink };
+      return t;
+    });
+  }
+  if (src.kind === 'newsItems') {
+    return (d && Array.isArray(d.news)) ? d.news : [];
+  }
+  if (Array.isArray(d)) return d;
+  if (d && Array.isArray(d.list)) return d.list;
+  if (Array.isArray(json)) return json;
+  return [];
+}
+
+function buildMeta(raw, src) {
+  var parts = [];
+  var who = firstStr(raw.author, raw.source, raw.up_name);
+  if (who) parts.push(who);
+  var t = firstStr(raw.created, raw.event_time, raw.published_at, raw.date);
+  if (t) parts.push(t);
+  var ac = firstNum(raw.answer_cnt);
+  if (ac) parts.push(ac + ' 个回答');
+  var fc = firstNum(raw.follower_cnt);
+  if (fc) parts.push(fc + ' 关注');
+  var cc = firstNum(raw.comment_cnt);
+  if (cc) parts.push(cc + ' 评论');
+  if (src.id === 'baidu' && raw.type_desc) parts.push(raw.type_desc);
+  return parts.join(' · ');
+}
+
+function normalizeItem(raw, src, idx, isDemo) {
+  raw = raw || {};
+  var title = firstStr(raw.title, raw.name, raw.word, raw.query, raw.keyword);
+  var summary = firstStr(
+    src.summaryField ? raw[src.summaryField] : '',
+    raw.detail, raw.desc, raw.description, raw.summary, raw.excerpt, raw.text, raw.content
+  );
+  if (summary.length > 600) summary = summary.slice(0, 600) + '…';
+  var hotRaw = firstNum(raw.hot_value, raw.score, raw.hot, raw.hot_index, raw.hot_num, raw.num);
+  var hotText = hotRaw ? fmtNum(hotRaw) : firstStr(raw.hot_value_desc, raw.score_desc, raw.hot_desc, raw.hot_text);
+  var url = firstStr(raw.link, raw.url, raw.mobileUrl, raw.share_url, raw.href);
+  if (!url && src.searchUrl) url = src.searchUrl + encodeURIComponent(title);
+  var rank = firstNum(raw.rank) || (idx + 1);
+  var cat = classify(title, summary, src);
+  return {
+    id: src.id + '-' + rank + '-' + (title.slice(0, 18)),
+    sourceId: src.id,
+    rank: rank,
+    title: title,
+    hot: hotText,
+    hotRaw: hotRaw,
+    summary: summary,
+    url: url,
+    meta: buildMeta(raw, src),
+    category: cat.id,
+    demo: !!isDemo
+  };
+}
+
+var _reCache = {};
+function catReg(c) {
+  if (!_reCache[c.id]) _reCache[c.id] = new RegExp(c.kw, 'gi');
+  return _reCache[c.id];
+}
+function countHits(re, text) {
+  if (!text) return 0;
+  re.lastIndex = 0;
+  var m = text.match(re);
+  return m ? m.length : 0;
+}
+function classify(title, summary, src) {
+  var best = null, bestScore = 0;
+  for (var i = 0; i < CATEGORIES.length; i++) {
+    var c = CATEGORIES[i];
+    var re = catReg(c);
+    var score = countHits(re, title) * 3 + countHits(re, summary) * 1;
+    if (score > bestScore) { bestScore = score; best = c; }
+  }
+  if (best) return best;
+  return categoryById(src && src.fallbackCat ? src.fallbackCat : 'society') || CATEGORIES[6];
+}
+
+function sampleToRaw(src) {
+  var arr = SAMPLE_RAW[src.id] || [];
+  return arr.map(function (t) {
+    return { title: t[0], hot_value: t[1], detail: t[2], meta0: t[3], __meta: t[3] };
+  });
+}
+
+/* =========================================================
+   7. 抓取主流程
+   ========================================================= */
+function demoItems(src, limit) {
+  return sampleToRaw(src).slice(0, limit).map(function (x, i) {
+    var it = normalizeItem(x, src, i, true);
+    it.meta = firstStr(x.__meta, it.meta);
+    return it;
+  });
+}
+
+/* 汇总各平台分桶结果，并标记全局「重点条目」 */
+function rebuildItems(buckets) {
+  var all = [];
+  for (var k in buckets) { if (buckets[k] && buckets[k].length) all = all.concat(buckets[k]); }
+  all.sort(function (a, b) { return (b.hotRaw || 0) - (a.hotRaw || 0); });
+  var topIds = {};
+  for (var i = 0; i < Math.min(15, all.length); i++) {
+    if (all[i].hotRaw > 0) topIds[all[i].id] = true;
+  }
+  all.forEach(function (it) { it.emphasis = !!topIds[it.id]; });
+  return all;
+}
+
+function setRefreshBtn(loading, txt) {
+  var btn = $('btnRefresh');
+  if (!btn) return;
+  btn.disabled = !!loading;
+  btn.innerHTML = loading ? '<span class="rot">↻</span> ' + (txt || '抓取中') : '&#8635; 一键刷新';
+}
+
+function refresh(silent) {
+  if (state.loading) return Promise.resolve();
+  var gap = Date.now() - state.updatedAt;
+  if (!silent && state.updatedAt && gap < 8000) {
+    toast('刚刚已刷新，' + Math.ceil((8000 - gap) / 1000) + ' 秒后可再试');
+    return Promise.resolve();
+  }
+  state.loading = true;
+  renderHeader();
+  setRefreshBtn(true, '准备中');
+
+  var sources = activeSources();
+  var limit = Number(settings.perSourceLimit) || 15;
+  var buckets = {};
+  var status = {};
+
+  /* 先用内置示例数据占位：页面立刻可读，随后每个平台抓到实时数据就地替换，
+     避免「等全部平台抓完才出内容」导致长时间白屏 */
+  sources.forEach(function (src) {
+    buckets[src.id] = demoItems(src, limit);
+    status[src.id] = { ok: false, demo: true, pending: true, count: buckets[src.id].length };
+  });
+  state.status = status;
+  state.items = rebuildItems(buckets);
+  state.progress = { done: 0, total: sources.length };
+  renderAll();
+  setRefreshBtn(true, '抓取中 0/' + sources.length);
+
+  var failed = [];
+
+  function fetchOne(src, round) {
+    /* 部分上游（如知乎）偶发返回 code 200 但列表为空，原地再试一次基本能恢复 */
+    var maxTry = round === 0 ? 2 : 1;
+
+    function attemptOnce(n) {
+      return requestSource(src).then(function (r) {
+        var raw = [];
+        if (r && r.ok) {
+          try { raw = extractItems(r.data, src); } catch (e) { raw = []; }
+        }
+        raw = (raw || []).filter(function (x) {
+          return firstStr(x && x.title, x && x.name, x && x.word, x && x.query);
+        });
+        if (r && r.ok && !raw.length && n < maxTry) {
+          return sleep(600).then(function () { return attemptOnce(n + 1); });
+        }
+        return { r: r, raw: raw };
+      });
+    }
+
+    return attemptOnce(1).then(function (res) {
+      var r = res.r, raw = res.raw;
+      if (raw.length) {
+        buckets[src.id] = raw.slice(0, limit).map(function (x, i) {
+          return normalizeItem(x, src, i, false);
+        });
+        status[src.id] = { ok: true, count: buckets[src.id].length, via: r.via };
+      } else {
+        /* 空列表已原地重试过，不再进入补抓轮，避免无谓拖延 */
+        status[src.id] = {
+          ok: false, demo: true, count: buckets[src.id].length,
+          error: (r && r.error) || '接口返回空列表'
+        };
+      }
+    }, function (err) {
+      /* 只有「等一下就好」的失败（限流 / 超时 / 断网）才值得补抓，服务端 500 直接跳过 */
+      if (round === 0 && isRetryable(err)) failed.push(src);
+      status[src.id] = { ok: false, demo: true, count: buckets[src.id].length, error: errText(err) };
+    }).then(function () {
+      state.progress.done++;
+      state.items = rebuildItems(buckets);
+      renderAll();
+      setRefreshBtn(true, (round === 0 ? '抓取中 ' : '重试中 ') + state.progress.done + '/' + state.progress.total);
+    });
+  }
+
+  /* 平台之间串行抓取（出网间隔由 netGate 统一控制），每完成一个立即重绘 */
+  function runRound(list, round) {
+    var seq = Promise.resolve();
+    list.forEach(function (src) {
+      seq = seq.then(function () { return fetchOne(src, round); });
+    });
+    return seq;
+  }
+
+  return runRound(sources, 0).then(function () {
+    /* 第一轮失败的平台再补抓一轮：此时突发已过，成功率明显更高 */
+    if (!failed.length) return null;
+    var retryList = failed.slice(0, 8);
+    failed = [];
+    state.progress.total += retryList.length;
+    setRefreshBtn(true, '重试中 ' + state.progress.done + '/' + state.progress.total);
+    return runRound(retryList, 1);
+  }).then(function () {
+    var okCount = 0, demoCount = 0;
+    Object.keys(status).forEach(function (k) {
+      delete status[k].pending;
+      if (status[k].ok) okCount++; else demoCount++;
+    });
+    state.mode = okCount === 0 ? 'demo' : (demoCount === 0 ? 'live' : 'mixed');
+    state.updatedAt = Date.now();
+    state.booting = false;
+    state.loading = false;
+    saveStore();
+    renderAll();
+    setRefreshBtn(false);
+
+    if (!silent) {
+      if (state.mode === 'live') toast('已更新 ' + state.items.length + ' 条实时热搜');
+      else if (state.mode === 'mixed') toast('已更新：' + okCount + ' 个平台实时，' + demoCount + ' 个降级示例数据');
+      else toast('接口暂不可用，当前为内置示例数据');
+    }
+  }, function () {
+    state.loading = false;
+    setRefreshBtn(false);
+    renderAll();
+    toast('抓取过程出现异常，请稍后重试');
+  });
+}
+
+/* =========================================================
+   8. 过滤
+   ========================================================= */
+function visibleItems() {
+  var q = state.query.trim().toLowerCase();
+  return state.items.filter(function (it) {
+    if (state.fSource !== 'all' && it.sourceId !== state.fSource) return false;
+    if (state.fCategory !== 'all' && it.category !== state.fCategory) return false;
+    if (q) {
+      var hay = (it.title + ' ' + (it.summary || '') + ' ' + (it.meta || '')).toLowerCase();
+      if (hay.indexOf(q) < 0) return false;
+    }
+    return true;
+  });
+}
+function normKey(t) {
+  return String(t || '').replace(/[\s\p{P}]/gu, '').slice(0, 26);
+}
+function topFlash(items, n) {
+  var seen = {}, out = [];
+  for (var i = 0; i < items.length; i++) {
+    var it = items[i];
+    if (!it.hotRaw) continue;
+    var k = normKey(it.title);
+    if (seen[k]) continue;
+    seen[k] = 1;
+    out.push(it);
+    if (out.length >= n) break;
+  }
+  return out;
+}
+
+/* =========================================================
+   9. 渲染
+   ========================================================= */
+function renderHeader() {
+  var now = new Date();
+  $('dateText').textContent = fmtDate(now) + ' ' + WEEK[now.getDay()];
+  $('updateText').textContent = state.updatedAt ? (fmtTime(new Date(state.updatedAt)) + '（' + ago(state.updatedAt) + '）') : '尚未获取';
+  $('countText').textContent = state.items.length + ' 条';
+
+  var on = activeSources();
+  var ok = 0;
+  on.forEach(function (s) { if (state.status[s.id] && state.status[s.id].ok) ok++; });
+  $('srcText').textContent = ok + ' / ' + on.length + ' 个数据源在线';
+
+  var b = $('stateBadge');
+  var note = $('sourceNote');
+  if (state.loading) {
+    var pr = state.progress || { done: 0, total: 0 };
+    b.className = 'state-badge state-loading';
+    b.innerHTML = '<span class="rot">&#8635;</span> 正在抓取 ' + pr.done + '/' + pr.total;
+    note.innerHTML = '公开接口限流较严（约每 2 秒 1 次请求），因此<b>逐个平台串行抓取</b>，抓到即更新界面；尚未抓到的平台先显示<strong>示例数据</strong>。';
+  } else if (state.mode === 'live') {
+    b.className = 'state-badge state-live';
+    b.textContent = '● 实时数据';
+    note.innerHTML = '各平台公开热榜接口（' + esc(String(settings.apiBase)) + '）实时抓取，摘要内联展示，无需跳转。';
+  } else if (state.mode === 'mixed') {
+    b.className = 'state-badge state-mixed';
+    b.textContent = ' 部分示例数据';
+    note.innerHTML = '部分平台接口不可用，已自动降级为<strong>示例数据</strong>（卡片上有红色「示例数据」标记）。';
+  } else {
+    b.className = 'state-badge state-demo';
+    b.textContent = '▲ 示例数据';
+    note.innerHTML = '当前展示的是内置<strong>示例数据</strong>（接口不可用或尚未抓取）。点「一键刷新」重试真实接口。';
+  }
+  if (state.mode === 'live' && state.updatedAt) {
+    b.textContent = '● 实时数据';
+  }
+}
+
+function renderChips() {
+  var pc = $('platformChips');
+  var html = '<span class="filters-label">平台</span>';
+  html += '<button class="chip' + (state.fSource === 'all' ? ' on' : '') + '" data-fs="all">全部</button>';
+  activeSources().forEach(function (s) {
+    var st = state.status[s.id];
+    var dot = st ? (st.ok ? '' : '') : '';
+    html += '<button class="chip' + (state.fSource === s.id ? ' on' : '') + '" data-fs="' + s.id + '">' +
+      '<span class="dot" style="background:' + s.color + '"></span>' + esc(s.short) + ' ' + dot + '</button>';
+  });
+  pc.innerHTML = html;
+
+  var cc = $('categoryChips');
+  var c2 = '<span class="filters-label">分类</span>';
+  c2 += '<button class="chip' + (state.fCategory === 'all' ? ' on' : '') + '" data-fc="all">全部</button>';
+  CATEGORIES.forEach(function (c) {
+    var n = state.items.filter(function (it) { return it.category === c.id; }).length;
+    c2 += '<button class="chip' + (state.fCategory === c.id ? ' on' : '') + '" data-fc="' + c.id + '">' +
+      c.icon + ' ' + esc(c.name) + (n ? ' <span style="opacity:.6">' + n + '</span>' : '') + '</button>';
+  });
+  cc.innerHTML = c2;
+}
+
+function renderFlash() {
+  var items = topFlash(visibleItems(), 10);
+  var ul = $('flashList');
+  if (!items.length) {
+    ul.innerHTML = '<li style="color:var(--ink-3)">暂无数据，请点击「一键刷新」。</li>';
+    return;
+  }
+  ul.innerHTML = items.map(function (it, i) {
+    var s = sourceById(it.sourceId) || { short: '未知' };
+    var hot = it.hot ? '<span class="hot"></span>' : '';
+    return '<li><span class="idx">' + (i + 1) + '</span>' +
+      '<span class="tt">' + esc(it.title) + '</span>' +
+      (it.hot ? '<span class="hot">' + esc(it.hot) + '</span>' : '') +
+      '<span class="src">' + esc(s.short) + '</span></li>';
+  }).join('');
+}
+
+function itemHtml(it) {
+  var s = sourceById(it.sourceId) || { short: '未知', color: '#888' };
+  var c = categoryById(it.category) || { name: '未分类', icon: '📌', color: '#888' };
+  var isOpen = !!state.expanded[it.id];
+  var rankCls = it.rank <= 3 ? ' rank-' + it.rank : '';
+  var sumCls = 'item-sum' + (it.summary ? (isOpen ? ' open' : '') : ' none');
+  var sumTxt = it.summary ? esc(it.summary) : '该数据源仅提供标题与热度值，未提供正文摘要，点「展开全文」可在本页直接抓取原文。';
+  var demoTag = it.demo ? '<span class="tag" style="--tg:#9c2b1f">示例数据</span>' : '';
+  var canOpen = !!it.summary || !!it.url;
+  return '<li class="item' + (it.emphasis ? ' emphasis' : '') + '" data-id="' + esc(it.id) + '">' +
+    '<span class="rank' + rankCls + '">' + it.rank + '</span>' +
+    '<div class="item-main">' +
+      '<div class="item-title">' + esc(it.title) + '</div>' +
+      '<div class="item-meta">' +
+        (it.hot ? '<span class="hot">' + esc(it.hot) + '</span>' : '') +
+        '<span class="tag" style="--tg:' + s.color + '">' + esc(s.short) + '</span>' +
+        '<span class="tag plain">' + c.icon + ' ' + esc(c.name) + '</span>' +
+        (it.meta ? '<span>' + esc(it.meta) + '</span>' : '') +
+        demoTag +
+      '</div>' +
+      '<div class="' + sumCls + '">' + sumTxt + '</div>' +
+      (isOpen && it.url ? artHtml(it.id) : '') +
+      '<div class="item-acts">' +
+        (canOpen ? '<button class="mini" data-act="toggle">' + (isOpen ? '收起全文' : '展开全文') + '</button>' : '') +
+        '<button class="mini" data-act="copy">复制此条</button>' +
+        (it.url ? '<a class="mini" href="' + esc(it.url) + '" target="_blank" rel="noopener noreferrer">原文 ↗</a>' : '') +
+      '</div>' +
+    '</div>' +
+  '</li>';
+}
+
+/* 通用卡片 */
+function cardHtml(opts) {
+  var open = !!state.moreOpen[opts.key];
+  var limit = 8;
+  var list = opts.items || [];
+  var show = open ? list : list.slice(0, limit);
+  var body = show.length
+    ? '<ul class="list">' + show.map(itemHtml).join('') + '</ul>'
+    : '<div class="empty">当前筛选条件下暂无条目</div>';
+  var more = list.length > limit
+    ? '<button class="more" data-more="' + esc(opts.key) + '">' + (open ? '收起 ▴' : '展开全部 ' + list.length + ' 条 ▾') + '</button>'
+    : '';
+  return '<section class="card" style="--c:' + opts.color + '">' +
+    '<div class="card-head">' +
+      '<div class="ico">' + (opts.icon || '📌') + '</div>' +
+      '<div class="nm">' + esc(opts.name) + '<span class="cnt">' + list.length + ' 条</span></div>' +
+      (opts.statusHtml || '') +
+    '</div>' +
+    '<div class="card-body">' + body + '</div>' +
+    more +
+    (opts.footNote ? '<div class="card-foot"><span>' + opts.footNote + '</span></div>' : '') +
+  '</section>';
+}
+
+function badgeFor(s) {
+  var st = state.status[s.id];
+  if (st && st.pending) return '<span class="badge b-wait"><span class="rot">↻</span> 抓取中</span>';
+  if (st && st.ok) return '<span class="badge b-ok">实时</span>';
+  if (st && st.demo) return '<span class="badge b-demo">示例数据</span>';
+  return '<span class="badge b-err">未获取</span>';
+}
+
+function renderMain() {
+  var items = visibleItems();
+  var main = $('main');
+  if (!items.length) {
+    main.innerHTML = '<section class="section"><div class="card"><div class="empty">' +
+      (state.items.length ? '没有符合筛选条件的条目，换个关键词或点「全部」试试。'
+                         : '还没有数据，点上方「↻ 一键刷新」获取今日热搜。') +
+      '</div></div></section>';
+    return;
+  }
+  var html = '', i, g;
+
+  if (state.view === 'category') {
+    html = '<section class="section"><h2 class="section-title">按内容分类 <span class="sub">共 ' + items.length + ' 条</span></h2><div class="grid">';
+    var groups = [];
+    for (i = 0; i < CATEGORIES.length; i++) {
+      var c = CATEGORIES[i];
+      var list = items.filter(function (it) { return it.category === c.id; });
+      if (list.length) groups.push({ c: c, list: list });
+    }
+    for (i = 0; i < groups.length; i++) {
+      g = groups[i];
+      g.list.sort(function (a, b) { return (b.hotRaw || 0) - (a.hotRaw || 0); });
+      var demoN = g.list.filter(function (x) { return x.demo; }).length;
+      var pendN = g.list.filter(function (x) {
+        var st2 = state.status[x.sourceId];
+        return x.demo && st2 && st2.pending;
+      }).length;
+      var badge = pendN
+        ? '<span class="badge b-wait"><span class="rot">↻</span> 抓取中</span>'
+        : (demoN ? '<span class="badge b-demo">含示例 ' + demoN + ' 条</span>'
+                 : '<span class="badge b-ok">实时</span>');
+      html += cardHtml({
+        key: 'cat-' + g.c.id, name: g.c.name, icon: g.c.icon, color: g.c.color, items: g.list,
+        statusHtml: badge,
+        footNote: '按热度排序 · 展开全文可在本页直接读原文正文'
+      });
+    }
+    html += '</div></section>';
+  } else {
+    html = '<section class="section"><h2 class="section-title">按平台分区 <span class="sub">共 ' + items.length + ' 条</span></h2><div class="grid">';
+    var srcs = activeSources();
+    for (i = 0; i < srcs.length; i++) {
+      var s = srcs[i];
+      var l2 = items.filter((function (id) {
+        return function (it) { return it.sourceId === id; };
+      })(s.id));
+      if (!l2.length) continue;
+      l2.sort(function (a, b) { return a.rank - b.rank; });
+      var st = state.status[s.id];
+      html += cardHtml({
+        key: 'src-' + s.id, name: s.name, icon: s.icon, color: s.color, items: l2,
+        statusHtml: badgeFor(s),
+        footNote: '接口：' + esc(s.path) + (st && !st.ok && st.error ? ' · ' + esc(st.error) : '')
+      });
+    }
+    html += '</div></section>';
+  }
+  main.innerHTML = html;
+}
+
+function renderStatus() {
+  var on = activeSources();
+  var rows = on.map(function (s) {
+    var st = state.status[s.id];
+    var okTxt, cls;
+    if (!st) { okTxt = '未获取'; cls = 'b-err'; }
+    else if (st.pending) { okTxt = '抓取中…'; cls = 'b-wait'; }
+    else if (st.ok) { okTxt = '正常（' + esc(st.via || '直连') + '）'; cls = 'b-ok'; }
+    else { okTxt = '降级为示例数据' + (st.error ? '（' + esc(st.error) + '）' : ''); cls = 'b-demo'; }
+    return '<tr><td><span class="dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' +
+      s.color + ';margin-right:6px"></span>' + esc(s.name) + '</td>' +
+      '<td><code>' + esc(s.path) + '</code></td>' +
+      '<td>' + (st ? st.count + ' 条' : '--') + '</td>' +
+      '<td><span class="badge ' + cls + '">' + okTxt + '</span></td></tr>';
+  }).join('');
+  $('srcStatus').innerHTML =
+    '<div class="card" style="--c:#888"><div class="card-body" style="padding:10px 12px">' +
+    '<table class="src-table"><thead><tr><th>数据源</th><th>接口</th><th>条目</th><th>状态</th></tr></thead>' +
+    '<tbody>' + rows + '</tbody></table>' +
+    '<div style="margin-top:8px;font-size:12px;color:var(--ink-3)">更新时间：' +
+    (state.updatedAt ? esc(fmtTime(new Date(state.updatedAt))) : '--') +
+    ' · 页面版本 v' + APP_VERSION + '</div>' +
+    '</div></div>';
+}
+
+function renderAll() {
+  renderHeader();
+  renderChips();
+  renderFlash();
+  renderMain();
+  renderStatus();
+}
+
+/* =========================================================
+   10. 复制与导出
+   ========================================================= */
+function copyText(text, tip) {
+  function done() { toast(tip || '已复制到剪贴板'); }
+  function fallback() {
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, ta.value.length);
+      var ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      if (ok) done(); else toast('复制失败，请手动选择文本复制');
+    } catch (e) { toast('复制失败，请手动选择文本复制'); }
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext !== false) {
+    navigator.clipboard.writeText(text).then(done, fallback);
+  } else { fallback(); }
+}
+
+function itemToText(it) {
+  var s = sourceById(it.sourceId) || { short: '未知' };
+  var c = categoryById(it.category) || { name: '未分类' };
+  var out = '【' + s.short + ' #' + it.rank + '】' + it.title;
+  if (it.hot) out += '（热度 ' + it.hot + '）';
+  out += '\n分类：' + c.name;
+  if (it.meta) out += ' · ' + it.meta;
+  if (it.demo) out += ' · 示例数据';
+  if (it.summary) out += '\n摘要：' + it.summary;
+  else out += '\n摘要：该数据源未提供正文摘要';
+  if (it.url) out += '\n原文：' + it.url;
+  return out;
+}
+
+function buildReportText() {
+  var now = new Date();
+  var L = [];
+  var line = '════════════════════════════════════';
+  L.push(line);
+  L.push('　　每日热搜早报');
+  L.push('　　' + fmtDate(now) + ' ' + WEEK[now.getDay()]);
+  L.push('　　最后更新：' + (state.updatedAt ? fmtTime(new Date(state.updatedAt)) : '尚未获取'));
+  L.push('　　数据来源：' + (state.mode === 'live' ? '各平台公开热榜接口（实时）'
+    : state.mode === 'mixed' ? '公开热榜接口 + 内置示例数据（部分降级）'
+    : '内置示例数据（接口不可用）'));
+  L.push('　　条目总数：' + state.items.length);
+  L.push(line);
+
+  var items = visibleItems();
+  var flashes = topFlash(items, 10);
+  if (flashes.length) {
+    L.push('');
+    L.push('【今日要闻 · 跨平台热度 Top ' + flashes.length + '】');
+    flashes.forEach(function (it, i) {
+      var s = sourceById(it.sourceId) || { short: '未知' };
+      L.push(' ' + pad(i + 1) + '. ' + it.title + '　（' + s.short + (it.hot ? ' · ' + it.hot : '') + '）');
+    });
+  }
+
+  if (state.view === 'category') {
+    CATEGORIES.forEach(function (c) {
+      var list = items.filter(function (it) { return it.category === c.id; });
+      if (!list.length) return;
+      list.sort(function (a, b) { return (b.hotRaw || 0) - (a.hotRaw || 0); });
+      L.push('');
+      L.push('━━━ ' + c.name + '（' + list.length + ' 条）━━━');
+      list.forEach(function (it) {
+        var s = sourceById(it.sourceId) || { short: '未知' };
+        L.push((it.rank <= 3 ? '★ ' : '') + it.rank + '. ' + it.title +
+          '　[' + s.short + (it.hot ? ' · ' + it.hot : '') + ']' + (it.demo ? '（示例）' : ''));
+        if (it.summary) L.push('   摘要：' + it.summary);
+        if (it.meta) L.push('   ' + it.meta);
+        if (it.url) L.push('   原文：' + it.url);
+      });
+    });
+  } else {
+    activeSources().forEach(function (s) {
+      var list = items.filter(function (it) { return it.sourceId === s.id; });
+      if (!list.length) return;
+      list.sort(function (a, b) { return a.rank - b.rank; });
+      var st = state.status[s.id];
+      L.push('');
+      L.push('━━━ ' + s.name + '（' + list.length + ' 条' + (st && !st.ok ? ' · 示例数据' : '') + '）━━━');
+      list.forEach(function (it) {
+        L.push(it.rank + '. ' + it.title + (it.hot ? '　[' + it.hot + ']' : ''));
+        if (it.summary) L.push('   摘要：' + it.summary);
+        if (it.meta) L.push('   ' + it.meta);
+        if (it.url) L.push('   原文：' + it.url);
+      });
+    });
+  }
+
+  L.push('');
+  L.push(line);
+  L.push('由「每日热搜早报」生成 · 数据版权归原平台所有，仅供个人浏览');
+  L.push(line);
+  return L.join('\n');
+}
+
+function download(filename, text, mime) {
+  try {
+    var blob = new Blob(['\ufeff' + text], { type: (mime || 'text/plain') + ';charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () {
+      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    }, 600);
+    toast('已导出：' + filename);
+  } catch (e) {
+    toast('导出失败，可改用「复制早报」');
+  }
+}
+
+/* =========================================================
+   11. 设置
+   ========================================================= */
+function renderSettingsForm() {
+  $('setApiBase').value = settings.apiBase;
+  $('setProxyMode').value = settings.proxyMode;
+  $('setProxy').value = settings.proxy;
+  $('setLimit').value = settings.perSourceLimit;
+  $('setCache').value = settings.cacheMinutes;
+  var box = $('setSources');
+  box.innerHTML = SOURCES.map(function (s) {
+    return '<label class="sw"><input type="checkbox" data-sid="' + s.id + '"' +
+      (isSourceOn(s.id) ? ' checked' : '') + '><span>' + (s.icon || '📌') + ' ' + esc(s.short) + '</span></label>';
+  }).join('');
+}
+function openSettings() {
+  renderSettingsForm();
+  $('mask').classList.add('on');
+}
+function closeSettings() { $('mask').classList.remove('on'); }
+function readSettingsForm() {
+  var next = clone(settings);
+  next.apiBase = String($('setApiBase').value || '').trim() || DEFAULT_SETTINGS.apiBase;
+  next.proxyMode = $('setProxyMode').value;
+  next.proxy = String($('setProxy').value || '').trim();
+  next.perSourceLimit = Math.min(50, Math.max(5, Number($('setLimit').value) || 15));
+  next.cacheMinutes = Math.min(720, Math.max(1, Number($('setCache').value) || 30));
+  var enabled = {};
+  var boxes = $('setSources').querySelectorAll('input[data-sid]');
+  for (var i = 0; i < boxes.length; i++) {
+    enabled[boxes[i].getAttribute('data-sid')] = boxes[i].checked;
+  }
+  next.enabled = enabled;
+  settings = mergeSettings(next);
+  saveStore();
+  return enabled;
+}
+
+/* =========================================================
+   12. 事件绑定
+   ========================================================= */
+function bindEvents() {
+  $('btnRefresh').addEventListener('click', function () { refresh(false); });
+
+  $('viewTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-view]');
+    if (!b) return;
+    state.view = b.getAttribute('data-view');
+    var all = $('viewTabs').querySelectorAll('button');
+    for (var i = 0; i < all.length; i++) all[i].classList.toggle('on', all[i] === b);
+    state.moreOpen = {};
+    renderMain();
+  });
+
+  $('platformChips').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-fs]');
+    if (!b) return;
+    state.fSource = b.getAttribute('data-fs');
+    renderChips(); renderFlash(); renderMain();
+  });
+  $('categoryChips').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-fc]');
+    if (!b) return;
+    state.fCategory = b.getAttribute('data-fc');
+    renderChips(); renderFlash(); renderMain();
+  });
+
+  /* 搜索：兼容中文输入法（组合期间不重绘） */
+  var composing = false, deb = null;
+  var q = $('q');
+  function applySearch() {
+    var v = q.value;
+    state.query = v;
+    $('qClear').classList.toggle('on', !!v);
+    if (deb) clearTimeout(deb);
+    deb = setTimeout(function () { renderFlash(); renderMain(); }, 180);
+  }
+  q.addEventListener('compositionstart', function () { composing = true; });
+  q.addEventListener('compositionend', function () { composing = false; applySearch(); });
+  q.addEventListener('input', function () { if (!composing) applySearch(); });
+  $('qClear').addEventListener('click', function () {
+    q.value = ''; q.focus(); applySearch();
+  });
+
+  /* 条目区域：复制 / 展开摘要 / 展开更多 */
+  $('main').addEventListener('click', function (e) {
+    var moreBtn = e.target.closest('button[data-more]');
+    if (moreBtn) {
+      var k = moreBtn.getAttribute('data-more');
+      state.moreOpen[k] = !state.moreOpen[k];
+      renderMain();
+      return;
+    }
+    var actBtn = e.target.closest('button[data-act]');
+    if (!actBtn) return;
+    var li = actBtn.closest('.item');
+    if (!li) return;
+    var id = li.getAttribute('data-id');
+    var it = null;
+    for (var i = 0; i < state.items.length; i++) if (state.items[i].id === id) { it = state.items[i]; break; }
+    if (!it) return;
+    var act = actBtn.getAttribute('data-act');
+    if (act === 'copy') {
+      copyText(itemToText(it), '已复制该条热搜');
+    } else if (act === 'toggle') {
+      var willOpen = !state.expanded[id];
+      state.expanded[id] = willOpen;
+      renderMain();
+      /* 展开后才去抓原文：先渲染出占位块，抓完只补这一条，不整块重绘 */
+      if (willOpen && it.url) loadArticle(it);
+    }
+  });
+
+  /* 顶部工具按钮 */
+  $('btnCopyAll').addEventListener('click', function () {
+    if (!state.items.length) return toast('暂无数据可复制');
+    copyText(buildReportText(), '整份早报已复制');
+  });
+  $('btnTxt').addEventListener('click', function () {
+    if (!state.items.length) return toast('暂无数据可导出');
+    download('每日热搜早报_' + fmtDate(new Date()) + '.txt', buildReportText(), 'text/plain');
+  });
+  $('btnJson').addEventListener('click', function () {
+    if (!state.items.length) return toast('暂无数据可导出');
+    var payload = {
+      app: '每日热搜早报',
+      version: APP_VERSION,
+      exportedAt: fmtTime(new Date()),
+      date: fmtDate(new Date()),
+      mode: state.mode,
+      sourceNote: state.mode === 'live' ? '实时数据（公开热榜接口）' : (state.mode === 'mixed' ? '部分示例数据' : '内置示例数据'),
+      updatedAt: state.updatedAt,
+      settings: { apiBase: settings.apiBase, perSourceLimit: settings.perSourceLimit },
+      sources: activeSources().map(function (s) {
+        var st = state.status[s.id] || {};
+        return { id: s.id, name: s.name, path: s.path, ok: !!st.ok, count: st.count || 0 };
+      }),
+      items: visibleItems().map(function (it) {
+        return {
+          source: (sourceById(it.sourceId) || {}).short || '',
+          category: (categoryById(it.category) || {}).name || '',
+          rank: it.rank, title: it.title, hot: it.hot,
+          summary: it.summary, meta: it.meta, url: it.url, demo: !!it.demo
+        };
+      })
+    };
+    download('每日热搜早报_' + fmtDate(new Date()) + '.json', JSON.stringify(payload, null, 2), 'application/json');
+  });
+
+  /* 设置弹窗 */
+  $('btnSettings').addEventListener('click', openSettings);
+  $('btnCloseSet').addEventListener('click', closeSettings);
+  $('mask').addEventListener('click', function (e) { if (e.target === $('mask')) closeSettings(); });
+  $('btnSaveSet').addEventListener('click', function () {
+    readSettingsForm();
+    closeSettings();
+    toast('设置已保存，正在刷新…');
+    state.moreOpen = {};
+    state.fSource = 'all';
+    renderChips();
+    refresh(false);
+  });
+  $('btnReset').addEventListener('click', function () {
+    settings = clone(DEFAULT_SETTINGS);
+    saveStore();
+    renderSettingsForm();
+    toast('已恢复默认设置');
+  });
+  $('btnClearCache').addEventListener('click', function () {
+    stDel(STORAGE_KEY);
+    state.items = []; state.status = {}; state.updatedAt = 0; state.mode = 'demo';
+    renderAll();
+    toast('缓存已清空');
+  });
+
+  /* 快捷键 */
+  document.addEventListener('keydown', function (e) {
+    var tag = (e.target && e.target.tagName) || '';
+    var typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+    if (e.key === 'Escape') {
+      if ($('mask').classList.contains('on')) { closeSettings(); return; }
+      if (state.query) { $('q').value = ''; state.query = ''; $('qClear').classList.remove('on'); renderFlash(); renderMain(); }
+      return;
+    }
+    if (typing) return;
+    if (e.key === 'r' || e.key === 'R') { refresh(false); }
+    if (e.key === '/') { e.preventDefault(); $('q').focus(); }
+  });
+
+  /* 切回页面时，若缓存过期则自动刷新 */
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') maybeAutoRefresh();
+  });
+}
+
+function maybeAutoRefresh() {
+  if (!settings.autoRefresh) return;
+  var stale = !state.updatedAt || (Date.now() - state.updatedAt) > settings.cacheMinutes * 60 * 1000;
+  if (stale && !state.loading) refresh(true);
+}
+
+/* =========================================================
+   13. 启动
+   ========================================================= */
+function boot() {
+  bindEvents();
+  var hasCache = loadStore();
+  if (hasCache) {
+    state.booting = false;
+    renderAll();
+    toast('已载入缓存（' + ago(state.updatedAt) + '）');
+  } else {
+    state.mode = 'demo';
+    renderAll();
+  }
+  renderHeader();
+  var stale = !state.updatedAt || (Date.now() - state.updatedAt) > settings.cacheMinutes * 60 * 1000;
+  if (settings.autoRefresh && stale) {
+    refresh(hasCache);
+  } else if (!hasCache) {
+    refresh(true);
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}
+
+})();
+</script>
+</body>
+</html>
