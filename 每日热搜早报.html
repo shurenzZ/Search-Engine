@@ -2493,6 +2493,10 @@ function renderAll() {
    ========================================================= */
 function copyText(text, tip) {
   function done() { toast(tip || '已复制到剪贴板'); }
+  function fail(why) {
+    /* 窗口失焦时两条通道都会被拒（NotAllowedError），这时导出 TXT 比反复点更实用 */
+    toast('复制失败' + (why ? '：' + why : '') + '。点一下页面再试，或改用「⬇ TXT」导出');
+  }
   function fallback() {
     try {
       var ta = document.createElement('textarea');
@@ -2505,11 +2509,15 @@ function copyText(text, tip) {
       ta.setSelectionRange(0, ta.value.length);
       var ok = document.execCommand('copy');
       document.body.removeChild(ta);
-      if (ok) done(); else toast('复制失败，请手动选择文本复制');
-    } catch (e) { toast('复制失败，请手动选择文本复制'); }
+      if (ok) done(); else fail(document.hasFocus() ? '' : '窗口未获得焦点');
+    } catch (e) { fail(e && e.name ? e.name : String((e && e.message) || '')); }
   }
   if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext !== false) {
-    navigator.clipboard.writeText(text).then(done, fallback);
+    navigator.clipboard.writeText(text).then(done, function (err) {
+      /* 失焦类拒绝重试也没用，直接给出原因；其余异常退回 execCommand */
+      if (err && err.name === 'NotAllowedError') { fail('窗口未获得焦点'); return; }
+      fallback();
+    });
   } else { fallback(); }
 }
 
