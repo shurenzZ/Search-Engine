@@ -1,0 +1,76 @@
+{
+ "schema": 1,
+ "hash": "91212c3e062ba577",
+ "generatedAt": "2026-10-09T09:44:44.707Z",
+ "generatedAtMs": 1791539084707,
+ "itemCount": 99,
+ "okCount": 9,
+ "sources": [
+  {
+   "id": "hf",
+   "ok": false,
+   "count": 0,
+   "error": "fetch failed（UND_ERR_CONNECT_TIMEOUT）"
+  },
+  {
+   "id": "arxiv",
+   "ok": true,
+   "count": 16,
+   "error": ""
+  },
+  {
+   "id": "openai",
+   "ok": true,
+   "count": 12,
+   "error": ""
+  },
+  {
+   "id": "googleai",
+   "ok": true,
+   "count": 3,
+   "error": ""
+  },
+  {
+   "id": "deepmind",
+   "ok": true,
+   "count": 3,
+   "error": ""
+  },
+  {
+   "id": "qbitai",
+   "ok": true,
+   "count": 10,
+   "error": ""
+  },
+  {
+   "id": "infoq",
+   "ok": true,
+   "count": 16,
+   "error": ""
+  },
+  {
+   "id": "sspai",
+   "ok": true,
+   "count": 10,
+   "error": ""
+  },
+  {
+   "id": "juejin",
+   "ok": true,
+   "count": 20,
+   "error": ""
+  },
+  {
+   "id": "v2ex",
+   "ok": false,
+   "count": 0,
+   "error": "fetch failed（UND_ERR_CONNECT_TIMEOUT）"
+  },
+  {
+   "id": "ghtrend",
+   "ok": true,
+   "count": 9,
+   "error": ""
+  }
+ ]
+}
