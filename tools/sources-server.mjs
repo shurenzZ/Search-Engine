@@ -101,14 +101,18 @@ export const SERVER_SOURCES = [
     id: 'jqzx', name: '机器之心', short: '机器之心', icon: '', color: '#e0653a',
     fallbackCat: 'ai', max: 16, maxAgeH: 72,
     async run() {
+      /* Actions 上实测：q=site:jiqizhixin.com 返回 0 条，Google News 对中文站的
+         site: 限定基本不给结果；改用品牌词查询，再按「标题 - 机器之心」的来源过滤 */
       const xml = await getText('https://news.google.com/rss/search?q=' +
-        encodeURIComponent('site:jiqizhixin.com') + '&hl=zh-CN&gl=CN&ceid=CN:zh-Hans');
-      return parseFeed(xml).map(function (x) {
-        return {
-          title: clean(String(x.title || '').replace(/\s*[-–—]\s*机器之心\s*$/, ''), 200),
-          url: x.url, summary: x.summary, ts: x.ts, hotRaw: 0, hotText: '', tags: ['报道']
-        };
-      });
+        encodeURIComponent('"机器之心"') + '&hl=zh-CN&gl=CN&ceid=CN:zh-Hans');
+      return parseFeed(xml)
+        .filter(function (x) { return /机器之心\s*$/.test(x.title); })
+        .map(function (x) {
+          return {
+            title: clean(String(x.title || '').replace(/\s*[-–—]\s*机器之心\s*$/, ''), 200),
+            url: x.url, summary: x.summary, ts: x.ts, hotRaw: 0, hotText: '', tags: ['报道']
+          };
+        });
     }
   },
   {
