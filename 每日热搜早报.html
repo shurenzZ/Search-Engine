@@ -108,8 +108,16 @@ input,select{font-family:inherit;font-size:inherit;color:inherit}
 .btn.primary:hover{background:#000;color:#fff}
 .btn.ghost{background:transparent}
 .btn[disabled]{opacity:.5;cursor:not-allowed}
-.chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none}
-.chips::-webkit-scrollbar{display:none}
+.chips{
+  display:flex;gap:6px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:thin;
+  scrollbar-color:var(--line-2) transparent;cursor:grab;overscroll-behavior-x:contain;
+}
+/* 滚动条平时收成 0 高，悬停或拖动时才出现：既不破坏报纸式的排版，又让人知道这行能滚 */
+.chips::-webkit-scrollbar{display:block;height:0;background:transparent}
+.chips:hover::-webkit-scrollbar,.chips.dragging::-webkit-scrollbar{height:6px}
+.chips::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:3px}
+.chips.dragging{cursor:grabbing;user-select:none}
+.chips .chip{scroll-snap-align:start}
 .chip{
   flex:0 0 auto;padding:5px 12px;border-radius:999px;border:1px solid var(--line-2);
   background:var(--paper-2);font-size:12.5px;color:var(--ink-2);white-space:nowrap;transition:.15s;
@@ -401,10 +409,10 @@ code{
       <button class="chip" id="freshToggle">🕐 只看 24h 内</button>
       <button class="chip" id="mergeToggle">🔗 同事件合并</button>
     </div>
-    <div class="chips" id="platformChips"></div>
-    <div class="chips" id="categoryChips"></div>
-    <div class="chips" id="facetChips"></div>
-    <div class="chips" id="watchChips"></div>
+    <div class="chips" id="platformChips" title="按住左键拖动，或 Shift+滚轮 横向查看"></div>
+    <div class="chips" id="categoryChips" title="按住左键拖动，或 Shift+滚轮 横向查看"></div>
+    <div class="chips" id="facetChips" title="按住左键拖动，或 Shift+滚轮 横向查看"></div>
+    <div class="chips" id="watchChips" title="按住左键拖动，或 Shift+滚轮 横向查看"></div>
   </div>
 
   <!-- ============ 今日要闻 / 新发布 / 值得关注 ============ -->
@@ -2723,7 +2731,40 @@ function readSettingsForm() {
 /* =========================================================
    12. 事件绑定
    ========================================================= */
+/* 筛选行横向拖动：这几行是 overflow-x 滚动条，鼠标没有天然的横向滚动方式，
+   不补拖拽的话看起来就像被截断了（触摸板/触屏本来就能滑，不需要接管） */
+function enableRowDrag(el) {
+  var down = false, startX = 0, startLeft = 0, moved = false;
+  el.addEventListener('pointerdown', function (e) {
+    if (e.pointerType === 'touch' || e.button !== 0) return;
+    down = true; moved = false; startX = e.clientX; startLeft = el.scrollLeft;
+    el.classList.add('dragging');
+    if (el.setPointerCapture) { try { el.setPointerCapture(e.pointerId); } catch (x) {} }
+  });
+  el.addEventListener('pointermove', function (e) {
+    if (!down) return;
+    var dx = e.clientX - startX;
+    if (Math.abs(dx) > 4) moved = true;
+    if (moved) el.scrollLeft = startLeft - dx;
+  });
+  function end() {
+    if (!down) return;
+    down = false;
+    el.classList.remove('dragging');
+    if (moved) el._draggedAt = Date.now();
+  }
+  el.addEventListener('pointerup', end);
+  el.addEventListener('pointercancel', end);
+  /* 拖完紧跟着会派发一次 click，不吞掉就会误改筛选条件 */
+  el.addEventListener('click', function (e) {
+    if (Date.now() - (el._draggedAt || 0) < 250) { e.preventDefault(); e.stopPropagation(); }
+  }, true);
+}
+
 function bindEvents() {
+  var rows = document.querySelectorAll('.chips');
+  for (var ri = 0; ri < rows.length; ri++) enableRowDrag(rows[ri]);
+
   $('btnRefresh').addEventListener('click', function () { refresh(false); });
 
   $('viewTabs').addEventListener('click', function (e) {
