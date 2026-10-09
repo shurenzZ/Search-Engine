@@ -1,5 +1,10 @@
 /* 服务端源注册表：这些接口对浏览器不开 CORS，只能由 Actions 在服务端抓取后产出快照。
-   每个源独立失败，互不影响；输出统一 item 形状，语义抽取（要素/信号分）只在页面里做一次。 */
+   每个源独立失败，互不影响；输出统一 item 形状，语义抽取（要素/信号分）只在页面里做一次。
+
+   机器之心暂时没能纳入：/rss 与 /articles 会返回「机器之心·数据服务」反爬拦截页，
+   /api/v1/articles.json 虽然 200 但是个废弃缓存（忽略 page 参数、没有链接和发布时间、
+   内容停在 2022-2023，还混着 title-1507881175 这类占位数据），公共 RSSHub 镜像的
+   /jiqizhixin 路由也全部 404/503。要接它只能自建 RSSHub 或用它的付费数据服务。 */
 
 import { getJson, getText, parseFeed, parseTime, parseHot, clean, fmtNum, hash8 } from './lib.mjs';
 
@@ -84,6 +89,16 @@ export const SERVER_SOURCES = [
     id: 'deepmind', name: 'DeepMind 博客', short: 'DeepMind', icon: '🟣', color: '#5f2fb4',
     fallbackCat: 'ai', max: 12, maxAgeH: 336,
     async run() { return officialRss('https://deepmind.google/blog/rss.xml', '官方'); }
+  },
+  {
+    id: 'xinzhiyuan', name: '新智元', short: '新智元', icon: '🥇', color: '#c2410c',
+    fallbackCat: 'ai', max: 16, maxAgeH: 96,
+    async run() { return officialRss('https://www.aiera.com.cn/feed', '报道'); }
+  },
+  {
+    id: 'leiphone', name: '雷锋网', short: '雷锋网', icon: '⛰️', color: '#0d9488',
+    fallbackCat: 'tech', max: 16, maxAgeH: 96,
+    async run() { return officialRss('https://www.leiphone.com/feed', '报道'); }
   },
   {
     id: 'qbitai', name: '量子位（AI 媒体）', short: '量子位', icon: '📡', color: '#0f766e',

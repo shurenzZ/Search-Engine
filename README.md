@@ -73,9 +73,14 @@ node tools/verify-sources.mjs         # 服务端源 + 直连源逐个契约断�
 | OpenAI 官方发布 | `openai.com/news/rss.xml` |
 | Google AI 博客 | `blog.google/technology/ai/rss/` |
 | DeepMind 博客 | `deepmind.google/blog/rss.xml` |
-| 量子位 / InfoQ 中文 / 少数派 | 各自 RSS |
+| 新智元 | `aiera.com.cn/feed` |
+| 量子位 | `qbitai.com/feed` |
+| 雷锋网 | `leiphone.com/feed` |
+| InfoQ 中文 / 少数派 | 各自 RSS |
 | 掘金热榜 / V2EX 今日热议 | 各自 API |
 | GitHub Trending | `github.com/trending`（服务端解 HTML，不受 REST 配额限制） |
+
+> **机器之心暂时没接进来**：`/rss` 与 `/articles` 会返回「机器之心·数据服务」反爬拦截页；`/api/v1/articles.json` 虽然返回 200，但那是个废弃缓存——忽略 `page` 参数、条目里没有链接和发布时间、内容停在 2022-2023 年，还混着 `title-1507881175` 这种占位数据；公共 RSSHub 镜像的 `/jiqizhixin` 路由也全部 404/503。要接它只能自建 RSSHub 或用它的数据服务，硬接进来只会污染早报，所以宁可不加。
 
 > 为什么不用公共 CORS 代理：2026-10 实测 `api.allorigins.win`、`api.codetabs.com` 返回 Cloudflare 522，`cors.isomorphic-git.org` 403，`api.cors.lol` 429，`thingproxy` 已停，**`corsproxy.io` 已改为必须自带 API Key**，`rsshub.app` 按策略封禁。所以「发布类」源全部走服务端，公共代理只留作页面里的尽力兜底。
 

@@ -470,7 +470,7 @@ code{
         </ul>
         <h4>5. 服务端快照（浏览器拿不到的源）</h4>
         <ul>
-          <li>HuggingFace 每日论文、arXiv、OpenAI / Google AI / DeepMind 官方博客、量子位、InfoQ、少数派、掘金、V2EX、GitHub Trending 都<b>不开 CORS</b>，浏览器直连必然失败，公共 CORS 代理目前已全部失效。</li>
+          <li>HuggingFace 每日论文、arXiv、OpenAI / Google AI / DeepMind 官方博客、新智元、量子位、雷锋网、InfoQ、少数派、掘金、V2EX、GitHub Trending 都<b>不开 CORS</b>，浏览器直连必然失败，公共 CORS 代理目前已全部失效。</li>
           <li>这些源由仓库里的 <code>.github/workflows/refresh-brief.yml</code> 在 GitHub 服务端定时（每 30 分钟）抓取，生成 <code>data/latest.json</code> 提交回仓库；页面从 <code>raw.githubusercontent.com</code>（CORS 全开）读取。</li>
           <li>换到自己的 fork：默认按当前页面地址自动推断 raw 地址；推断不出来就在「设置 → 快照 JSON 地址」里手填。</li>
           <li>快照只做数据搬运，<b>要素与信号分仍只在页面这一份词典里计算</b>，不会出现两套规则打架。</li>
@@ -737,7 +737,7 @@ var ENTITY_GROUPS = [
   { k:'model', label:'模型', terms:['GPT','ChatGPT','Claude','Gemini','Llama','DeepSeek','Qwen','豆包','通义','文心','混元','星火','Kimi','智谱清言','Midjourney','Sora','Vidu','可灵','Whisper','Copilot','Nano Banana','EmbeddingGemma','Gemma','Mistral','Stable Diffusion','FLUX','Suno','Manus','智能体'] },
   { k:'product', label:'产品', terms:['iPhone','iPad','MacBook','AirPods','Vision Pro','鸿蒙','HarmonyOS','Android','iOS','Windows','Linux','Steam','PS5','Xbox','Switch','问界','尊界','小米汽车','微信','支付宝','淘宝','闲鱼','飞书','钉钉','Notion','VS Code','Cursor','Windsurf'] },
   { k:'person', label:'人物', terms:['特朗普','马斯克','黄仁勋','张一鸣','王兴','马云','马化腾','任正非','雷军','贝索斯','扎克伯格','奥特曼','Altman','Amodei','李彦宏','刘强东','董明珠'] },
-  { k:'inst', label:'机构', terms:['新华社','人民日报','央视','IT之家','量子位','36氪','财新','环球时报','Nature','Science','Cell','arXiv','GitHub','HuggingFace','Hugging Face','MIT','斯坦福','清华','北大','中科院','美联储','证监会','工信部','市场监管总局'] }
+  { k:'inst', label:'机构', terms:['新华社','人民日报','央视','IT之家','量子位','新智元','机器之心','雷锋网','36氪','财新','环球时报','Nature','Science','Cell','arXiv','GitHub','HuggingFace','Hugging Face','MIT','斯坦福','清华','北大','中科院','美联储','证监会','工信部','市场监管总局'] }
 ];
 
 /* 数值要素：标题里出现即抽出，直接当硬信息展示（+35% / 2699 元 / v3.8） */
