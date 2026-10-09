@@ -1,10 +1,12 @@
 /* 服务端源注册表：这些接口对浏览器不开 CORS，只能由 Actions 在服务端抓取后产出快照。
    每个源独立失败，互不影响；输出统一 item 形状，语义抽取（要素/信号分）只在页面里做一次。
 
-   机器之心暂时没能纳入：/rss 与 /articles 会返回「机器之心·数据服务」反爬拦截页，
-   /api/v1/articles.json 虽然 200 但是个废弃缓存（忽略 page 参数、没有链接和发布时间、
-   内容停在 2022-2023，还混着 title-1507881175 这类占位数据），公共 RSSHub 镜像的
-   /jiqizhixin 路由也全部 404/503。要接它只能自建 RSSHub 或用它的付费数据服务。 */
+   机器之心只能走 Google News RSS：它家 /rss、/articles、文章页、gmis 子站对数据中心
+   IP 一律返回「机器之心·数据服务」闸门页（Googlebot UA 同样），/api/v1/articles.json
+   是忽略分页、无链接无时间、内容停在 2022-2023 的废弃缓存；robots.txt 声明的
+   /shared/sitemap.xml.gz 能取到 3 万条 URL 和发布日期，但条目里没有标题，按 URL 回抓
+   文章页又会被闸门挡住。公共 RSSHub 镜像路由 404/503，Bing 的 RSS 忽略 site: 限定。
+   要直连它本身，只能自建 RSSHub 或接入它的付费数据服务。 */
 
 import { getJson, getText, parseFeed, parseTime, parseHot, clean, fmtNum, hash8 } from './lib.mjs';
 
@@ -89,6 +91,25 @@ export const SERVER_SOURCES = [
     id: 'deepmind', name: 'DeepMind 博客', short: 'DeepMind', icon: '🟣', color: '#5f2fb4',
     fallbackCat: 'ai', max: 12, maxAgeH: 336,
     async run() { return officialRss('https://deepmind.google/blog/rss.xml', '官方'); }
+  },
+  {
+    /* 机器之心全站（/rss、/articles、文章页、gmis 子站）对数据中心 IP 一律返回
+       「机器之心·数据服务」闸门页，Googlebot UA 也一样；robots.txt 里的
+       /shared/sitemap.xml.gz 能拿到 3 万条 URL 与发布日期，但条目里没有标题，
+       而按 URL 去抓文章页又会被闸门挡回来。这里退一步用 Google News 的站限定
+       RSS 取最新条目；抓不到时该源自动缺席，不影响其他源。 */
+    id: 'jqzx', name: '机器之心', short: '机器之心', icon: '', color: '#e0653a',
+    fallbackCat: 'ai', max: 16, maxAgeH: 72,
+    async run() {
+      const xml = await getText('https://news.google.com/rss/search?q=' +
+        encodeURIComponent('site:jiqizhixin.com') + '&hl=zh-CN&gl=CN&ceid=CN:zh-Hans');
+      return parseFeed(xml).map(function (x) {
+        return {
+          title: clean(String(x.title || '').replace(/\s*[-–—]\s*机器之心\s*$/, ''), 200),
+          url: x.url, summary: x.summary, ts: x.ts, hotRaw: 0, hotText: '', tags: ['报道']
+        };
+      });
+    }
   },
   {
     id: 'xinzhiyuan', name: '新智元', short: '新智元', icon: '🥇', color: '#c2410c',
