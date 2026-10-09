@@ -1,16 +1,16 @@
 {
  "schema": 1,
- "hash": "91212c3e062ba577",
- "generatedAt": "2026-10-09T09:44:44.707Z",
- "generatedAtMs": 1791539084707,
- "itemCount": 99,
- "okCount": 9,
+ "hash": "2943ada3571eb8cb",
+ "generatedAt": "2026-10-09T09:49:29.107Z",
+ "generatedAtMs": 1791539369107,
+ "itemCount": 132,
+ "okCount": 11,
  "sources": [
   {
    "id": "hf",
-   "ok": false,
-   "count": 0,
-   "error": "fetch failed（UND_ERR_CONNECT_TIMEOUT）"
+   "ok": true,
+   "count": 24,
+   "error": ""
   },
   {
    "id": "arxiv",
@@ -62,9 +62,9 @@
   },
   {
    "id": "v2ex",
-   "ok": false,
-   "count": 0,
-   "error": "fetch failed（UND_ERR_CONNECT_TIMEOUT）"
+   "ok": true,
+   "count": 9,
+   "error": ""
   },
   {
    "id": "ghtrend",
