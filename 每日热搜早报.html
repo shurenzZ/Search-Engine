@@ -760,6 +760,8 @@ var state = {
   updatedAt: 0,
   loading: false,
   booting: true,
+  mergedCount: 0,
+  retryQueue: [],      // 本轮「等一下就好」的失败源，收尾时补抓
   progress: { done: 0, total: 0 },
   snap: { loaded: false, at: 0, date: '', sources: [], error: '', retrying: false }
 };
@@ -982,6 +984,8 @@ function loadStore() {
         });
       });
       state.buckets = regroup(state.items);
+      /* 缓存里的 signal / hotPct / 簇关系都是上一次会话算的，重新派生一遍再用 */
+      state.items = rebuildItems(state.buckets);
       state.status = d.status || {};
       state.mode = d.mode === 'live' || d.mode === 'partial' ? d.mode : 'empty';
       state.updatedAt = Number(d.updatedAt) || 0;
@@ -1962,6 +1966,7 @@ function retrySource(id) {
     return;
   }
   if (state.loading) return toast('正在刷新，请稍候');
+  state.retryQueue = [];
   state.status[id] = { ok: false, pending: true, count: 0, skel: Number(settings.perSourceLimit) || 15 };
   renderAll();
   fetchOne(src, 0).then(function () {
