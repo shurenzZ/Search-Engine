@@ -101,18 +101,21 @@ export const SERVER_SOURCES = [
     id: 'jqzx', name: '机器之心', short: '机器之心', icon: '', color: '#e0653a',
     fallbackCat: 'ai', max: 16, maxAgeH: 72,
     async run() {
-      /* Actions 上实测：q=site:jiqizhixin.com 返回 0 条，Google News 对中文站的
-         site: 限定基本不给结果；改用品牌词查询，再按「标题 - 机器之心」的来源过滤 */
+      /* Actions 上实测 q=site:jiqizhixin.com 与 q="机器之心" 都是 0 条。本机连不上
+         Google 无法就地判断，所以把「RSS 本身为空」和「有内容但来源过滤没命中」分开
+         写进错误里，让 manifest 直接给出诊断结论。 */
       const xml = await getText('https://news.google.com/rss/search?q=' +
         encodeURIComponent('"机器之心"') + '&hl=zh-CN&gl=CN&ceid=CN:zh-Hans');
-      return parseFeed(xml)
-        .filter(function (x) { return /机器之心\s*$/.test(x.title); })
-        .map(function (x) {
-          return {
-            title: clean(String(x.title || '').replace(/\s*[-–—]\s*机器之心\s*$/, ''), 200),
-            url: x.url, summary: x.summary, ts: x.ts, hotRaw: 0, hotText: '', tags: ['报道']
-          };
-        });
+      const all = parseFeed(xml);
+      if (!all.length) throw new Error('Google News 返回空 RSS：' + String(xml).replace(/\s+/g, ' ').slice(0, 70));
+      const hit = all.filter(function (x) { return /机器之心/.test(x.title); });
+      if (!hit.length) throw new Error('RSS 有 ' + all.length + ' 条但无一条含「机器之心」，样例：' + all[0].title.slice(0, 50));
+      return hit.map(function (x) {
+        return {
+          title: clean(String(x.title || '').replace(/\s*[-–—]\s*机器之心\s*$/, ''), 200),
+          url: x.url, summary: x.summary, ts: x.ts, hotRaw: 0, hotText: '', tags: ['报道']
+        };
+      });
     }
   },
   {
