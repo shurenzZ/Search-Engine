@@ -1,9 +1,9 @@
 {
  "schema": 1,
- "hash": "37a8059259bc5a3e",
- "generatedAt": "2026-10-09T12:00:48.500Z",
- "generatedAtMs": 1791547248500,
- "itemCount": 164,
+ "hash": "aa94b3d7537cc119",
+ "generatedAt": "2026-10-09T12:15:03.487Z",
+ "generatedAtMs": 1791548103487,
+ "itemCount": 165,
  "okCount": 13,
  "sources": [
   {
@@ -40,7 +40,7 @@
    "id": "jqzx",
    "ok": false,
    "count": 0,
-   "error": "接口返回 0 条"
+   "error": "接口有 18 条，但被 168h 时间窗全部过滤（最新一条 2026-04-10）"
   },
   {
    "id": "xinzhiyuan",
@@ -81,7 +81,7 @@
   {
    "id": "v2ex",
    "ok": true,
-   "count": 8,
+   "count": 9,
    "error": ""
   },
   {
