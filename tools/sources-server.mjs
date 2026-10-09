@@ -1,12 +1,17 @@
 /* 服务端源注册表：这些接口对浏览器不开 CORS，只能由 Actions 在服务端抓取后产出快照。
    每个源独立失败，互不影响；输出统一 item 形状，语义抽取（要素/信号分）只在页面里做一次。
 
-   机器之心只能走 Google News RSS：它家 /rss、/articles、文章页、gmis 子站对数据中心
-   IP 一律返回「机器之心·数据服务」闸门页（Googlebot UA 同样），/api/v1/articles.json
-   是忽略分页、无链接无时间、内容停在 2022-2023 的废弃缓存；robots.txt 声明的
-   /shared/sitemap.xml.gz 能取到 3 万条 URL 和发布日期，但条目里没有标题，按 URL 回抓
-   文章页又会被闸门挡住。公共 RSSHub 镜像路由 404/503，Bing 的 RSS 忽略 site: 限定。
-   要直连它本身，只能自建 RSSHub 或接入它的付费数据服务。 */
+   机器之心没有可用来源，已实测排除（2026-10-09）：
+   · /rss、/articles、/library、文章页、gmis 子站对数据中心 IP 一律返回
+     「机器之心·数据服务」闸门页，换 Googlebot UA 结果相同；
+   · /api/v1/articles.json 是废弃缓存：page=1 与 page=2 内容一致、条目无链接无时间、
+     正文停在 2022-2023，还混着 title-1507881175 占位数据；
+   · robots.txt 声明的 /shared/sitemap.xml.gz 能取到 30136 条 URL 与发布日期，
+     但 sitemap 里没有标题（<image:title> 出现 0 次），按 URL 回抓文章页又是闸门页；
+   · Google News RSS 品牌词查询在 Actions 上返回 18 条含「机器之心」的条目，
+     但最新一条是 2026-04-10 —— 只能喂半年前的旧闻，与「早报」定位冲突，故不接；
+   · 公共 RSSHub 镜像的 /jiqizhixin 路由 404/503，Bing 的 RSS 忽略 site: 限定。
+   要接它只能自建 RSSHub，或接入它的付费数据服务。 */
 
 import { getJson, getText, parseFeed, parseTime, parseHot, clean, fmtNum, hash8 } from './lib.mjs';
 
@@ -91,35 +96,6 @@ export const SERVER_SOURCES = [
     id: 'deepmind', name: 'DeepMind 博客', short: 'DeepMind', icon: '🟣', color: '#5f2fb4',
     fallbackCat: 'ai', max: 12, maxAgeH: 336,
     async run() { return officialRss('https://deepmind.google/blog/rss.xml', '官方'); }
-  },
-  {
-    /* 机器之心全站（/rss、/articles、文章页、gmis 子站）对数据中心 IP 一律返回
-       「机器之心·数据服务」闸门页，Googlebot UA 也一样；robots.txt 里的
-       /shared/sitemap.xml.gz 能拿到 3 万条 URL 与发布日期，但条目里没有标题，
-       而按 URL 去抓文章页又会被闸门挡回来。这里退一步用 Google News 的站限定
-       RSS 取最新条目；抓不到时该源自动缺席，不影响其他源。 */
-    id: 'jqzx', name: '机器之心', short: '机器之心', icon: '', color: '#e0653a',
-    /* 品牌词查询会混进几个月前的旧文，Google News 又不按时间排序：
-       所以自己按时间倒序，并把窗口放宽到 7 天，否则容易被全部滤掉 */
-    fallbackCat: 'ai', max: 14, maxAgeH: 168,
-    async run() {
-      /* Actions 上实测 q=site:jiqizhixin.com 与 q="机器之心" 都是 0 条。本机连不上
-         Google 无法就地判断，所以把「RSS 本身为空」和「有内容但来源过滤没命中」分开
-         写进错误里，让 manifest 直接给出诊断结论。 */
-      const xml = await getText('https://news.google.com/rss/search?q=' +
-        encodeURIComponent('"机器之心"') + '&hl=zh-CN&gl=CN&ceid=CN:zh-Hans');
-      const all = parseFeed(xml);
-      if (!all.length) throw new Error('Google News 返回空 RSS：' + String(xml).replace(/\s+/g, ' ').slice(0, 70));
-      const hit = all.filter(function (x) { return /机器之心/.test(x.title); });
-      if (!hit.length) throw new Error('RSS 有 ' + all.length + ' 条但无一条含「机器之心」，样例：' + all[0].title.slice(0, 50));
-      hit.sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
-      return hit.map(function (x) {
-        return {
-          title: clean(String(x.title || '').replace(/\s*[-–—]\s*机器之心\s*$/, ''), 200),
-          url: x.url, summary: x.summary, ts: x.ts, hotRaw: 0, hotText: '', tags: ['报道']
-        };
-      });
-    }
   },
   {
     id: 'xinzhiyuan', name: '新智元', short: '新智元', icon: '🥇', color: '#c2410c',

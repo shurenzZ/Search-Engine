@@ -73,7 +73,6 @@ node tools/verify-sources.mjs         # 服务端源 + 直连源逐个契约断�
 | OpenAI 官方发布 | `openai.com/news/rss.xml` |
 | Google AI 博客 | `blog.google/technology/ai/rss/` |
 | DeepMind 博客 | `deepmind.google/blog/rss.xml` |
-| 机器之心 | 经 `news.google.com/rss/search?q=site:jiqizhixin.com`（原因见下） |
 | 新智元 | `aiera.com.cn/feed` |
 | 量子位 | `qbitai.com/feed` |
 | 雷锋网 | `leiphone.com/feed` |
@@ -81,7 +80,13 @@ node tools/verify-sources.mjs         # 服务端源 + 直连源逐个契约断�
 | 掘金热榜 / V2EX 今日热议 | 各自 API |
 | GitHub Trending | `github.com/trending`（服务端解 HTML，不受 REST 配额限制） |
 
-> **机器之心只能绕道取**。它家 `/rss`、`/articles`、文章页乃至 `gmis` 子站对数据中心 IP 一律返回「机器之心·数据服务」闸门页（换 Googlebot UA 也一样）；`/api/v1/articles.json` 虽然 200，但那是个忽略 `page` 参数、条目里没有链接和发布时间、内容停在 2022-2023 年、还混着 `title-1507881175` 占位数据的废弃缓存；`robots.txt` 声明的 `/shared/sitemap.xml.gz` 能取到 3 万条 URL 和发布日期，但 sitemap 里没有标题，按 URL 回抓文章页又会被闸门挡回来；公共 RSSHub 镜像的 `/jiqizhixin` 路由 404/503，Bing 的 RSS 会忽略 `site:` 限定只返回官网首页与百科。所以这里走 Google News 的站限定 RSS 取最新条目，抓不到时该源自动缺席、不影响其他源。要直连它本身，只能自建 RSSHub 或接入它的付费数据服务。
+> **机器之心接不进来**（2026-10-09 全部实测过，结论写在 `tools/sources-server.mjs` 顶部）：
+> `/rss`、`/articles`、`/library`、文章页乃至 `gmis` 子站对数据中心 IP 一律返回「机器之心·数据服务」闸门页，换 Googlebot UA 一样；
+> `/api/v1/articles.json` 是废弃缓存（`page=1` 与 `page=2` 内容相同、条目里没有链接和发布时间、正文停在 2022-2023、还混着 `title-1507881175` 占位数据）；
+> `robots.txt` 声明的 `/shared/sitemap.xml.gz` 能拿到 30136 条 URL 与发布日期，但 sitemap 里没有标题（`<image:title>` 出现 0 次），按 URL 回抓文章页又落回闸门页；
+> Google News RSS 品牌词查询能返回 18 条含「机器之心」的条目，但**最新一条是 2026-04-10** —— 只能喂半年前的旧闻，与「早报」定位冲突；
+> 公共 RSSHub 镜像的 `/jiqizhixin` 路由 404/503，Bing 的 RSS 会忽略 `site:` 限定只返回官网与百科。
+> 要接它只能自建 RSSHub 或接入它的付费数据服务。同类内容目前由新智元、量子位、雷锋网、InfoQ 与各家官方博客覆盖。
 
 > 为什么不用公共 CORS 代理：2026-10 实测 `api.allorigins.win`、`api.codetabs.com` 返回 Cloudflare 522，`cors.isomorphic-git.org` 403，`api.cors.lol` 429，`thingproxy` 已停，**`corsproxy.io` 已改为必须自带 API Key**，`rsshub.app` 按策略封禁。所以「发布类」源全部走服务端，公共代理只留作页面里的尽力兜底。
 
