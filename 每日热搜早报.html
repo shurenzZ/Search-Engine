@@ -1799,7 +1799,16 @@ function ingestSnapshot(payload) {
   /* 快照先铺，实时源逐个覆盖同名分桶；已抓到的实时数据不会被快照盖掉 */
   Object.keys(buckets).forEach(function (id) {
     if (!state.buckets[id] || !state.buckets[id].length) state.buckets[id] = buckets[id];
-    state.status[id] = { ok: true, count: buckets[id].length, via: 'Actions 快照', snap: true };
+  });
+  /* 快照源的状态照搬 manifest 里的 ok/error：服务端那一轮没抓到，不等于「正常 0 条」，
+     否则机器之心这类被时间窗/来源过滤卡住的源，在状态表里看起来像是好的 */
+  state.snap.sources.forEach(function (m) {
+    if (!isSourceOn(m.id)) return;
+    var n = (buckets[m.id] || []).length;
+    state.status[m.id] = n
+      ? { ok: true, count: n, via: 'Actions 快照', snap: true }
+      : { ok: false, failed: m.ok === false, count: 0, snap: true,
+          error: m.error || '本轮快照里没有该源的条目' };
   });
   state.snap.loaded = true;
   state.snap.at = at;
@@ -2342,9 +2351,9 @@ function failedHtml(srcId, st) {
 function badgeFor(s) {
   var st = state.status[s.id];
   if (st && st.pending) return '<span class="badge b-wait"><span class="rot">↻</span> 抓取中</span>';
+  if (st && st.ok) return s.isSnap ? '<span class="badge b-snap">📸 快照</span>' : '<span class="badge b-ok">实时</span>';
+  if (st && !st.ok && st.error) return '<span class="badge b-fail">' + (s.isSnap ? '快照缺数据' : '获取失败') + '</span>';
   if (s.isSnap) return '<span class="badge b-snap">📸 快照</span>';
-  if (st && st.ok) return '<span class="badge b-ok">实时</span>';
-  if (st && st.failed) return '<span class="badge b-fail">获取失败</span>';
   if (st && st.stale) return '<span class="badge b-fail">失败·旧数据</span>';
   return '<span class="badge b-err">未获取</span>';
 }
