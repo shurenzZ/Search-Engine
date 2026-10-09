@@ -167,7 +167,6 @@ input,select{font-family:inherit;font-size:inherit;color:inherit}
   border:1px solid transparent;
 }
 .b-ok{background:#e9f6ec;color:#1c7a3e;border-color:#bfe3cb}
-.b-demo{background:#fdecea;color:#9c2b1f;border-color:#f0c5bf}
 .b-err{background:#f1efea;color:#8a8377;border-color:#ddd6c6}
 .b-wait{background:#eef2fb;color:#2b4c9c;border-color:#c6d3ef}
 .card-body{padding:6px 6px 10px;flex:1}
@@ -228,6 +227,41 @@ input,select{font-family:inherit;font-size:inherit;color:inherit}
 }
 .more:hover{color:var(--accent)}
 .empty{padding:34px 12px;text-align:center;color:var(--ink-3);font-size:13.5px}
+.empty.fail{color:var(--ink-2)}
+.fail-acts{margin-top:10px;display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap}
+.fail-acts .tip{font-size:11.5px;color:var(--ink-3)}
+.b-snap{background:#eef2fb;color:#2b4c9c;border-color:#c6d3ef}
+.b-fail{background:#fdecea;color:#9c2b1f;border-color:#f0c5bf}
+.tag.snap,.tag.watch,.tag.ent,.tag.num{font-weight:700}
+.tag.snap{background:#eef2fb;color:#2b4c9c;border-color:#c6d3ef}
+.tag.watch{background:#fff4d6;color:#8a5a00;border-color:#edd9ac}
+.tag.ent{background:#f2efe6;color:var(--ink-2);border-color:var(--line-2)}
+.tag.num{background:#e9f6ec;color:#1c7a3e;border-color:#bfe3cb;font-family:Georgia,serif}
+.age{color:var(--ink-2);white-space:nowrap}
+.age.unk{color:var(--ink-3);font-style:italic}
+.clump{
+  font-size:11px;font-weight:700;color:#8a5a00;background:#fff4d6;
+  border:1px solid #edd9ac;border-radius:999px;padding:1px 7px;white-space:nowrap;
+}
+/* 信号分：把「为什么排在这儿」做成一眼可见的量化条 */
+.sig{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--ink-3)}
+.sig i{position:relative;display:inline-block;width:34px;height:5px;border-radius:3px;background:var(--line);overflow:hidden}
+.sig s{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,var(--gold),var(--accent));text-decoration:none}
+.sig b{font-family:Georgia,serif;color:var(--ink-2)}
+.sub-h{
+  display:flex;align-items:center;gap:6px;margin:12px 10px 4px;
+  font-size:12px;font-weight:800;letter-spacing:.4px;color:var(--ink-2);
+  border-bottom:1px dashed var(--line-2);padding-bottom:4px;
+}
+.sub-h span{font-weight:500;color:var(--ink-3);font-size:11px}
+.sub-h:first-child{margin-top:4px}
+.grid.two{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.skel-row{display:block;padding:6px 0;border-bottom:1px dotted rgba(207,198,178,.6)}
+.skel-item{pointer-events:none}
+.skel-item .item-main{display:flex;flex-direction:column}
+.filters-hint{font-size:11.5px;color:var(--ink-3);padding:5px 4px}
+.search.watch{flex:1 1 320px}
+.toolbar-row .chips{margin-left:4px}
 
 /* ================= 底部说明 ================= */
 .foot{margin-top:34px;border-top:3px double var(--line-2);padding-top:16px;font-size:13px;color:var(--ink-2)}
@@ -321,7 +355,7 @@ code{
         <h1>每日热搜早报</h1>
         <span id="stateBadge" class="state-badge state-loading">准备中</span>
       </div>
-      <p class="brand-sub">聚合全网热榜 · 一页读完今日热点 · 无需登录 · 本地运行</p>
+      <p class="brand-sub">聚合全网热榜与发布动态 · 按「要素 + 新鲜度」而非只看热度 · 无需登录 · 本地运行</p>
       <div class="headline-bar">
         <span>📅 <b id="dateText">--</b></span>
         <span>🕘 最后更新：<b id="updateText">--</b></span>
@@ -339,28 +373,55 @@ code{
     <div class="toolbar-row">
       <div class="search">
         <span>🔍</span>
-        <input id="q" type="text" placeholder="搜索热搜标题或摘要关键词…" autocomplete="off">
+        <input id="q" type="text" placeholder="搜索标题、摘要、公司 / 模型名…" autocomplete="off">
         <button class="clr" id="qClear" title="清空">✕</button>
       </div>
       <div class="view-tabs" id="viewTabs">
         <button data-view="category" class="on">按分类</button>
         <button data-view="platform">按平台</button>
       </div>
-      <button class="btn primary" id="btnRefresh">↻ 一键刷新</button>
+      <select class="btn" id="sortSel" title="排序方式">
+        <option value="signal">信号优先</option>
+        <option value="heat">热度优先</option>
+        <option value="time">时间优先</option>
+      </select>
+      <button class="btn" id="btnRefresh">↻ 一键刷新</button>
       <button class="btn" id="btnSettings">⚙ 设置</button>
       <button class="btn" id="btnCopyAll">📋 复制早报</button>
       <button class="btn" id="btnTxt">⬇ TXT</button>
       <button class="btn" id="btnJson">⬇ JSON</button>
     </div>
+    <div class="toolbar-row">
+      <div class="search watch">
+        <span>⭐</span>
+        <input id="watchInput" type="text" placeholder="关注词：OpenAI、DeepSeek、融资…（回车添加，命中条目无视热度置顶）" autocomplete="off">
+      </div>
+      <button class="btn" id="btnWatchAdd">+ 关注</button>
+      <button class="chip" id="onlyWatchChip">只看关注</button>
+      <button class="chip" id="freshToggle">🕐 只看 24h 内</button>
+      <button class="chip" id="mergeToggle">🔗 同事件合并</button>
+    </div>
     <div class="chips" id="platformChips"></div>
     <div class="chips" id="categoryChips"></div>
+    <div class="chips" id="facetChips"></div>
+    <div class="chips" id="watchChips"></div>
   </div>
 
-  <!-- ============ 今日要闻 ============ -->
+  <!-- ============ 今日要闻 / 新发布 / 值得关注 ============ -->
   <section class="section">
-    <h2 class="section-title">今日要闻 <span class="sub">跨平台热度最高的 10 条</span></h2>
+    <h2 class="section-title">今日要闻 <span class="sub" id="flashSub">同事件已跨平台合并 · 排序随上方切换</span></h2>
     <div class="flash"><ul class="flash-list" id="flashList"></ul></div>
   </section>
+  <div class="grid two">
+    <section class="section">
+      <h2 class="section-title">今日新发布 <span class="sub">发布 / 开源 / 论文，按时间倒序，不看热度</span></h2>
+      <div class="flash"><ul class="flash-list" id="releaseList"></ul></div>
+    </section>
+    <section class="section">
+      <h2 class="section-title">值得关注 <span class="sub">热度不高，但信号分很高</span></h2>
+      <div class="flash"><ul class="flash-list" id="lowHotList"></ul></div>
+    </section>
+  </div>
 
   <!-- ============ 主体 ============ -->
   <main id="main"></main>
@@ -371,43 +432,66 @@ code{
     <div id="srcStatus"></div>
 
     <details>
-      <summary>使用说明（打开 / 刷新 / 换数据源 / 新增平台）</summary>
+      <summary>使用说明（打开 / 刷新 / 要素与信号分 / 快照 / 新增平台）</summary>
       <div class="body">
         <h4>1. 如何打开</h4>
         <ul>
           <li>双击本文件，用 Chrome / Edge / Firefox 打开即可。无需服务器、无需安装、无需登录。</li>
-          <li>首次打开会自动拉取实时数据；若网络不可用，会自动降级为内置示例数据并给出提示。</li>
+          <li>打开后先读一次「服务端快照 JSON」（一个静态文件，一次请求），页面立刻有内容；随后浏览器直连的实时热榜逐个覆盖。</li>
+          <li>接口失败时该源显示失败原因与「重试此源」，<b>不会用示例数据或旧数据冒充实时数据</b>。本页面已不含任何内置示例条目。</li>
         </ul>
-        <h4>2. 如何刷新</h4>
+        <h4>2. 要素、信号分与「值得关注」</h4>
         <ul>
-          <li>点右上角「↻ 一键刷新」重新抓取全部平台。抓取过程会显示进度（如「抓取中 3/8」），每个平台抓到数据后立即替换示例内容，无需等全部完成。</li>
-          <li>若某个平台显示红色「示例数据」，把鼠标移到卡片底部可看到失败原因（限流 / 服务端错误 / 超时），稍后再点刷新即可。</li>
-          <li>启用的数据源越少、抓取越快。默认开启 8 个平台；可在「设置 → 启用的数据源」里增减（关掉一个约省 2 秒）。</li>
-          <li>数据会缓存到浏览器 <code>localStorage</code>（键名 <code>hot_daily_brief_v1</code>），下次打开先秒显缓存、再按「缓存时长」判断是否自动刷新。</li>
-          <li>「设置」里可以调整每平台条数、缓存时长、数据源开关，以及「清空缓存」。</li>
+          <li>每条都会在本地用关键词词典抽出<b>要素</b>（发布上线 / 新模型 / 开源项目 / 论文研究 / 融资并购 / 政策监管 / 事故风险 …）与<b>主体</b>（公司 / 模型 / 产品 / 人物 / 机构），并抽取标题里的金额、涨跌幅、版本号。全部是正则匹配，不调用任何模型、不需要 Key。</li>
+          <li><b>信号分 = 源内热度百分位 + 新鲜度 + 要素权重 + 主体命中 + 跨平台同现 + 关注词命中</b>（0-100，鼠标悬浮可看每一项的得分）。</li>
+          <li>热度跨平台不可比（微博 780 万、知乎 4 万、HN 300 分），所以热度只按<b>同一源内的百分位</b>计分，接口不给热度值的源（IT之家、AI 新闻、快照源）不会再被系统性埋没。</li>
+          <li>分类卡片内固定分三档：🆕 发布 · 开源 · 论文（按时间倒序，不看热度）→ 📌 热度不高但值得关注 → 🔥 按当前排序。</li>
         </ul>
-        <h4>3. 如何替换 / 增加真实数据源</h4>
+        <h4>3. 关注词 / 只看 24h / 同事件合并</h4>
+        <ul>
+          <li>工具栏「⭐ 关注」输入框填公司、模型或关键词，回车即加；命中条目加 24 分信号分并在分类内置顶，chip 上点 ✕ 移除。</li>
+          <li>「🕐 只看 24h 内」按条目真实发布时间过滤；没有发布时间且不属于「当日榜」的源会被隐藏，空态会写明隐藏了多少条。</li>
+          <li>「🔗 同事件合并」把同一事件在多平台的热搜合成一行，显示「N 平台在热」并累加热度；切到「按平台」视图时仍然各平台独立完整展示。</li>
+        </ul>
+        <h4>4. 如何刷新</h4>
+        <ul>
+          <li>点「↻ 一键刷新」重新抓取全部实时源，进度形如「抓取中 7/13」，每个源抓到就地更新，不必等全部完成。</li>
+          <li>默认开启 13 个实时源，串行抓取约 25-30 秒；在「设置 → 启用的实时数据源」里关掉一个约省 2 秒。</li>
+          <li>数据缓存到浏览器 <code>localStorage</code>（键名 <code>hot_daily_brief_v1</code>），下次打开先秒显缓存，再按「缓存时长」判断是否自动刷新。</li>
+          <li>GitHub 源受匿名配额限制（搜索接口 10 次/分钟、按 IP 计），页面每轮只请求一次并按 30 分钟缓存；被限流时会显示几点几分恢复，且不会反复重试。</li>
+        </ul>
+        <h4>5. 服务端快照（浏览器拿不到的源）</h4>
+        <ul>
+          <li>HuggingFace 每日论文、arXiv、OpenAI / Google AI / DeepMind 官方博客、量子位、InfoQ、少数派、掘金、V2EX、GitHub Trending 都<b>不开 CORS</b>，浏览器直连必然失败，公共 CORS 代理目前已全部失效。</li>
+          <li>这些源由仓库里的 <code>.github/workflows/refresh-brief.yml</code> 在 GitHub 服务端定时（每 30 分钟）抓取，生成 <code>data/latest.json</code> 提交回仓库；页面从 <code>raw.githubusercontent.com</code>（CORS 全开）读取。</li>
+          <li>换到自己的 fork：默认按当前页面地址自动推断 raw 地址；推断不出来就在「设置 → 快照 JSON 地址」里手填。</li>
+          <li>快照只做数据搬运，<b>要素与信号分仍只在页面这一份词典里计算</b>，不会出现两套规则打架。</li>
+        </ul>
+        <h4>6. 如何替换 / 增加实时数据源</h4>
         <ul>
           <li>默认使用免费开源的 <b>60s API</b>（<code>https://60s.viki.moe</code>，MIT 协议，已开启 CORS，可直接被本地页面调用）。</li>
           <li>在脚本里的 <code>SOURCES</code> 数组新增一项即可，例如：
-            <br><code>{id:'xxx', name:'平台名', short:'简称', icon:'🆕', color:'#1e88e5', path:'/v2/xxx', kind:'list', defaultOn:true}</code>
+            <br><code>{id:'xxx', name:'平台名', short:'简称', icon:'🆕', color:'#1e88e5', path:'/v2/xxx', kind:'list', defaultOn:true, fallbackCat:'tech'}</code>
           </li>
-          <li><code>path</code> 换成别家接口的完整地址（以 <code>http</code> 开头时会直接使用，不再拼接 API 基地址）。</li>
-          <li><b>限流说明</b>：60s 公共实例约「每 2 秒只允许 1 次请求」（超限返回 <code>429</code> + <code>Retry-After</code>）。页面已把所有请求排队串行发送，保证间隔不小于 <code>REQ_GAP</code>（初始 2000 毫秒，被限流时自动放慢、恢复正常后自动提速）；遇 429 会按服务端要求等待后重试，整轮结束后还会对失败平台自动补抓一轮。</li>
-          <li><b>备用接口</b>：一个数据源可写多个候选地址，例如 <code>path:['/v2/zhihu','https://你的镜像/zhihu']</code>，或加一项 <code>altPaths:['https://备用地址']</code>；主地址失败会自动顺延到下一个。B站接口（<code>/v2/bili</code>）目前服务端 500（B站反爬致使上游解析失败），页面会自动降级为示例数据；待上游修复后无需改动即可自动恢复。</li>
-          <li><code>kind</code> 说明：<code>list</code>=返回数组；<code>newsItems</code>=<code>data.news</code> 为对象数组；<code>news</code>=<code>data.news</code> 为字符串数组。</li>
-          <li>若某接口不提供摘要，可在设置里为它加 <code>summaryField</code> 指定摘要字段名（如 <code>description</code>）。</li>
-          <li>若目标站点不允许跨域，在「设置 → 代理模式」中选择「自动」：先直连（含限流重试），仍失败才用 1 个公共 CORS 代理兜底；若接口本身返回 5xx（上游挂了），换代理也没用，会直接降级省时间。也可以填自建代理（如 Cloudflare Worker）。</li>
+          <li><code>path</code> 可以是完整地址（以 <code>http</code> 开头则不拼基地址），里面可写 <code>{today-minus-7}</code> 这类相对日期；数组或 <code>altPaths</code> 表示多个候选地址，失败自动顺延。</li>
+          <li><code>pick</code>：数据不在 <code>data</code> 根数组时写点分路径，如 <code>pick:'items'</code>（GitHub 搜索）、<code>pick:'metals'</code>。</li>
+          <li><code>titleField</code> / <code>summaryField</code>：字段名不是 <code>title</code> / <code>description</code> 时指定，如 GitHub 用 <code>titleField:'full_name'</code>。</li>
+          <li><code>hotField</code> / <code>timeField</code>：声明期望的热度与时间字段，<code>node tools/verify-sources.mjs --client</code> 会逐源断言这些字段还在不在——接口悄悄改字段名时只有这里能发现。</li>
+          <li><code>noProxy + cacheKey + cacheTtl</code>：给有配额上限的接口用，本轮与 TTL 内只出网一次，且绝不把地址外发给第三方代理。</li>
+          <li><code>kind</code>：<code>list</code>=返回数组；<code>newsItems</code>=<code>data.news</code> 为对象数组；<code>news</code>=<code>data.news</code> 为字符串数组。</li>
+          <li><code>dayList:true</code>：该源给不出发布时间但本身就是「今天的榜」（掘金、Trending、历史上的今天），这样「只看 24h」不会把它误删。</li>
+          <li><b>限流说明</b>：60s 公共实例约「每 2 秒 1 次请求」（超限返回 <code>429</code> + <code>Retry-After</code>）。所有出网请求走串行闸门，间隔不小于 <code>REQ_GAP</code>（初始 2000 毫秒，被限流自动放慢、恢复后自动提速）；整轮结束后还会对可恢复的失败源补抓一轮。</li>
+          <li><b>B站接口</b>（<code>/v2/bili</code>）目前上游 500（B站反爬导致解析失败），已默认关闭；上游修复后在设置里打开即可，无需改代码。</li>
+          <li>代理模式：直连失败时才用 1 个公共 CORS 代理兜底（这些公共代理 2026-10 实测大多已失效）；需要稳定跨域请在设置里填自建 Worker 作为自定义代理。接口自身返回 5xx / 401 / 403 时直接降级，换代理没有意义。</li>
         </ul>
-        <h4>4. 关于「原文内容」</h4>
+        <h4>7. 关于「原文内容」</h4>
         <ul>
-          <li>知乎、百度、IT之家、AI 新闻等数据源本身提供正文摘要，页面会直接内联展示。</li>
-          <li>点条目里的「展开全文」，会就地抓取该条的原文页面并抽出正文，直接显示在条目内，不需要跳出去；抓取结果按链接记忆，重复展开不再请求。</li>
-          <li>抓取先直连（部分源站开了 CORS），跨域失败再依次换「代理模式」里的公共 CORS 代理；全部失败会在条目里写明原因。</li>
-          <li>微博、抖音、头条等榜单接口只提供标题与热度值，它们的原文/搜索页多为脚本渲染或需登录，能否抓到正文取决于源站；抓不到时仍可点「原文 ↗」跳转查看，跳转始终保留。</li>
-          <li>单条正文最多展示 4000 字，超出会截断并提示；点「复制此条」可单独复制该条的标题、摘要与链接。</li>
+          <li>知乎、百度、IT之家、夸克、AI 新闻以及快照里的各家博客本身就带正文摘要，页面直接内联展示。</li>
+          <li>点条目里的「展开全文」，会就地抓取该条原文页面并抽出正文，不用跳出去；结果按链接记忆，重复展开不再请求。</li>
+          <li>微博、抖音、头条等榜单接口只提供标题与热度值，其原文页多为脚本渲染或需登录，能否抓到正文取决于源站；抓不到时点「原文 ↗」跳转始终可用。</li>
+          <li>单条正文最多展示 4000 字，超出会截断并提示。</li>
         </ul>
-        <h4>5. 快捷键</h4>
+        <h4>8. 快捷键</h4>
         <ul>
           <li><code>R</code> 刷新　<code>/</code> 聚焦搜索　<code>Esc</code> 关闭弹窗或清空搜索</li>
         </ul>
@@ -417,7 +501,7 @@ code{
     <details>
       <summary>免责声明</summary>
       <div class="body">
-        本页面为个人效率小工具，热搜数据来自第三方公开接口，版权归原平台所有，仅用于个人学习与快速浏览，不作为商业用途或事实认定依据。若某个接口返回失败，页面会自动降级，不影响其他平台展示。
+        本页面为个人效率小工具，数据来自第三方公开接口与原平台页面，版权归原平台所有，仅用于个人学习与快速浏览，不作为商业用途或事实认定依据。某个接口失败时页面会写明原因并可单独重试，不影响其他源展示，也不会用示例数据填充。
       </div>
     </details>
   </footer>
@@ -460,8 +544,33 @@ code{
         </div>
       </div>
       <div class="field">
-        <label>启用的数据源</label>
+        <label>默认排序</label>
+        <select id="setSortMode">
+          <option value="signal">信号优先（热度 + 新鲜度 + 要素 + 关注）</option>
+          <option value="heat">热度优先（传统热榜序）</option>
+          <option value="time">时间优先（最新的排前面）</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>关注词</label>
+        <input type="text" id="setWatch" placeholder="OpenAI DeepSeek 融资 机器人">
+        <div class="hint">空格或逗号分隔，最多 12 个。命中的条目会加 24 分信号分并在分类内置顶。</div>
+      </div>
+      <div class="switches">
+        <label class="sw"><input type="checkbox" id="setFresh"><span>🕐 只看 24 小时内</span></label>
+        <label class="sw"><input type="checkbox" id="setMerge"><span>🔗 合并同事件多平台</span></label>
+        <label class="sw"><input type="checkbox" id="setAuto"><span>⏱ 缓存过期自动刷新</span></label>
+        <label class="sw"><input type="checkbox" id="setSnap"><span>📸 使用服务端快照</span></label>
+      </div>
+      <div class="field" style="margin-top:12px">
+        <label>快照 JSON 地址（可留空自动推断）</label>
+        <input type="text" id="setSnapUrl" placeholder="https://raw.githubusercontent.com/you/repo/main/data/latest.json">
+        <div class="hint">由 <code>.github/workflows/refresh-brief.yml</code> 定时抓取浏览器跨域拿不到的源（HuggingFace 论文、官方博客 RSS、掘金 / V2EX、GitHub Trending）并提交到仓库。默认自动按当前仓库推断 raw 地址；换成自己的 fork 时填这里。</div>
+      </div>
+      <div class="field">
+        <label>启用的实时数据源</label>
         <div class="switches" id="setSources"></div>
+        <div id="setSnapSources"></div>
       </div>
     </div>
     <div class="modal-foot">
@@ -483,8 +592,13 @@ code{
    0. 常量
    ========================================================= */
 var STORAGE_KEY = 'hot_daily_brief_v1';
-var APP_VERSION = '1.1.0';
+/* 缓存结构版本：与 APP_VERSION 分开，升版只作废条目、保留用户设置 */
+var CACHE_SCHEMA = 2;
+var APP_VERSION = '2.0.0';
 var WEEK = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+
+/* 服务端快照的兜底仓库：页面从别处打开（file://）时用它拼出 raw 地址 */
+var SNAPSHOT_REPO = 'shurenzz/Search-Engine';
 
 var DEFAULT_SETTINGS = {
   apiBase: 'https://60s.viki.moe',
@@ -493,15 +607,21 @@ var DEFAULT_SETTINGS = {
   perSourceLimit: 15,
   cacheMinutes: 30,
   autoRefresh: true,
+  sortMode: 'signal',
+  freshOnly: false,
+  mergeSame: true,
+  watch: '',
+  useSnapshot: true,
+  snapshotUrl: '',
   enabled: {}
 };
 
-/* 公共 CORS 代理（自动模式下的备用通道） */
+/* 公共 CORS 代理兜底。2026-10 实测：corsproxy.io 已改为必须自带 API key（401），
+   cors.isomorphic-git.org 403，thingproxy 已停；这里只留下偶尔可用的两个，且都随时可能 522。
+   需要稳定跨域请自建 Worker 并在设置里填「自定义代理前缀」。 */
 var PROXY_PRESETS = [
   { label: 'allorigins', wrap: function (u) { return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u); } },
-  { label: 'codetabs',   wrap: function (u) { return 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u); } },
-  { label: 'corsproxy',  wrap: function (u) { return 'https://corsproxy.io/?url=' + encodeURIComponent(u); } },
-  { label: 'isomorphic', wrap: function (u) { return 'https://cors.isomorphic-git.org/' + u; } }
+  { label: 'codetabs',   wrap: function (u) { return 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u); } }
 ];
 
 /* 60s 公共实例的限流实测约为「每 2 秒 1 次请求」（429 响应带 Retry-After: 2），
@@ -523,21 +643,37 @@ function easeGap() { REQ_GAP = Math.max(REQ_GAP_MIN, REQ_GAP - 200); }
 
 /* ---------------------------------------------------------
    数据源定义：新增平台只需在这里加一项
+   pick=取数组的点分路径；titleField/summaryField=字段名覆盖；
+   hotField/timeField=声明期望字段（tools/verify-sources.mjs 会逐源断言）；
+   noProxy+cacheKey+cacheTtl=有配额上限的接口不走代理、本轮与 TTL 内只取一次
    --------------------------------------------------------- */
 var SOURCES = [
   { id:'weibo',    name:'微博热搜',      short:'微博',   icon:'🔥', color:'#e6162d', path:'/v2/weibo',              kind:'list', defaultOn:true,  fallbackCat:'society', searchUrl:'https://s.weibo.com/weibo?q=' },
   { id:'baidu',    name:'百度热搜榜',    short:'百度',   icon:'🔎', color:'#2932e1', path:'/v2/baidu/hot',          kind:'list', defaultOn:true,  fallbackCat:'society', searchUrl:'https://www.baidu.com/s?wd=' },
   { id:'zhihu',    name:'知乎热榜',      short:'知乎',   icon:'💡', color:'#0084ff', path:'/v2/zhihu',              kind:'list', defaultOn:true,  fallbackCat:'society', searchUrl:'https://www.zhihu.com/search?type=content&q=' },
   { id:'douyin',   name:'抖音热点榜',    short:'抖音',   icon:'🎵', color:'#fe2c55', path:'/v2/douyin',             kind:'list', defaultOn:true,  fallbackCat:'life',    searchUrl:'https://www.douyin.com/search/' },
-  { id:'bili',     name:'B站热门',       short:'B站',    icon:'📺', color:'#fb7299', path:'/v2/bili',               kind:'list', defaultOn:true,  fallbackCat:'game',    searchUrl:'https://search.bilibili.com/all?keyword=' },
   { id:'toutiao',  name:'今日头条热榜',  short:'头条',   icon:'📰', color:'#f04142', path:'/v2/toutiao',            kind:'list', defaultOn:true,  fallbackCat:'society', searchUrl:'https://so.toutiao.com/search?keyword=' },
-  { id:'itnews',   name:'IT之家 · 科技快讯', short:'IT之家', icon:'💻', color:'#c62f2f', path:'/v2/it-news',    kind:'list', defaultOn:true,  fallbackCat:'tech', summaryField:'description' },
-  { id:'ainews',   name:'AI 新闻',       short:'AI新闻', icon:'🤖', color:'#7c3aed', path:'/v2/ai-news',            kind:'newsItems', defaultOn:true, fallbackCat:'ai' },
-  { id:'hn',       name:'Hacker News（海外）', short:'HN', icon:'🌐', color:'#ff6600', path:'/v2/hacker-news/top', kind:'list', defaultOn:false, fallbackCat:'tech', searchUrl:'https://www.bing.com/search?q=' },
-  { id:'world60s', name:'60秒读懂世界',  short:'60秒',   icon:'⏱️', color:'#0ea5e9', path:'/v2/60s',                kind:'news', defaultOn:false, fallbackCat:'world' },
-  { id:'rednote',  name:'小红书热点',    short:'小红书', icon:'📕', color:'#ff2442', path:'/v2/rednote',            kind:'list', defaultOn:false, fallbackCat:'life',    searchUrl:'https://www.xiaohongshu.com/search_result?keyword=' },
+  { id:'itnews',   name:'IT之家 · 科技快讯', short:'IT之家', icon:'💻', color:'#c62f2f', path:'/v2/it-news',    kind:'list', defaultOn:true,  fallbackCat:'tech', summaryField:'description', hotField:'none', timeField:'none' },
+  { id:'itrank',   name:'IT之家 · 热榜',  short:'IT热榜', icon:'🏆', color:'#a4231f', path:'/v2/it-news/rank',  kind:'list', defaultOn:true,  fallbackCat:'tech', hotField:'none', timeField:'none' },
+  { id:'ainews',   name:'AI 新闻',       short:'AI新闻', icon:'🤖', color:'#7c3aed', path:'/v2/ai-news',            kind:'newsItems', defaultOn:true, fallbackCat:'ai', summaryField:'detail', timeField:'date' },
+  { id:'quark',    name:'夸克热点',      short:'夸克',   icon:'🔷', color:'#0ea5e9', path:'/v2/quark',              kind:'list', defaultOn:true,  fallbackCat:'society', summaryField:'summary', hotField:'like_count', timeField:'published_at' },
+  { id:'hn',       name:'Hacker News 首页', short:'HN',  icon:'🌐', color:'#ff6600', path:'/v2/hacker-news/top',    kind:'list', defaultOn:true,  fallbackCat:'tech', hotField:'score', hotLabel:' 分', timeField:'created_at' },
+  { id:'hnnew',    name:'Hacker News 最新', short:'HN新', icon:'🌱', color:'#ff8c3a', path:'/v2/hacker-news/new',   kind:'list', defaultOn:true,  fallbackCat:'tech', hotField:'score', hotLabel:' 分', timeField:'created_at' },
+  { id:'world60s', name:'60秒读懂世界',  short:'60秒',   icon:'⏱️', color:'#0ea5e9', path:'/v2/60s',                kind:'news', defaultOn:true,  fallbackCat:'world' },
+  { id:'ghnew',    name:'GitHub 近期新建仓库', short:'GH新', icon:'🐙', color:'#24292e',
+    path:'https://api.github.com/search/repositories?q=created:%3E{today-minus-7}+stars:%3E200&sort=stars&order=desc&per_page=20',
+    kind:'list', pick:'items', titleField:'full_name', summaryField:'description', defaultOn:true, fallbackCat:'tech',
+    hotField:'stargazers_count', timeField:'created_at', hotLabel:' star', noProxy:true, cacheKey:'ghnew', cacheTtl:1800000 },
+  /* B站接口目前上游 500（B站反爬导致解析失败），默认关闭，修好后打开开关即可 */
+  { id:'bili',     name:'B站热门',       short:'B站',    icon:'📺', color:'#fb7299', path:'/v2/bili',               kind:'list', defaultOn:false, fallbackCat:'game',    searchUrl:'https://search.bilibili.com/all?keyword=' },
+  { id:'rednote',  name:'小红书热点',    short:'小红书', icon:'📕', color:'#ff2442', path:'/v2/rednote',            kind:'list', defaultOn:false, fallbackCat:'life',    searchUrl:'https://www.xiaohongshu.com/search_result?keyword=', hotField:'score' },
   { id:'tieba',    name:'百度贴吧热议',  short:'贴吧',   icon:'💬', color:'#3385ff', path:'/v2/baidu/tieba',        kind:'list', defaultOn:false, fallbackCat:'society', searchUrl:'https://tieba.baidu.com/f/search/res?qw=' },
-  { id:'douban',   name:'豆瓣电影口碑榜', short:'豆瓣',  icon:'🎬', color:'#2e963d', path:'/v2/douban/weekly/movie',kind:'list', defaultOn:false, fallbackCat:'culture', searchUrl:'https://search.douban.com/movie/subject_search?search_text=' }
+  { id:'douban',   name:'豆瓣电影口碑榜', short:'豆瓣',  icon:'🎬', color:'#2e963d', path:'/v2/douban/weekly/movie',kind:'list', defaultOn:false, fallbackCat:'culture', searchUrl:'https://search.douban.com/movie/subject_search?search_text=', hotField:'rating_count', summaryField:'card_subtitle' },
+  { id:'doubanShow',name:'豆瓣全球口碑综艺', short:'综艺', icon:'🎤', color:'#2e963d', path:'/v2/douban/weekly/show_global', kind:'list', defaultOn:false, fallbackCat:'culture', hotField:'rating_count', summaryField:'card_subtitle' },
+  { id:'teleplay', name:'百度剧集榜',    short:'剧集',   icon:'📽️', color:'#7e22ce', path:'/v2/baidu/teleplay',     kind:'list', defaultOn:false, fallbackCat:'culture', summaryField:'desc', hotField:'score', hotLabel:' 热度' },
+  { id:'hbbest',   name:'Hacker News 历史最佳', short:'HN最佳', icon:'🥇', color:'#e05a00', path:'/v2/hacker-news/best', kind:'list', defaultOn:false, fallbackCat:'tech', hotField:'score', hotLabel:' 分', timeField:'created_at' },
+  { id:'histoday', name:'历史上的今天',  short:'史今',   icon:'📜', color:'#8a5a00', path:'/v2/today-in-history',   kind:'list', pick:'items', summaryField:'description', dayList:true, defaultOn:false, fallbackCat:'culture', hotField:'none', timeField:'none' },
+  /* 与快照源同名的项可留空：快照里的 sources[] 会由页面自动登记，不需要在这里重复声明 */
 ];
 
 /* ---------------------------------------------------------
@@ -567,122 +703,41 @@ var CATEGORIES = [
 ];
 
 /* =========================================================
-   1. 内置示例数据（当接口不可用时降级显示，会明确标注）
-   格式：[标题, 热度值, 摘要(可空), 附加信息(可空)]
+   1. 要素与主体词典（纯本地规则，不调用任何模型、不需要 Key）
+   base = 该要素在信号分里的权重；kw 是一条 alternation，编译一次全局复用
    ========================================================= */
-var SAMPLE_RAW = {
-  weibo: [
-    ['平陆运河今日正式通航', 2874154, '西南地区货物出海少走560公里，每年可节约运输费用超50亿元，西南出海通道正式形成。'],
-    ['美联储宣布加息25个基点', 341444, '将联邦基金利率目标区间上调至3.75%-4.00%，为2023年7月以来首次加息。'],
-    ['引力一号遥三运载火箭一箭九星', 268000, '刷新海上发射载荷重量纪录，9颗卫星顺利进入预定轨道。'],
-    ['43岁张一鸣首次成为亚洲首富', 215000, '财富达1050亿美元，7年增长约7倍，全球排名第18位。'],
-    ['我国将制定全国统一的医保医疗服务项目目录', 198000, '首批覆盖心血管、呼吸、眼科、妇科、放疗等13个类别。'],
-    ['广州拟立法处罚地铁外放手机声音', 176000, '搭乘地铁外放手机声音最高处罚1000元，草案正在征求意见。'],
-    ['中国男足2比1逆转朝鲜取亚运开门红', 164921, '同日中国女排3比0战胜菲律宾队，同样取得开门红。'],
-    ['研究发现AI冲击计算机专业就业', 152000, '美国研究显示电脑相关专业毕业生初次就业概率下降5个百分点，起薪下降13%。']
-  ],
-  baidu: [
-    ['时隔3年多 美联储加息25个基点', 7808993, '当地时间9月16日，美联储宣布将联邦基金利率目标区间上调25个基点，使基准基金利率从3.50%至3.75%上调到3.75%至4%。政策声明指出，顽固的通胀压力以及地缘政治冲突导致的能源价格走高，使货币政策在压制通胀上仍显不足。', '热'],
-    ['一车人都买错票车站 12306有新显示', 7714541, '记者发现在12306客户端购买前往泸州东站车票时新增弹窗，提示该站位于泸县云锦镇。此前因泸州站与泸州东站相距约30公里，多名旅客买错票。'],
-    ['平陆运河“全能管家”有多硬核', 7616594, '平陆运河16日正式通航，青年调度中心作为国内首个全生命周期智慧运河数字孪生平台，实现一屏观全线、一脑统江海。'],
-    ['中国十大消费县排行出炉', 6500000, '4个县域社零总额超千亿元，义乌以2153.8亿元居首，昆山、晋江、常熟紧随其后。'],
-    ['香港特区首个五年规划公布', 5200000, '拟加强上市制度竞争力，吸引内地及海外龙头赴港IPO。'],
-    ['社保缴费基数调整', 4800000, '多地公布2026年度社保缴费基数上下限，灵活就业人员可自主选择缴费档次。'],
-    ['AI兴起后计算机专业就业率下降', 4100000, '研究显示AI兴起后，电脑相关专业毕业生初次就业概率下降五个百分点。'],
-    ['8月新能源车渗透率再创新高', 3800000, '新能源汽车零售渗透率超过55%，多家车企交付量创单月新高。']
-  ],
-  zhihu: [
-    ['美联储3年来首次加息，会对市场有哪些影响？', 41620000, '美联储宣布将联邦基金利率目标区间上调25个基点，这是自2023年7月以来时隔三年多的首次加息。政策声明指出，顽固的通胀压力以及地缘政治冲突导致的全球能源价格持续走高，使当前货币政策在压制通胀至2%的目标上仍显不足。点阵图显示，18位官员中有12位预计今年还将加息25个基点。', '252 个回答'],
-    ['如何评价国产大模型集体降价？', 12000000, '多家厂商宣布主力模型 API 价格下调，推理成本大幅下降，行业进入价格战阶段，中小开发者受益明显。', '186 个回答'],
-    ['计算机专业还值得报吗？', 9800000, 'AI 冲击下初级岗位需求收缩，但系统、底层、安全、芯片方向依然紧缺，关键是能否形成不可替代的能力。', '431 个回答'],
-    ['如何看“AI 面试官”在秋招中普及？', 7600000, '越来越多企业用 AI 做初面，候选人反馈评价标准不透明，也有人认为能减少人为偏见。', '98 个回答'],
-    ['平陆运河通航到底意味着什么？', 6400000, '西南出海通道形成，物流成本下降，沿线产业布局与港口分工都将发生变化。', '120 个回答'],
-    ['考研报名人数连续两年下降说明了什么？', 5200000, '学历回报率下降、就业导向变化、专硕扩招是主要原因，也有人认为是理性回归。', '205 个回答'],
-    ['为什么现在年轻人开始“反内耗”？', 4300000, '心理健康意识提升，社交平台流行“低耗能生活”，主动降低无效社交与情绪消耗。', '77 个回答'],
-    ['大一新生该怎样规划四年？', 3900000, '绩点、竞赛、科研、实习、英语是五条主线，建议先做加法再做减法，尽早确定方向。', '163 个回答']
-  ],
-  douyin: [
-    ['美联储宣布加息25个基点', 11432445, '', '09-17 07:04'],
-    ['各地已进入秋季最佳赏味期', 11417548, '', '09-16 16:20'],
-    ['平陆运河究竟有多“夯”', 11384764, '', '09-17 10:02'],
-    ['全国铁路完成固定资产投资5118亿', 11272824, '', '09-16 20:10'],
-    ['AI面试官上线秋招', 9800000, '', '09-17 08:30'],
-    ['开学第一课', 8700000, '', '09-16 19:00'],
-    ['秋季流感高发如何预防', 7200000, '', '09-17 06:40'],
-    ['亚运赛场名场面', 6800000, '', '09-17 09:15']
-  ],
-  bili: [
-    ['我花了一个月，把宿舍改造成了极客工位', 3200000, 'UP主用3D打印与自制支架完成桌面改造，成本控制在500元以内。'],
-    ['【硬核科普】一颗芯片是怎么被造出来的', 2800000, '从光刻、蚀刻到封装测试，完整拆解28纳米工艺产线流程。'],
-    ['AI 辅助写代码一年后，我的真实感受', 2100000, '效率提升明显，但调试能力与架构能力仍是不可替代的核心。'],
-    ['中国航天2026高光时刻合集', 1900000, ''],
-    ['用文言文写程序会是什么体验', 1500000, ''],
-    ['新版本剧情解析：这段伏笔埋了两年', 1400000, ''],
-    ['大学四年，我劝你早点学会这些', 1200000, ''],
-    ['第一次坐平陆运河货船是什么体验', 1000000, '']
-  ],
-  toutiao: [
-    ['时隔3年多美联储加息25个基点', 18893027, ''],
-    ['男子酒驾发生事故主动报警“自首”', 17095118, ''],
-    ['夏粮收购总量超1亿吨', 15468302, ''],
-    ['美联储突然加息意味着什么', 13996298, '加息落地后全球资产价格波动，市场关注后续加息路径与点阵图变化。'],
-    ['拆迁查户口发现父亲有个16岁私生子', 12664374, ''],
-    ['全国统一医保目录将首次制定', 11000000, '首批覆盖13个类别，将统一各省医疗服务项目名称与内涵。'],
-    ['第一批大学生已经开学了', 9400000, ''],
-    ['新能源车下乡政策再加码', 8200000, '']
-  ],
-  itnews: [
-    ['特斯拉 Cybercab 全国巡展首秀亮相京沪', 0, '9月17日至21日在上海兴业太古汇静态展出，北京华贸特斯拉体验店展至9月27日。官方明确此次活动仅作静态展示，不涉及国内上市销售或无人驾驶网约车商业运营安排。Cybercab 取消方向盘、踏板与后视镜，面向无人驾驶网约车场景设计。'],
-    ['华为发布新一代昇腾算力集群方案', 0, '面向大模型训练场景，单集群支持万卡互联，配套推出新版算子库与通信优化方案。'],
-    ['英伟达开源 CUDA Rust 两套 GPU 内核编写路径', 0, '开发者可用 Rust 编写 GPU 内核，借助语言特性降低内存安全问题，目前提供两条接入路线。'],
-    ['.NET 11 性能改进公布', 0, 'JIT 与 GC 均有明显优化，官方给出多组基准测试数据，涉及启动时间与内存占用。'],
-    ['国产 3nm 手机芯片进入流片阶段', 0, '消息称良率爬坡顺利，预计明年上半年量产，将用于旗舰机型。'],
-    ['开源项目 OpenSpec 发布：轻量 AI 规格框架', 0, '用于约束 AI 编码行为，让生成结果更符合工程规范，支持自定义规格文件。']
-  ],
-  ainews: [
-    ['生数科技推出实时交互与编辑视频模型 Vidu S2', 0, '含 Vidu S2-Avatar 与 Vidu S2-Editing 两款模型。Avatar 支持对话互动中动态更新参考图，实时输出从540P提升至720P；Editing 支持风格迁移、虚拟试穿、人物替换、背景替换四类实时编辑任务。', '生数科技 · 09-16'],
-    ['科大讯飞推出全场景 AI 生产力工作台 AStudio', 0, '以模型为核心，搭载 ACode Harness Agent 运行框架，支持多模型切换、Plan 规划与目标模式、多智能体协作，可连接本地文件与真实项目并验证结果。', '讯飞开放平台 · 09-16'],
-    ['谷歌推出原生实时语音对话模型 Gemini 3.8 Live', 0, '支持97种语言自动切换、近实时视觉理解及后台工具调用；Extended Thinking 版强化多步推理，推理与发言可同步进行，语音质量基准测试排名第一。', 'IT之家 · 09-16'],
-    ['豆包工作模型上新，同时推出“豆包工作伙伴”', 0, '模型完成0915小版本升级并同步上线，API 全量上架火山方舟；工作伙伴以独立身份入驻飞书群聊、文档和会议。', '豆包工作 · 09-16'],
-    ['美研究：AI 使计算机相关专业就业概率下降', 0, 'AI 兴起后电脑相关专业毕业生初次就业概率下降五个百分点，起薪下降13%，研究建议加强系统与工程能力训练。', '学术观察 · 09-16'],
-    ['三元量化研究突破 1.58-bit 精度壁垒', 0, '在保持精度的前提下大幅压缩显存占用，相关论文已上传 arXiv，可显著降低推理成本。', 'arXiv · 09-16']
-  ],
-  hn: [
-    ['Nvidia announces native GPU programming in Rust', 304, '', 'nonmaskable · 09-16 11:15'],
-    ['Training a 4B model to produce 81% faster query plans than Postgres', 406, '', 'polyphilz · 09-16 18:50'],
-    ['Breaking the 1.58-bit Barrier for Ternary LLMs', 145, '', 'matt_d · 09-16 20:59'],
-    ['Small programming tricks', 406, '', 'signa11 · 09-16 15:56'],
-    ['Performance Improvements in .NET 11', 180, '', 'soheilpro · 09-15 12:18'],
-    ['Developing provably correct Rust code with Verus', 17, '', 'Betelbuddy · 09-14 16:57']
-  ],
-  world60s: [
-    ['中国十大消费县排行出炉：4个县域社零总额超千亿元，义乌以2153.8亿元居首', 0, ''],
-    ['我国已办成世界上规模最大的法学教育体系，每年培养输送10万余名法治专门人才', 0, ''],
-    ['平陆运河16日正式通航：西南地区货物出海少走560公里，每年可节约运输费用超50亿元', 0, ''],
-    ['引力一号遥三运载火箭发射成功，一箭九星，刷新海上发射载荷重量纪录', 0, ''],
-    ['我国将首次制定全国统一的医保医疗服务项目目录，首批覆盖13个类别', 0, ''],
-    ['美国“星舰”计划22日进行首次地球轨道试飞，同时计划部署26颗第三代星链卫星', 0, ''],
-    ['美国防部通报美对伊军事行动耗资已超420亿美元，多家美媒称实际支出或更高', 0, ''],
-    ['韩国法院判决朝鲜就炸毁联络办公室大楼赔偿约446亿韩元，系韩首次起诉朝鲜胜诉', 0, '']
-  ],
-  rednote: [
-    ['秋日通勤穿搭公式', 0, ''], ['宿舍改造好物清单', 0, ''],
-    ['大一新生避坑指南', 0, ''], ['学会这招期末不熬夜', 0, ''],
-    ['北京周边一日游推荐', 0, '']
-  ],
-  tieba: [
-    ['如何评价今年的秋招形势', 0, ''], ['大学室友相处有什么经验', 0, ''],
-    ['显卡价格还会降吗', 0, ''], ['每天坚持跑步一年后的变化', 0, ''],
-    ['计算机专业学习路线求推荐', 0, '']
-  ],
-  douban: [
-    ['《星际穿越》重映版', 0, '经典科幻重登大银幕，IMAX 版本一票难求。'],
-    ['《漫长的季节》', 0, '国产悬疑剧口碑之作，细腻呈现时代变迁下的小人物命运。'],
-    ['《奥本海默》', 0, '诺兰执导，围绕原子弹之父的抉择展开三小时叙事。'],
-    ['《宇宙探索编辑部》', 0, '伪纪录片式科幻喜剧，以荒诞包裹浪漫。'],
-    ['《长安三万里》', 0, '以唐诗为线索的动画长片，展现盛唐气象。']
-  ]
-};
+var FACETS = [
+  { id:'model',    name:'新模型',   icon:'🧠', color:'#9333ea', base:30, kw:'大模型|新模型|开源模型|基础模型|多模态|MoE|蒸馏|微调|权重|基座|推理模型|参数规模' },
+  { id:'release',  name:'发布上线', icon:'🚀', color:'#7c3aed', base:26, kw:'发布|推出|上线|官宣|首发|亮相|开售|上市|正式版|新版本|公测|内测|预约|实装|揭幕' },
+  { id:'incident', name:'事故风险', icon:'⚠️', color:'#9c2b1f', base:24, kw:'事故|故障|宕机|崩了|泄露|漏洞|被黑|遭到攻击|召回|起火|爆炸|坠机|断供|停摆|瘫痪' },
+  { id:'opensource',name:'开源项目', icon:'📦', color:'#0f766e', base:24, kw:'开源|GitHub|GitLab|仓库|代码库|框架|Star|Hugging ?Face' },
+  { id:'funding',  name:'融资并购', icon:'💰', color:'#1d4ed8', base:24, kw:'融资|获投|领投|跟投|增资|估值|并购|收购|控股|举牌|\\bIPO\\b|招股|上市' },
+  { id:'policy',   name:'政策监管', icon:'⚖️', color:'#b45309', base:22, kw:'政策|新规|监管|处罚|罚款|立案调查|征求意见|立法|条例|标准|禁令|制裁|合规|约谈|反垄断' },
+  { id:'paper',    name:'论文研究', icon:'📄', color:'#0369a1', base:22, kw:'论文|arXiv|研究团队|研究称|发表|期刊|\\bNature\\b|\\bScience\\b|科研成果|突破|首次实现|提出一种|实验表明' },
+  { id:'price',    name:'价格成本', icon:'🏷️', color:'#15803d', base:16, kw:'涨价|降价|定价|起售|售价|免费|优惠|折|成本|报价|调价|收费' },
+  { id:'person',   name:'人事组织', icon:'👤', color:'#9d174d', base:16, kw:'任命|离职|辞职|加盟|开除|裁员|\\bCEO\\b|\\bCTO\\b|首席|创始人|当选|调任|接棒' },
+  { id:'bench',    name:'评测跑分', icon:'📊', color:'#0e7490', base:16, kw:'评测|实测|跑分|基准|benchmark|对比|排名|榜单|得分|性能提升|胜率|盲测' },
+  { id:'feature',  name:'功能更新', icon:'🧩', color:'#4338ca', base:12, kw:'功能|更新|升级|支持|新增|集成|接入|插件|接口|\\bAPI\\b|\\bSDK\\b' },
+  { id:'opinion',  name:'观点争议', icon:'💬', color:'#6b7280', base:6,  kw:'争议|回应|否认|道歉|吐槽|认为|怎么看|为何|不该|建议|呼吁' }
+];
+
+/* 「发布与开源」小节收录的要素：这类条目热度低也要让用户看到 */
+var RELEASE_FACETS = { model:1, release:1, opensource:1, feature:1, paper:1 };
+
+var ENTITY_GROUPS = [
+  { k:'org', label:'公司', terms:['OpenAI','Anthropic','Google','DeepMind','微软','Microsoft','苹果','Apple','Meta','特斯拉','Tesla','SpaceX','英伟达','Nvidia','AMD','Intel','台积电','阿斯麦','ASML','Arm','高通','联发科','三星','索尼','任天堂','华为','小米','荣耀','OPPO','vivo','字节','抖音','腾讯','阿里','阿里云','蚂蚁','百度','京东','美团','拼多多','快手','小红书','滴滴','网易','米哈游','比亚迪','宁德时代','理想','蔚来','小鹏','大疆','中兴','联想','商汤','旷视','科大讯飞','智谱','月之暗面','MiniMax','深度求索','生数科技','爱诗科技','阶跃','硅基流动','宇树','优必选'] },
+  { k:'model', label:'模型', terms:['GPT','ChatGPT','Claude','Gemini','Llama','DeepSeek','Qwen','豆包','通义','文心','混元','星火','Kimi','智谱清言','Midjourney','Sora','Vidu','可灵','Whisper','Copilot','Nano Banana','EmbeddingGemma','Gemma','Mistral','Stable Diffusion','FLUX','Suno','Manus','智能体'] },
+  { k:'product', label:'产品', terms:['iPhone','iPad','MacBook','AirPods','Vision Pro','鸿蒙','HarmonyOS','Android','iOS','Windows','Linux','Steam','PS5','Xbox','Switch','问界','尊界','小米汽车','微信','支付宝','淘宝','闲鱼','飞书','钉钉','Notion','VS Code','Cursor','Windsurf'] },
+  { k:'person', label:'人物', terms:['特朗普','马斯克','黄仁勋','张一鸣','王兴','马云','马化腾','任正非','雷军','贝索斯','扎克伯格','奥特曼','Altman','Amodei','李彦宏','刘强东','董明珠'] },
+  { k:'inst', label:'机构', terms:['新华社','人民日报','央视','IT之家','量子位','36氪','财新','环球时报','Nature','Science','Cell','arXiv','GitHub','HuggingFace','Hugging Face','MIT','斯坦福','清华','北大','中科院','美联储','证监会','工信部','市场监管总局'] }
+];
+
+/* 数值要素：标题里出现即抽出，直接当硬信息展示（+35% / 2699 元 / v3.8） */
+var NUMBER_RULES = [
+  { id:'money',   re:/([0-9][0-9,.]*\s*(?:万亿元?|亿元?|万美元|美元|元))/g },
+  { id:'percent', re:/([+-]?[0-9]+(?:\.[0-9]+)?\s*%)/g },
+  { id:'version', re:/(?:^|[^\w.])((?:v|ver\.?)[0-9]+(?:\.[0-9]+){1,3})/gi }
+];
 
 /* =========================================================
    2. 状态
@@ -693,16 +748,20 @@ var state = {
   query: '',
   fSource: 'all',
   fCategory: 'all',
+  fFacet: 'all',        // 分类卡片内的要素筛选（新发布 / 论文 / 融资 …）
+  onlyWatch: false,
   expanded: {},        // 展开的条目 id
   art: {},             // 条目 id -> 原文正文抓取状态 {st:'loading'|'ok'|'err', text, err, via}
-  moreOpen: {},        // 分类/平台卡片「展开更多」
+  moreOpen: {},        // 卡片小节「展开更多」，键为 key#小节
   items: [],
-  status: {},          // sourceId -> {ok,count,via,error,demo}
-  mode: 'demo',        // live | mixed | demo
+  buckets: {},         // sourceId -> 条目数组，逐源重试与重新派生都从这里出发
+  status: {},          // sourceId -> {ok,count,via,error,pending}
+  mode: 'idle',        // live | partial | empty | loading
   updatedAt: 0,
   loading: false,
   booting: true,
-  progress: { done: 0, total: 0 }
+  progress: { done: 0, total: 0 },
+  snap: { loaded: false, at: 0, date: '', sources: [], error: '', retrying: false }
 };
 
 /* =========================================================
@@ -756,6 +815,103 @@ function ago(ts) {
   if (s < 86400) return Math.floor(s / 3600) + ' 小时前';
   return Math.floor(s / 86400) + ' 天前';
 }
+
+/* 宽松时间解析：13 位毫秒 / 10 位秒 / 'YYYY-MM-DD HH:mm:ss' / ISO / RFC822。
+   只接受 2000 年后且不晚于未来 2 天的值，避免把「1604」这类年份当成时间戳 */
+function parseTimeLoose(v) {
+  if (v === null || v === undefined || v === '') return 0;
+  if (typeof v === 'number' || /^\d{9,13}$/.test(String(v).trim())) {
+    var n = Number(v);
+    if (n > 1e12) return saneTs(n);
+    if (n > 1e8) return saneTs(n * 1000);
+    return 0;
+  }
+  var s = String(v).trim();
+  var t = Date.parse(s.replace(' ', 'T'));
+  if (!isFinite(t)) t = Date.parse(s);
+  return isFinite(t) ? saneTs(t) : 0;
+}
+function saneTs(ms) {
+  if (!isFinite(ms)) return 0;
+  if (ms < 946684800000 || ms > Date.now() + 2 * 86400000) return 0;
+  return Math.round(ms);
+}
+/* 热度字符串归一：'947.5w' → 9475000，'9.55万' → 95500，'1,234' → 1234 */
+function parseHotStr(s) {
+  if (s === null || s === undefined || s === '') return 0;
+  if (typeof s === 'number') return isFinite(s) && s > 0 ? s : 0;
+  var t = String(s).trim().replace(/,/g, '');
+  var m = /^([0-9]+(?:\.[0-9]+)?)\s*(亿|万|kw|w|k|m)?/i.exec(t);
+  if (!m) return 0;
+  var n = parseFloat(m[1]);
+  if (!isFinite(n) || n <= 0) return 0;
+  var mul = { '': 1, k: 1e3, w: 1e4, 万: 1e4, kw: 1e7, m: 1e6, 亿: 1e8 }[(m[2] || '').toLowerCase()];
+  return Math.round(n * (mul || 1));
+}
+function ageHours(ts) { return ts ? Math.max(0, (Date.now() - ts) / 3600e3) : -1; }
+function fmtAge(ts) {
+  var h = ageHours(ts);
+  if (h < 0) return '时间未知';
+  if (h < 1) return Math.max(1, Math.round(h * 60)) + ' 分钟前';
+  if (h < 24) return Math.round(h) + ' 小时前';
+  if (h < 24 * 30) return Math.round(h / 24) + ' 天前';
+  return fmtShort(ts);
+}
+function watchWords() {
+  var raw = String(settings.watch || '');
+  var arr = raw.split(/[,，;；\s]+/);
+  var out = [], seen = {};
+  for (var i = 0; i < arr.length; i++) {
+    var w = arr[i].trim().toLowerCase();
+    if (!w || seen[w] || w.length > 24) continue;
+    seen[w] = 1; out.push(w);
+    if (out.length >= 12) break;
+  }
+  return out;
+}
+/* 点分路径取值：'items' / 'data.metals' */
+function digPath(obj, dotted) {
+  var parts = String(dotted || '').split('.'), cur = obj;
+  for (var i = 0; i < parts.length && cur != null; i++) cur = cur[parts[i]];
+  return cur;
+}
+/* 数据源状态表里只显示 host+pathname，GitHub 那种超长查询串不至于撑爆表格 */
+function shortPath(src) {
+  var p = Array.isArray(src.path) ? src.path[0] : String(src.path || '');
+  p = fillDyn(p);
+  var m = /^https?:\/\/([^/]+)([^?#]*)/i.exec(p);
+  return m ? m[1] + m[2] : p;
+}
+/* 路径里的日期占位符：GitHub 按「近 N 天新建」查询，需要每天现算 */
+function fillDyn(p) {
+  return String(p).replace(/\{today-minus-(\d+)\}/g, function (_, n) {
+    return fmtDate(new Date(Date.now() - Number(n) * 86400000));
+  }).replace(/\{yyyy-mm-dd\}/g, fmtDate(new Date()));
+}
+function heatOf(it) { return it && it.hotRaw > 0 ? it.hotRaw : 0; }
+function tsOf(it) { return (it && it.ts) || 0; }
+/* 唯一的排序实现：屏幕、TXT、JSON 三处必须同序，否则导出结果和看到的不一样 */
+function sortItems(list, mode) {
+  var m = mode || settings.sortMode || 'signal';
+  var pinWatch = m !== 'time';
+  list.sort(function (a, b) {
+    if (pinWatch) {
+      var w = ((b.watch && b.watch.length) ? 1 : 0) - ((a.watch && a.watch.length) ? 1 : 0);
+      if (w) return w;
+    }
+    if (m === 'heat') {
+      var d = heatOf(b) - heatOf(a);
+      return d || (a.rank - b.rank);
+    }
+    if (m === 'time') {
+      var dt = tsOf(b) - tsOf(a);
+      return dt || (heatOf(b) - heatOf(a));
+    }
+    var s = (b.signal || 0) - (a.signal || 0);
+    return s || (heatOf(b) - heatOf(a));
+  });
+  return list;
+}
 var toastTimer = null;
 function toast(msg) {
   var t = $('toast');
@@ -766,10 +922,18 @@ function toast(msg) {
 }
 function sourceById(id) {
   for (var i = 0; i < SOURCES.length; i++) if (SOURCES[i].id === id) return SOURCES[i];
+  var sn = state.snap.sources;
+  for (var j = 0; j < sn.length; j++) if (sn[j].id === id) return sn[j];
   return null;
 }
+/* 直连源 + 快照源一起参与开关判断、chips 与卡片分组 */
+function allSources() { return SOURCES.concat(state.snap.sources); }
 function categoryById(id) {
   for (var i = 0; i < CATEGORIES.length; i++) if (CATEGORIES[i].id === id) return CATEGORIES[i];
+  return null;
+}
+function facetById(id) {
+  for (var i = 0; i < FACETS.length; i++) if (FACETS[i].id === id) return FACETS[i];
   return null;
 }
 
@@ -789,6 +953,7 @@ function stDel(k) {
 function saveStore() {
   var payload = {
     v: APP_VERSION,
+    cv: CACHE_SCHEMA,
     settings: settings,
     updatedAt: state.updatedAt,
     mode: state.mode,
@@ -802,18 +967,37 @@ function loadStore() {
   if (!raw) return false;
   try {
     var d = JSON.parse(raw);
-    if (d && d.settings) {
-      settings = mergeSettings(d.settings);
-    }
-    if (d && Array.isArray(d.items) && d.items.length) {
-      state.items = d.items.filter(function (it) { return it && it.title; });
+    if (d && d.settings) settings = mergeSettings(d.settings);
+    /* 条目只在结构版本一致时复用：旧版缓存里混着已删除的示例数据，不能让它复活 */
+    if (d && Number(d.cv) === CACHE_SCHEMA && Array.isArray(d.items) && d.items.length) {
+      var kept = d.items.filter(function (it) { return it && it.title && !it.demo; });
+      if (!kept.length) return false;
+      /* 要素 / 分类 / 时间都重新算一遍再展示：词典改过之后，旧缓存里的派生字段不该继续生效 */
+      state.items = kept.map(function (it) {
+        var src = sourceById(it.sourceId) || { id: it.sourceId, fallbackCat: 'society' };
+        return makeItem({
+          sourceId: it.sourceId, rank: it.rank, title: it.title, summary: it.summary,
+          hot: it.hot, hotRaw: it.hotRaw, url: it.url, meta: it.meta, tags: it.tags,
+          ts: it.ts, src: src, snap: it.snap, snapAt: it.snapAt
+        });
+      });
+      state.buckets = regroup(state.items);
       state.status = d.status || {};
-      state.mode = d.mode || 'demo';
+      state.mode = d.mode === 'live' || d.mode === 'partial' ? d.mode : 'empty';
       state.updatedAt = Number(d.updatedAt) || 0;
       return true;
     }
   } catch (e) { /* 忽略损坏缓存 */ }
   return false;
+}
+function regroup(items) {
+  var out = {};
+  for (var i = 0; i < items.length; i++) {
+    var id = items[i].sourceId || 'other';
+    if (!out[id]) out[id] = [];
+    out[id].push(items[i]);
+  }
+  return out;
 }
 function mergeSettings(s) {
   var out = clone(DEFAULT_SETTINGS);
@@ -827,6 +1011,13 @@ function mergeSettings(s) {
   out.cacheMinutes = Math.min(720, Math.max(1, Number(out.cacheMinutes) || 30));
   out.apiBase = String(out.apiBase || '').trim() || DEFAULT_SETTINGS.apiBase;
   if (['auto', 'off', 'custom'].indexOf(out.proxyMode) < 0) out.proxyMode = 'auto';
+  if (['signal', 'heat', 'time'].indexOf(out.sortMode) < 0) out.sortMode = 'signal';
+  out.freshOnly = !!out.freshOnly;
+  out.mergeSame = out.mergeSame !== false;
+  out.useSnapshot = out.useSnapshot !== false;
+  out.watch = String(out.watch || '').slice(0, 240);
+  out.snapshotUrl = String(out.snapshotUrl || '').trim();
+  if (!/^https?:\/\//i.test(out.snapshotUrl)) out.snapshotUrl = '';
   return out;
 }
 function isSourceOn(id) {
@@ -835,6 +1026,10 @@ function isSourceOn(id) {
   return settings.enabled[id] === undefined ? def : !!settings.enabled[id];
 }
 function activeSources() {
+  return allSources().filter(function (s) { return isSourceOn(s.id); });
+}
+/* 只有直连源参与出网抓取；快照源由 loadSnapshot 一次性带进来 */
+function liveSources() {
   return SOURCES.filter(function (s) { return isSourceOn(s.id); });
 }
 
@@ -852,8 +1047,16 @@ function fetchJson(url, ms) {
       var e1 = new Error('HTTP ' + res.status);
       e1.status = res.status;
       /* 429 会带 Retry-After，按服务端要求的间隔重试最有效 */
-      var ra = res.headers && res.headers.get ? parseInt(res.headers.get('Retry-After'), 10) : NaN;
-      e1.retryAfter = (isFinite(ra) && ra > 0) ? ra : 0;
+      if (res.headers && res.headers.get) {
+        var ra = parseInt(res.headers.get('Retry-After'), 10);
+        e1.retryAfter = (isFinite(ra) && ra > 0) ? ra : 0;
+        /* GitHub 把配额头放进了 Access-Control-Expose-Headers，浏览器读得到，
+           限流时能直接告诉用户几点恢复，而不是盲目重试 */
+        var rem = parseInt(res.headers.get('X-RateLimit-Remaining'), 10);
+        var rst = parseInt(res.headers.get('X-RateLimit-Reset'), 10);
+        if (isFinite(rem)) e1.rateRemain = rem;
+        if (isFinite(rst)) e1.rateReset = rst;
+      }
       throw e1;
     }
     return res.text();
@@ -878,12 +1081,13 @@ function sleep(ms) {
 }
 
 /* 一个数据源可配置多个候选地址：path 写成数组，或用 altPaths 追加备用地址，
-   主接口挂掉时自动顺延到下一个，不需要人工干预 */
+   主接口挂掉时自动顺延到下一个，不需要人工干预；path 里可用 {today-minus-7} 取相对日期 */
 function buildTargets(src) {
   var base = String(settings.apiBase || '').replace(/\/+$/, '');
   var list = Array.isArray(src.path) ? src.path : [src.path];
   var alt = Array.isArray(src.altPaths) ? src.altPaths : [];
   return list.concat(alt).map(function (p) {
+    p = fillDyn(p);
     return /^https?:/i.test(p) ? p : base + p;
   });
 }
@@ -910,6 +1114,11 @@ function errText(err) {
   if (!err) return '请求失败';
   if (err.status === 429) return '被接口限流（429），稍后重试';
   if (err.status >= 500) return '接口服务端错误（' + err.status + '）';
+  if (err.status === 403 && err.rateRemain === 0 && err.rateReset) {
+    return '接口共享配额用尽，约 ' + Math.max(1, Math.ceil((err.rateReset * 1000 - Date.now()) / 60000)) + ' 分钟后恢复';
+  }
+  if (err.status === 403) return '接口拒绝访问（403）';
+  if (err.status === 401) return '接口要求 API Key（401）';
   if (err.status >= 400) return 'HTTP ' + err.status;
   if (err.badBody) return '返回非 JSON（接口可能被限流）';
   if (err.name === 'AbortError') return '请求超时';
@@ -933,8 +1142,10 @@ function tryChannel(url, via, tries) {
     attempt++;
     return netGate(function () { return fetchJson(url, 9000); }).then(function (json) {
       var badCode = json && typeof json.code === 'number' && json.code !== 200 && json.code !== 0;
-      var hasData = json && (json.data !== undefined || Array.isArray(json));
-      if (json && !badCode && hasData) { easeGap(); return { ok: true, data: json, via: via }; }
+      /* 60s 系接口把内容包在 data 里；GitHub / HN Algolia 这类外部接口没有这层包装，
+         只有 JSON 解析成功本身才是判断依据，否则合法响应会被当成「接口返回异常」 */
+      var shaped = !!json && (Array.isArray(json) || typeof json === 'object');
+      if (json && !badCode && shaped) { easeGap(); return { ok: true, data: json, via: via }; }
       var e = new Error(badCode ? ('接口返回 code ' + json.code) : '接口返回异常');
       e.status = badCode ? Number(json.code) : 0;
       if (e.status === 429) e.retryAfter = 2;
@@ -952,8 +1163,22 @@ function tryChannel(url, via, tries) {
   return once();
 }
 
+/* 有配额上限的接口（GitHub）在一轮刷新里只出网一次，结果按 TTL 复用 */
+var _respCache = {};
+function cacheLook(src) {
+  if (!src.cacheKey) return null;
+  var e = _respCache[src.cacheKey];
+  if (!e) return null;
+  return (Date.now() - e.at > (Number(src.cacheTtl) || 1800000)) ? null : e;
+}
+function cacheSave(src, data) {
+  if (src.cacheKey) _respCache[src.cacheKey] = { at: Date.now(), data: data };
+}
+
 /* 依次尝试：主地址（失败顺延备用地址）→ 代理（仅当直连彻底失败时兜底） */
 function requestSource(src) {
+  var hit = cacheLook(src);
+  if (hit) return Promise.resolve({ ok: true, data: hit.data, via: '本轮缓存' });
   var targets = buildTargets(src);
   var lastErr = null;
   function tryTargets(i) {
@@ -964,8 +1189,10 @@ function requestSource(src) {
     });
   }
   return tryTargets(0).catch(function (err) {
-    /* 上游 5xx 说明该接口自己挂了（代理也是同一个上游），直接降级，省下时间给其他平台 */
-    if (err && err.status >= 500 && err.status < 600) throw err;
+    /* 上游 5xx / 401 / 403 换代理也没用（代理撞的是同一个上游，或对方已要求 Key）；
+       标了 noProxy 的源本身就不该把地址外发给第三方代理。直接降级，把时间留给其他平台 */
+    var st = err && err.status;
+    if (src.noProxy || (st >= 500 && st < 600) || st === 401 || st === 403) throw err;
     var mode = settings.proxyMode;
     var plan = null;
     if (mode === 'custom' && settings.proxy) plan = { via: '自定义代理', url: wrapProxy(settings.proxy, targets[0]) };
@@ -973,6 +1200,7 @@ function requestSource(src) {
     if (!plan) throw err;
     return tryChannel(plan.url, plan.via, 1);
   }).then(function (r) {
+    cacheSave(src, r.data);
     return r;
   }, function (err) {
     return { ok: false, error: errText(err), retryable: isRetryable(err) };
@@ -1158,6 +1386,7 @@ function loadArticle(it) {
 function extractItems(json, src) {
   if (!json) return [];
   var d = (json.data !== undefined) ? json.data : json;
+  if (src.pick) d = digPath(d, src.pick);
   if (src.kind === 'news') {
     var arr = (d && Array.isArray(d.news)) ? d.news : (Array.isArray(d) ? d : []);
     var commonLink = (d && d.link) ? d.link : '';
@@ -1175,49 +1404,185 @@ function extractItems(json, src) {
   return [];
 }
 
+/* 豆瓣把关注度放在 rating_count 里；rating 是评分（9.6），不能当热度 */
+var HOT_KEYS = ['hot_value', 'hot_index', 'hot_num', 'like_count', 'stargazers_count',
+                'rating_count', 'replies', 'hot', 'num', 'score'];
+var HOT_LABELS = { like_count: ' 互动', stargazers_count: ' star', rating_count: ' 人评价', replies: ' 回复' };
+var HOT_STR_KEYS = ['hot_value_desc', 'score_desc', 'hot_desc', 'hot_text', 'score', 'hot'];
+var TS_KEYS = ['created_at', 'published_at', 'published', 'updated_at', 'event_time',
+               'created', 'date', 'ctime', 'mtime', 'last_touched', 'submittedOnDailyAt'];
+
+function pickHot(raw, src) {
+  var fixed = src && src.hotLabel !== undefined ? src.hotLabel : null;
+  for (var i = 0; i < HOT_KEYS.length; i++) {
+    var n = firstNum(raw[HOT_KEYS[i]]);
+    /* 互动 / star / 评价 / 分数 这些数字不是「热搜热度」，带上单位才不会和微博的亿级热度混读 */
+    if (n > 0) return { hotRaw: n, hotText: fmtNum(n) + (fixed !== null ? fixed : (HOT_LABELS[HOT_KEYS[i]] || '')) };
+  }
+  var s = firstStr.apply(null, HOT_STR_KEYS.map(function (k) { return raw[k]; }));
+  var p = parseHotStr(s);
+  if (p > 0) return { hotRaw: p, hotText: fmtNum(p) };
+  return { hotRaw: 0, hotText: s ? String(s) : '' };
+}
+function pickTime(raw) {
+  for (var i = 0; i < TS_KEYS.length; i++) {
+    var t = parseTimeLoose(raw[TS_KEYS[i]]);
+    if (t) return t;
+  }
+  return 0;
+}
+function pickTags(raw) {
+  var t = raw.tags || raw.category || raw.node || [];
+  if (typeof t === 'string') t = t.split(/[,，]/);
+  if (!Array.isArray(t)) return [];
+  var out = [];
+  for (var i = 0; i < t.length && out.length < 4; i++) {
+    var x = t[i];
+    if (x && typeof x === 'object') x = x.name || x.title || x.id;
+    x = cleanText(String(x == null ? '' : x));
+    if (x && x.length <= 18 && out.indexOf(x) < 0) out.push(x);
+  }
+  return out;
+}
+
 function buildMeta(raw, src) {
   var parts = [];
-  var who = firstStr(raw.author, raw.source, raw.up_name);
+  var who = firstStr(raw.author, raw.source, raw.up_name, raw.member && raw.member.username);
   if (who) parts.push(who);
-  var t = firstStr(raw.created, raw.event_time, raw.published_at, raw.date);
-  if (t) parts.push(t);
   var ac = firstNum(raw.answer_cnt);
   if (ac) parts.push(ac + ' 个回答');
   var fc = firstNum(raw.follower_cnt);
   if (fc) parts.push(fc + ' 关注');
   var cc = firstNum(raw.comment_cnt);
   if (cc) parts.push(cc + ' 评论');
+  var rc = firstNum(raw.rating_count);
+  if (rc && !cc) parts.push(fmtNum(rc) + ' 人评价');
+  if (raw.unit) parts.push(String(raw.unit));
   if (src.id === 'baidu' && raw.type_desc) parts.push(raw.type_desc);
   return parts.join(' · ');
 }
 
-function normalizeItem(raw, src, idx, isDemo) {
+/* ---------- 要素抽取（纯规则） ---------- */
+var _facetRe = {}, _entRe = null, _termCount = {};
+function escapeRe(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+function facetRe(f) {
+  if (!_facetRe[f.id]) _facetRe[f.id] = new RegExp(f.kw, 'i');
+  return _facetRe[f.id];
+}
+function catTermCount(c) {
+  if (!_termCount[c.id]) _termCount[c.id] = Math.sqrt(c.kw.split('|').length);
+  return _termCount[c.id];
+}
+/* 实体表编译成一条 alternation，按长度降序，保证「EmbeddingGemma」不被「Gemma」截胡。
+   英文词必须带单词边界，否则 "Metal driver" 会被认成 Meta */
+function termRe(t) {
+  var head = /^[A-Za-z0-9]/.test(t) ? '\\b' : '';
+  var tail = /[A-Za-z0-9]$/.test(t) ? '\\b' : '';
+  return head + escapeRe(t) + tail;
+}
+function entRe() {
+  if (_entRe) return _entRe;
+  var terms = [], seen = {};
+  for (var g = 0; g < ENTITY_GROUPS.length; g++) {
+    for (var i = 0; i < ENTITY_GROUPS[g].terms.length; i++) {
+      var t = ENTITY_GROUPS[g].terms[i], k = t.toLowerCase();
+      if (seen[k]) continue;
+      seen[k] = 1; terms.push(t);
+    }
+  }
+  terms.sort(function (a, b) { return b.length - a.length; });
+  _entRe = new RegExp('(' + terms.map(termRe).join('|') + ')', 'gi');
+  return _entRe;
+}
+function numFacts(text) {
+  var out = [];
+  for (var r = 0; r < NUMBER_RULES.length; r++) {
+    var re = NUMBER_RULES[r].re;
+    re.lastIndex = 0;
+    var m;
+    while ((m = re.exec(text))) {
+      var v = cleanText(m[1]);
+      if (v && out.indexOf(v) < 0) out.push(v);
+      if (out.length >= 3) return out;
+    }
+  }
+  return out;
+}
+function extractFacets(title, summary, tags) {
+  var hay = String(title || '') + ' ' + String(summary || '').slice(0, 260) +
+            ' ' + (tags || []).join(' ');
+  var re = entRe(), m, ents = [], seen = {};
+  re.lastIndex = 0;
+  while (ents.length < 4 && (m = re.exec(hay))) {
+    var v = cleanText(m[1]);
+    var k = v.toLowerCase();
+    if (!v || seen[k]) continue;
+    seen[k] = 1; ents.push(v);
+  }
+  var hits = [];
+  for (var i = 0; i < FACETS.length; i++) {
+    if (facetRe(FACETS[i]).test(hay)) hits.push(FACETS[i]);
+  }
+  hits.sort(function (a, b) { return b.base - a.base; });
+  return {
+    evt: hits.length ? hits[0].id : '',
+    facets: hits.map(function (f) { return f.id; }),
+    ents: ents,
+    nums: numFacts(String(title || ''))
+  };
+}
+
+/* ---------- 条目工厂：直连源与快照源都汇到这里，要素与分类各算一次 ---------- */
+function hash32(s) {
+  var h = 5381, str = String(s || '');
+  for (var i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) >>> 0;
+  return h.toString(36);
+}
+function makeItem(o) {
+  var title = cleanText(o.title).slice(0, 200);
+  var f = extractFacets(title, o.summary, o.tags);
+  var cat = classify(title, o.summary, o.src, f.ents);
+  return {
+    id: o.sourceId + '-' + o.rank + '-' + hash32(title),
+    sourceId: o.sourceId,
+    rank: o.rank,
+    title: title,
+    hot: o.hot,
+    hotRaw: o.hotRaw,
+    summary: o.summary,
+    url: o.url,
+    meta: o.meta,
+    tags: o.tags || [],
+    ts: o.ts || 0,
+    ageH: ageHours(o.ts || 0),
+    evt: f.evt,
+    facets: f.facets,
+    ents: f.ents,
+    nums: f.nums,
+    category: cat.id,
+    snap: !!o.snap,
+    snapAt: o.snapAt || 0
+  };
+}
+
+function normalizeItem(raw, src, idx) {
   raw = raw || {};
-  var title = firstStr(raw.title, raw.name, raw.word, raw.query, raw.keyword);
+  var title = firstStr(src.titleField ? raw[src.titleField] : '', raw.title, raw.name, raw.word, raw.query, raw.keyword);
   var summary = firstStr(
     src.summaryField ? raw[src.summaryField] : '',
     raw.detail, raw.desc, raw.description, raw.summary, raw.excerpt, raw.text, raw.content
   );
+  summary = cleanText(summary);
   if (summary.length > 600) summary = summary.slice(0, 600) + '…';
-  var hotRaw = firstNum(raw.hot_value, raw.score, raw.hot, raw.hot_index, raw.hot_num, raw.num);
-  var hotText = hotRaw ? fmtNum(hotRaw) : firstStr(raw.hot_value_desc, raw.score_desc, raw.hot_desc, raw.hot_text);
-  var url = firstStr(raw.link, raw.url, raw.mobileUrl, raw.share_url, raw.href);
+  var h = pickHot(raw, src);
+  var url = firstStr(raw.link, raw.url, raw.mobileUrl, raw.share_url, raw.href, raw.html_url);
   if (!url && src.searchUrl) url = src.searchUrl + encodeURIComponent(title);
   var rank = firstNum(raw.rank) || (idx + 1);
-  var cat = classify(title, summary, src);
-  return {
-    id: src.id + '-' + rank + '-' + (title.slice(0, 18)),
-    sourceId: src.id,
-    rank: rank,
-    title: title,
-    hot: hotText,
-    hotRaw: hotRaw,
-    summary: summary,
-    url: url,
-    meta: buildMeta(raw, src),
-    category: cat.id,
-    demo: !!isDemo
-  };
+  return makeItem({
+    sourceId: src.id, rank: rank, title: title, summary: summary,
+    hot: h.hotText, hotRaw: h.hotRaw, url: url, meta: buildMeta(raw, src),
+    tags: pickTags(raw), ts: pickTime(raw), src: src
+  });
 }
 
 var _reCache = {};
@@ -1231,47 +1596,223 @@ function countHits(re, text) {
   var m = text.match(re);
   return m ? m.length : 0;
 }
-function classify(title, summary, src) {
+/* 词典长短不一，命中数除以词数开方，避免「摘要写得长」压过「标题真正相关」；
+   抽到的实体是精确专有名词，权重最高 */
+function classify(title, summary, src, ents) {
+  var entTxt = ents && ents.length ? ents.join(' ') : '';
   var best = null, bestScore = 0;
   for (var i = 0; i < CATEGORIES.length; i++) {
     var c = CATEGORIES[i];
     var re = catReg(c);
-    var score = countHits(re, title) * 3 + countHits(re, summary) * 1;
+    var raw = countHits(re, title) * 3 + Math.min(3, countHits(re, summary)) + countHits(re, entTxt) * 4;
+    var score = raw / catTermCount(c);
     if (score > bestScore) { bestScore = score; best = c; }
   }
-  if (best) return best;
+  if (best && bestScore > 0) return best;
   return categoryById(src && src.fallbackCat ? src.fallbackCat : 'society') || CATEGORIES[6];
 }
 
-function sampleToRaw(src) {
-  var arr = SAMPLE_RAW[src.id] || [];
-  return arr.map(function (t) {
-    return { title: t[0], hot_value: t[1], detail: t[2], meta0: t[3], __meta: t[3] };
-  });
-}
-
 /* =========================================================
-   7. 抓取主流程
+   7. 派生计算：关注词命中 → 同事件聚类 → 信号分 → 排序
    ========================================================= */
-function demoItems(src, limit) {
-  return sampleToRaw(src).slice(0, limit).map(function (x, i) {
-    var it = normalizeItem(x, src, i, true);
-    it.meta = firstStr(x.__meta, it.meta);
-    return it;
-  });
+function matchWatch(it, words) {
+  if (!words || !words.length) return [];
+  var hay = (it.title + ' ' + (it.summary || '') + ' ' + (it.ents || []).join(' ') + ' ' + (it.tags || []).join(' ')).toLowerCase();
+  var hit = [];
+  for (var i = 0; i < words.length; i++) if (hay.indexOf(words[i]) >= 0) hit.push(words[i]);
+  return hit;
 }
 
-/* 汇总各平台分桶结果，并标记全局「重点条目」 */
+var STOP_WORDS = /^(如何|为什么|怎么看|是什么|消息|视频|最新|今日|今天|一个|这个|那个|关于|表示|回应|宣布|即将|更多|继续|来源|报道|记者|编辑|现场|后续|确认|了解)$/;
+function titleTokens(t) {
+  var s = String(t || '').toLowerCase().replace(/[\s\p{P}]/gu, '');
+  var set = {}, out = [];
+  for (var i = 0; i + 2 <= s.length; i++) {
+    var g = s.slice(i, i + 2);
+    if (STOP_WORDS.test(g) || set[g]) continue;
+    set[g] = 1; out.push(g);
+  }
+  return out;
+}
+function jaccard(a, b) {
+  if (!a.length || !b.length) return 0;
+  var map = {}, i, hit = 0;
+  for (i = 0; i < a.length; i++) map[a[i]] = 1;
+  for (i = 0; i < b.length; i++) if (map[b[i]]) hit++;
+  return hit / (a.length + b.length - hit);
+}
+/* 跨平台标题用词几乎从不相同，「前 26 字精确匹配」实际命中率≈0。
+   这里按同分类内的二元组集合相似度聚簇，只与已有簇头比较，代价近似 O(n·簇数) */
+function clusterItems(all) {
+  var groups = {}, n = 0, i, j;
+  for (i = 0; i < all.length; i++) {
+    var it = all[i];
+    it.clusterSize = 1;
+    it.clusterSrcs = [it.sourceId];
+    it.clusterHot = heatOf(it);
+    it.clusterParent = '';
+    it._toks = titleTokens(it.title);
+    it._sig = (it.ents && it.ents[0]) ? String(it.ents[0]).toLowerCase() : '';
+  }
+  for (i = 0; i < all.length; i++) {
+    var cur = all[i];
+    var heads = groups[cur.category] || (groups[cur.category] = []);
+    for (j = 0; j < heads.length; j++) {
+      var h = heads[j];
+      /* 同一平台榜单里的两条通常是两件事，不折叠 */
+      if (h.sourceId === cur.sourceId) continue;
+      var sim = jaccard(h._toks, cur._toks);
+      var sameEnt = !!cur._sig && h._sig === cur._sig;
+      if (sim >= 0.5 || (sameEnt && sim >= 0.3)) {
+        cur.clusterParent = h.id;
+        h.clusterSize++;
+        h.clusterHot += heatOf(cur);
+        if (h.clusterSrcs.indexOf(cur.sourceId) < 0) h.clusterSrcs.push(cur.sourceId);
+        n++;
+        break;
+      }
+    }
+    if (!cur.clusterParent) heads.push(cur);
+  }
+  state.mergedCount = n;
+  return n;
+}
+
+/* 信号分：把「值不值得看」从热度里拆出来。
+   跨平台热度量纲不可比（微博 780 万 vs 知乎 4 万），所以热度只按源内百分位计分 */
+function computeSignal(it) {
+  var p = {}, a = it.ageH, f = it.evt ? facetById(it.evt) : null;
+  /* 热度先按源内百分位（微博 780 万与知乎 4 万不可直接比），再乘绝对量级系数：
+     否则夸克 6 个赞也能靠「本源第一」拿满热度项 */
+  var h = heatOf(it);
+  var abs = h > 0 ? Math.min(1, Math.log(h) / Math.log(1e6)) : 0;
+  p.热度 = h > 0 ? Math.round(32 * (it.hotPct || 0) * abs) : 5;
+  p.新鲜 = a < 0 ? 8 : (a < 3 ? 25 : (a < 12 ? 21 : (a < 24 ? 17 : (a < 72 ? 10 : 4))));
+  p.要素 = f ? Math.round(f.base * 0.75) : 0;
+  p.主体 = Math.min(8, (it.ents || []).length * 4);
+  p.同现 = Math.min(14, ((it.clusterSize || 1) - 1) * 7);
+  p.关注 = (it.watch && it.watch.length) ? 24 : 0;
+  var sum = 0;
+  for (var k in p) sum += p[k];
+  it.signalParts = p;
+  it.signal = Math.min(100, Math.round(sum));
+  return it.signal;
+}
+
 function rebuildItems(buckets) {
   var all = [];
   for (var k in buckets) { if (buckets[k] && buckets[k].length) all = all.concat(buckets[k]); }
-  all.sort(function (a, b) { return (b.hotRaw || 0) - (a.hotRaw || 0); });
+  var words = watchWords();
+  var bySrc = {};
+  all.forEach(function (it) {
+    it.watch = matchWatch(it, words);
+    if (!bySrc[it.sourceId]) bySrc[it.sourceId] = [];
+    bySrc[it.sourceId].push(it);
+  });
+  Object.keys(bySrc).forEach(function (id) {
+    var g = bySrc[id].slice().sort(function (a, b) { return heatOf(b) - heatOf(a); });
+    for (var i = 0; i < g.length; i++) {
+      g[i].hotPct = heatOf(g[i]) > 0 ? Math.max(0.05, 1 - i / Math.max(1, g.length - 1)) : 0;
+    }
+  });
+  /* 先按热度排一次，让同事件的簇头落在最热的那条上（各平台榜单的原始热度最有代表性） */
+  all.sort(function (a, b) { return heatOf(b) - heatOf(a) || (b.ts || 0) - (a.ts || 0); });
+  clusterItems(all);
+  sortItems(all, null);
+  all.forEach(function (it) { computeSignal(it); });
+  sortItems(all, null);
   var topIds = {};
-  for (var i = 0; i < Math.min(15, all.length); i++) {
-    if (all[i].hotRaw > 0) topIds[all[i].id] = true;
-  }
-  all.forEach(function (it) { it.emphasis = !!topIds[it.id]; });
+  for (var i = 0; i < Math.min(15, all.length); i++) topIds[all[i].id] = true;
+  all.forEach(function (it) { it.emphasis = !!topIds[it.id] && it.signal >= 45; });
   return all;
+}
+
+/* 设置变了（关注词 / 排序 / 合并）之后重新派生，不需要重新出网 */
+function recompute() {
+  state.items = rebuildItems(state.buckets);
+  renderAll();
+}
+
+/* =========================================================
+   7.5 服务端快照：浏览器拿不到的源（CORS 限制）由 Actions 定时抓好
+   ========================================================= */
+function guessSnapshotUrl() {
+  var here = String(location.href || '');
+  var raw = /^https?:\/\/raw\.githubusercontent\.com\/([^/]+)\/([^/]+)\/([^/]+)\//i.exec(here);
+  if (raw) return 'https://raw.githubusercontent.com/' + raw[1] + '/' + raw[2] + '/' + raw[3] + '/data/latest.json';
+  var io = /^https?:\/\/([^./]+)\.github\.io\/([^/]+)\//i.exec(here);
+  if (io) return 'https://raw.githubusercontent.com/' + io[1] + '/' + io[2] + '/main/data/latest.json';
+  return 'https://raw.githubusercontent.com/' + SNAPSHOT_REPO + '/main/data/latest.json';
+}
+function snapshotUrl() {
+  return settings.snapshotUrl || guessSnapshotUrl();
+}
+
+function ingestSnapshot(payload) {
+  if (!payload || !Array.isArray(payload.items)) throw new Error('快照结构不对');
+  var at = Number(payload.generatedAtMs) || 0;
+  var metas = Array.isArray(payload.sources) ? payload.sources : [];
+  state.snap.sources = metas.filter(function (m) { return m && m.id; }).map(function (m) {
+    return {
+      id: m.id, name: m.name || m.id, short: m.short || m.name || m.id,
+      icon: m.icon || '📌', color: m.color || '#8a8377',
+      fallbackCat: m.fallbackCat || 'tech', dayList: !!m.dayList,
+      defaultOn: m.defaultOn !== false, isSnap: true, kind: 'snapshot',
+      path: 'Actions 快照', ok: !!m.ok, count: m.count || 0, error: m.error || ''
+    };
+  });
+  var buckets = {};
+  var limit = Number(settings.perSourceLimit) || 15;
+  payload.items.forEach(function (row) {
+    if (!row || !row.title || !row.sourceId) return;
+    var meta = sourceById(row.sourceId);
+    if (!meta) {
+      meta = {
+        id: row.sourceId, name: row.sourceId, short: row.sourceId, icon: '📌',
+        color: '#8a8377', fallbackCat: row.fallbackCat || 'tech', isSnap: true,
+        defaultOn: true, kind: 'snapshot', path: 'Actions 快照'
+      };
+      state.snap.sources.push(meta);
+    }
+    if (!isSourceOn(meta.id)) return;
+    if (!buckets[meta.id]) buckets[meta.id] = [];
+    if (buckets[meta.id].length >= Math.max(limit, 25)) return;
+    buckets[meta.id].push(makeItem({
+      sourceId: meta.id, rank: buckets[meta.id].length + 1, title: row.title,
+      summary: String(row.summary || ''), hot: row.hot || '', hotRaw: Number(row.hotRaw) || 0,
+      url: row.url || '', meta: (row.tags || []).join(' · '), tags: row.tags || [],
+      ts: Number(row.ts) || 0, src: meta, snap: true, snapAt: at
+    }));
+  });
+  /* 快照先铺，实时源逐个覆盖同名分桶；已抓到的实时数据不会被快照盖掉 */
+  Object.keys(buckets).forEach(function (id) {
+    if (!state.buckets[id] || !state.buckets[id].length) state.buckets[id] = buckets[id];
+    state.status[id] = { ok: true, count: buckets[id].length, via: 'Actions 快照', snap: true };
+  });
+  state.snap.loaded = true;
+  state.snap.at = at;
+  state.snap.date = payload.date || '';
+  state.snap.error = '';
+  state.items = rebuildItems(state.buckets);
+  renderAll();
+}
+
+function loadSnapshot() {
+  if (!settings.useSnapshot) return Promise.resolve(false);
+  var url = snapshotUrl();
+  return fetch(url, { cache: 'no-store', headers: { Accept: 'application/json' } })
+    .then(function (res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.text();
+    })
+    .then(function (txt) { return JSON.parse(txt); })
+    .then(function (payload) {
+      ingestSnapshot(payload);
+      return true;
+    }, function (err) {
+      state.snap.error = errText(err);
+      return false;
+    });
 }
 
 function setRefreshBtn(loading, txt) {
@@ -1279,6 +1820,77 @@ function setRefreshBtn(loading, txt) {
   if (!btn) return;
   btn.disabled = !!loading;
   btn.innerHTML = loading ? '<span class="rot">↻</span> ' + (txt || '抓取中') : '&#8635; 一键刷新';
+}
+
+/* 抓一个源：结果写进 state.buckets / state.status。
+   整轮刷新与「重试此源」共用这一份实现，行为才不会分叉 */
+function fetchOne(src, round) {
+  var limit = Number(settings.perSourceLimit) || 15;
+  var maxTry = round === 0 ? 2 : 1;
+
+  function attemptOnce(n) {
+    return requestSource(src).then(function (r) {
+      var raw = [];
+      if (r && r.ok) {
+        try { raw = extractItems(r.data, src); } catch (e) { raw = []; }
+      }
+      raw = (raw || []).filter(function (x) {
+        return firstStr(src.titleField ? x && x[src.titleField] : '', x && x.title, x && x.name, x && x.word, x && x.query);
+      });
+      /* 部分上游（如知乎）偶发返回 code 200 但列表为空，原地再试一次基本能恢复 */
+      if (r && r.ok && !raw.length && n < maxTry) {
+        return sleep(600).then(function () { return attemptOnce(n + 1); });
+      }
+      return { r: r, raw: raw };
+    });
+  }
+
+  return attemptOnce(1).then(function (res) {
+    var r = res.r, raw = res.raw;
+    if (raw.length) {
+      state.buckets[src.id] = raw.slice(0, limit).map(function (x, i) {
+        return normalizeItem(x, src, i);
+      });
+      state.status[src.id] = { ok: true, count: state.buckets[src.id].length, via: r.via };
+    } else {
+      /* 抓失败时不清空已有条目：上次抓到的真实数据比空白有用，但状态必须标成失败并给出原因 */
+      var keep = (state.buckets[src.id] || []).length;
+      state.status[src.id] = {
+        ok: false, failed: true, count: keep, stale: keep > 0,
+        error: (r && r.error) || '接口返回空列表'
+      };
+    }
+  }, function (err) {
+    /* 只有「等一下就好」的失败（限流 / 超时 / 断网）才值得补抓，403/500 直接跳过 */
+    var keep = (state.buckets[src.id] || []).length;
+    if (round === 0 && isRetryable(err)) state.retryQueue.push(src);
+    state.status[src.id] = { ok: false, failed: true, count: keep, stale: keep > 0, error: errText(err) };
+  }).then(function () {
+    state.progress.done++;
+    state.items = rebuildItems(state.buckets);
+    renderAll();
+    setRefreshBtn(true, (round === 0 ? '抓取中 ' : '重试中 ') + state.progress.done + '/' + state.progress.total);
+  });
+}
+
+function finishRound(silent) {
+  var okCount = 0, badCount = 0;
+  Object.keys(state.status).forEach(function (k) {
+    var st = state.status[k];
+    delete st.pending;
+    if (st.ok) okCount++; else if (!st.snap) badCount++;
+  });
+  state.mode = !state.items.length ? 'empty' : (badCount === 0 ? 'live' : 'partial');
+  state.updatedAt = Date.now();
+  state.booting = false;
+  state.loading = false;
+  saveStore();
+  renderAll();
+  setRefreshBtn(false);
+  if (!silent) {
+    if (badCount === 0) toast('已更新 ' + state.items.length + ' 条（' + okCount + ' 个实时源）');
+    else toast('已更新 ' + state.items.length + ' 条：' + okCount + ' 个源正常，' + badCount + ' 个失败');
+  }
 }
 
 function refresh(silent) {
@@ -1289,73 +1901,24 @@ function refresh(silent) {
     return Promise.resolve();
   }
   state.loading = true;
+  state.retryQueue = [];
   renderHeader();
   setRefreshBtn(true, '准备中');
 
-  var sources = activeSources();
-  var limit = Number(settings.perSourceLimit) || 15;
-  var buckets = {};
-  var status = {};
-
-  /* 先用内置示例数据占位：页面立刻可读，随后每个平台抓到实时数据就地替换，
-     避免「等全部平台抓完才出内容」导致长时间白屏 */
+  var sources = liveSources();
+  /* 没抓到的源显示骨架行，不再用任何示例内容占位 */
   sources.forEach(function (src) {
-    buckets[src.id] = demoItems(src, limit);
-    status[src.id] = { ok: false, demo: true, pending: true, count: buckets[src.id].length };
+    if (!state.buckets[src.id]) state.buckets[src.id] = [];
+    state.status[src.id] = {
+      ok: false, pending: true, count: state.buckets[src.id].length,
+      skel: Number(settings.perSourceLimit) || 15
+    };
   });
-  state.status = status;
-  state.items = rebuildItems(buckets);
+  state.items = rebuildItems(state.buckets);
   state.progress = { done: 0, total: sources.length };
+  state.mode = 'loading';
   renderAll();
   setRefreshBtn(true, '抓取中 0/' + sources.length);
-
-  var failed = [];
-
-  function fetchOne(src, round) {
-    /* 部分上游（如知乎）偶发返回 code 200 但列表为空，原地再试一次基本能恢复 */
-    var maxTry = round === 0 ? 2 : 1;
-
-    function attemptOnce(n) {
-      return requestSource(src).then(function (r) {
-        var raw = [];
-        if (r && r.ok) {
-          try { raw = extractItems(r.data, src); } catch (e) { raw = []; }
-        }
-        raw = (raw || []).filter(function (x) {
-          return firstStr(x && x.title, x && x.name, x && x.word, x && x.query);
-        });
-        if (r && r.ok && !raw.length && n < maxTry) {
-          return sleep(600).then(function () { return attemptOnce(n + 1); });
-        }
-        return { r: r, raw: raw };
-      });
-    }
-
-    return attemptOnce(1).then(function (res) {
-      var r = res.r, raw = res.raw;
-      if (raw.length) {
-        buckets[src.id] = raw.slice(0, limit).map(function (x, i) {
-          return normalizeItem(x, src, i, false);
-        });
-        status[src.id] = { ok: true, count: buckets[src.id].length, via: r.via };
-      } else {
-        /* 空列表已原地重试过，不再进入补抓轮，避免无谓拖延 */
-        status[src.id] = {
-          ok: false, demo: true, count: buckets[src.id].length,
-          error: (r && r.error) || '接口返回空列表'
-        };
-      }
-    }, function (err) {
-      /* 只有「等一下就好」的失败（限流 / 超时 / 断网）才值得补抓，服务端 500 直接跳过 */
-      if (round === 0 && isRetryable(err)) failed.push(src);
-      status[src.id] = { ok: false, demo: true, count: buckets[src.id].length, error: errText(err) };
-    }).then(function () {
-      state.progress.done++;
-      state.items = rebuildItems(buckets);
-      renderAll();
-      setRefreshBtn(true, (round === 0 ? '抓取中 ' : '重试中 ') + state.progress.done + '/' + state.progress.total);
-    });
-  }
 
   /* 平台之间串行抓取（出网间隔由 netGate 统一控制），每完成一个立即重绘 */
   function runRound(list, round) {
@@ -1368,31 +1931,14 @@ function refresh(silent) {
 
   return runRound(sources, 0).then(function () {
     /* 第一轮失败的平台再补抓一轮：此时突发已过，成功率明显更高 */
-    if (!failed.length) return null;
-    var retryList = failed.slice(0, 8);
-    failed = [];
+    if (!state.retryQueue.length) return null;
+    var retryList = state.retryQueue.slice(0, 8);
+    state.retryQueue = [];
     state.progress.total += retryList.length;
     setRefreshBtn(true, '重试中 ' + state.progress.done + '/' + state.progress.total);
     return runRound(retryList, 1);
   }).then(function () {
-    var okCount = 0, demoCount = 0;
-    Object.keys(status).forEach(function (k) {
-      delete status[k].pending;
-      if (status[k].ok) okCount++; else demoCount++;
-    });
-    state.mode = okCount === 0 ? 'demo' : (demoCount === 0 ? 'live' : 'mixed');
-    state.updatedAt = Date.now();
-    state.booting = false;
-    state.loading = false;
-    saveStore();
-    renderAll();
-    setRefreshBtn(false);
-
-    if (!silent) {
-      if (state.mode === 'live') toast('已更新 ' + state.items.length + ' 条实时热搜');
-      else if (state.mode === 'mixed') toast('已更新：' + okCount + ' 个平台实时，' + demoCount + ' 个降级示例数据');
-      else toast('接口暂不可用，当前为内置示例数据');
-    }
+    finishRound(silent);
   }, function () {
     state.loading = false;
     setRefreshBtn(false);
@@ -1401,36 +1947,91 @@ function refresh(silent) {
   });
 }
 
+/* 单源重试：整页刷新太重，用户只想补这一个失败源 */
+function retrySource(id) {
+  var src = sourceById(id);
+  if (!src) return;
+  if (src.isSnap) {
+    if (state.snap.retrying) return;
+    state.snap.retrying = true;
+    toast('正在重新拉取服务端快照…');
+    loadSnapshot().then(function (ok) {
+      state.snap.retrying = false;
+      toast(ok ? '快照已更新' : '快照仍拉取失败：' + state.snap.error);
+    });
+    return;
+  }
+  if (state.loading) return toast('正在刷新，请稍候');
+  state.status[id] = { ok: false, pending: true, count: 0, skel: Number(settings.perSourceLimit) || 15 };
+  renderAll();
+  fetchOne(src, 0).then(function () {
+    finishRound(true);
+    var st = state.status[id];
+    toast(st && st.ok ? (src.short || src.name) + ' 已更新' : (src.short || src.name) + ' 仍失败：' + (st && st.error));
+  });
+}
+
 /* =========================================================
    8. 过滤
    ========================================================= */
+/* 「只看 24h 内」：没有时间信息的条目，只有当日榜单类来源（dayList）才留下，
+   否则会把掘金/Trending 这种「今天的热榜」误删掉 */
+function isFreshDay(it) {
+  if (it.ageH >= 0) return it.ageH <= 24;
+  var s = sourceById(it.sourceId);
+  return !!(s && (s.dayList || s.isSnap));
+}
 function visibleItems() {
   var q = state.query.trim().toLowerCase();
+  var hideMerged = settings.mergeSame && state.view === 'category';
   return state.items.filter(function (it) {
     if (state.fSource !== 'all' && it.sourceId !== state.fSource) return false;
     if (state.fCategory !== 'all' && it.category !== state.fCategory) return false;
+    if (state.fFacet !== 'all' && (it.facets || []).indexOf(state.fFacet) < 0) return false;
+    if (state.onlyWatch && !(it.watch && it.watch.length)) return false;
+    if (hideMerged && it.clusterParent) return false;
+    if (settings.freshOnly && !isFreshDay(it)) return false;
     if (q) {
-      var hay = (it.title + ' ' + (it.summary || '') + ' ' + (it.meta || '')).toLowerCase();
+      var hay = (it.title + ' ' + (it.summary || '') + ' ' + (it.meta || '') + ' ' +
+                 (it.ents || []).join(' ') + ' ' + (it.tags || []).join(' ')).toLowerCase();
       if (hay.indexOf(q) < 0) return false;
     }
     return true;
   });
 }
-function normKey(t) {
-  return String(t || '').replace(/[\s\p{P}]/gu, '').slice(0, 26);
+/* 被「只看 24h」挡掉的条数，空态要如实说明，否则用户以为丢了数据 */
+function freshHiddenCount() {
+  if (!settings.freshOnly) return 0;
+  var n = 0;
+  state.items.forEach(function (it) {
+    if (!isFreshDay(it) && (state.fCategory === 'all' || it.category === state.fCategory)) n++;
+  });
+  return n;
 }
+/* 同事件已聚成一个簇，代表条目就是簇头 */
 function topFlash(items, n) {
-  var seen = {}, out = [];
-  for (var i = 0; i < items.length; i++) {
-    var it = items[i];
-    if (!it.hotRaw) continue;
-    var k = normKey(it.title);
-    if (seen[k]) continue;
-    seen[k] = 1;
-    out.push(it);
-    if (out.length >= n) break;
-  }
-  return out;
+  var out = items.filter(function (it) { return !it.clusterParent; });
+  return out.slice(0, n);
+}
+function isReleaseish(it) {
+  var f = it.facets || [];
+  for (var i = 0; i < f.length; i++) if (RELEASE_FACETS[f[i]]) return true;
+  return false;
+}
+/* 今日新发布：不看热度，按时间倒序 —— 这正是「热度不高但想了解」那一类 */
+function newReleaseItems(items, n) {
+  var out = items.filter(function (it) { return isReleaseish(it) && it.ts; });
+  out.sort(function (a, b) { return (b.ts - a.ts) || (heatOf(b) - heatOf(a)); });
+  return out.slice(0, n);
+}
+/* 低热度高信号：纯热度排序下必然沉底的那批，给它们一个自己的位置。
+   判据只看热度是否靠后，不看 emphasis（emphasis 本身就是按信号分选的，会自我排除） */
+function lowHotSignalItems(items, n) {
+  var out = items.filter(function (it) {
+    return it.signal >= 55 && (heatOf(it) === 0 || (it.hotPct || 0) < 0.5);
+  });
+  out.sort(function (a, b) { return (b.signal || 0) - (a.signal || 0); });
+  return out.slice(0, n);
 }
 
 /* =========================================================
@@ -1440,47 +2041,57 @@ function renderHeader() {
   var now = new Date();
   $('dateText').textContent = fmtDate(now) + ' ' + WEEK[now.getDay()];
   $('updateText').textContent = state.updatedAt ? (fmtTime(new Date(state.updatedAt)) + '（' + ago(state.updatedAt) + '）') : '尚未获取';
-  $('countText').textContent = state.items.length + ' 条';
+  var vis = visibleItems().length;
+  $('countText').textContent = vis === state.items.length ? state.items.length + ' 条' : vis + ' / ' + state.items.length + ' 条';
 
-  var on = activeSources();
-  var ok = 0;
-  on.forEach(function (s) { if (state.status[s.id] && state.status[s.id].ok) ok++; });
-  $('srcText').textContent = ok + ' / ' + on.length + ' 个数据源在线';
+  var on = activeSources(), ok = 0, snapOk = 0;
+  on.forEach(function (s) {
+    var st = state.status[s.id];
+    if (st && st.ok) { ok++; if (st.snap || s.isSnap) snapOk++; }
+  });
+  $('srcText').textContent = ok + ' / ' + on.length + ' 个源在线（实时 ' + (ok - snapOk) + ' · 快照 ' + snapOk + '）';
 
   var b = $('stateBadge');
   var note = $('sourceNote');
+  var snapTip = state.snap.at ? '服务端快照生成于 ' + fmtShort(state.snap.at) + '（' + ago(state.snap.at) + '）' : '服务端快照尚未取到';
+  var snapPart = state.snap.loaded
+    ? '另有 <b>' + state.snap.sources.length + '</b> 个「发布类」源（HuggingFace 论文、各家官方博客、掘金/V2EX、GitHub Trending 等）浏览器跨域取不到，由 Actions 定时抓好，' + snapTip + '。'
+    : '';
   if (state.loading) {
     var pr = state.progress || { done: 0, total: 0 };
     b.className = 'state-badge state-loading';
     b.innerHTML = '<span class="rot">&#8635;</span> 正在抓取 ' + pr.done + '/' + pr.total;
-    note.innerHTML = '公开接口限流较严（约每 2 秒 1 次请求），因此<b>逐个平台串行抓取</b>，抓到即更新界面；尚未抓到的平台先显示<strong>示例数据</strong>。';
+    note.innerHTML = '公开热榜接口限流较严（约每 2 秒 1 次请求），因此<b>逐个平台串行抓取</b>，抓到即更新界面；' +
+      '没抓到的平台先显示骨架行，<strong>不会用任何示例内容冒充真实数据</strong>。' + snapPart;
+  } else if (!state.items.length) {
+    b.className = 'state-badge state-demo';
+    b.textContent = '▲ 无数据';
+    note.innerHTML = '所有数据源都没有返回数据（接口挂了 / 限流 / 断网）。下方每个源都写明了失败原因，可点「重试此源」逐个补。' + snapPart;
   } else if (state.mode === 'live') {
     b.className = 'state-badge state-live';
     b.textContent = '● 实时数据';
-    note.innerHTML = '各平台公开热榜接口（' + esc(String(settings.apiBase)) + '）实时抓取，摘要内联展示，无需跳转。';
-  } else if (state.mode === 'mixed') {
-    b.className = 'state-badge state-mixed';
-    b.textContent = ' 部分示例数据';
-    note.innerHTML = '部分平台接口不可用，已自动降级为<strong>示例数据</strong>（卡片上有红色「示例数据」标记）。';
+    note.innerHTML = '实时热榜来自各平台公开接口（' + esc(String(settings.apiBase)) + '）与 GitHub 直连接口。' + snapPart;
   } else {
-    b.className = 'state-badge state-demo';
-    b.textContent = '▲ 示例数据';
-    note.innerHTML = '当前展示的是内置<strong>示例数据</strong>（接口不可用或尚未抓取）。点「一键刷新」重试真实接口。';
-  }
-  if (state.mode === 'live' && state.updatedAt) {
-    b.textContent = '● 实时数据';
+    var bad = 0;
+    on.forEach(function (s) { var st = state.status[s.id]; if (!st || (!st.ok && !st.snap)) bad++; });
+    b.className = 'state-badge state-mixed';
+    b.textContent = '◐ 部分源失败';
+    note.innerHTML = bad + ' 个实时源本次抓取失败，卡片上写明原因并可单独重试；<strong>失败的源不会用旧数据或示例数据顶替</strong>。' + snapPart;
   }
 }
 
 function renderChips() {
+  var items = state.items;
   var pc = $('platformChips');
   var html = '<span class="filters-label">平台</span>';
   html += '<button class="chip' + (state.fSource === 'all' ? ' on' : '') + '" data-fs="all">全部</button>';
   activeSources().forEach(function (s) {
     var st = state.status[s.id];
-    var dot = st ? (st.ok ? '' : '') : '';
-    html += '<button class="chip' + (state.fSource === s.id ? ' on' : '') + '" data-fs="' + s.id + '">' +
-      '<span class="dot" style="background:' + s.color + '"></span>' + esc(s.short) + ' ' + dot + '</button>';
+    var mark = st && st.pending ? ' ⏳' : (st && !st.ok ? (st.stale ? ' ⚠旧' : ' ⚠') : (s.isSnap ? ' 📸' : ''));
+    var n = 0;
+    for (var i = 0; i < items.length; i++) if (items[i].sourceId === s.id) n++;
+    html += '<button class="chip' + (state.fSource === s.id ? ' on' : '') + '" data-fs="' + s.id + '" title="' + esc(s.name) + '">' +
+      '<span class="dot" style="background:' + s.color + '"></span>' + esc(s.short) + ' <span style="opacity:.6">' + n + '</span>' + mark + '</button>';
   });
   pc.innerHTML = html;
 
@@ -1488,28 +2099,117 @@ function renderChips() {
   var c2 = '<span class="filters-label">分类</span>';
   c2 += '<button class="chip' + (state.fCategory === 'all' ? ' on' : '') + '" data-fc="all">全部</button>';
   CATEGORIES.forEach(function (c) {
-    var n = state.items.filter(function (it) { return it.category === c.id; }).length;
+    var n = 0;
+    for (var i = 0; i < items.length; i++) if (items[i].category === c.id) n++;
     c2 += '<button class="chip' + (state.fCategory === c.id ? ' on' : '') + '" data-fc="' + c.id + '">' +
       c.icon + ' ' + esc(c.name) + (n ? ' <span style="opacity:.6">' + n + '</span>' : '') + '</button>';
   });
   cc.innerHTML = c2;
+
+  /* 工具栏控件与设置保持一致：renderChips 每次全量刷新时顺带同步 */
+  var ss = $('sortSel'); if (ss) ss.value = settings.sortMode;
+  var ft = $('freshToggle'); if (ft) ft.classList.toggle('on', !!settings.freshOnly);
+  var mt = $('mergeToggle'); if (mt) mt.classList.toggle('on', !!settings.mergeSame);
+  var ow = $('onlyWatchChip'); if (ow) ow.classList.toggle('on', !!state.onlyWatch);
+
+  /* 要素筛选：只看「新模型 / 发布 / 论文 / 开源」这一类，跨分类生效 */
+  var fEl = $('facetChips');
+  if (fEl) {
+    var f3 = '<span class="filters-label">要素</span>';
+    f3 += '<button class="chip' + (state.fFacet === 'all' ? ' on' : '') + '" data-ff="all">全部</button>';
+    FACETS.forEach(function (f) {
+      var n = 0;
+      for (var i = 0; i < items.length; i++) if ((items[i].facets || []).indexOf(f.id) >= 0) n++;
+      if (!n) return;
+      f3 += '<button class="chip' + (state.fFacet === f.id ? ' on' : '') + '" data-ff="' + f.id + '">' +
+        f.icon + ' ' + esc(f.name) + ' <span style="opacity:.6">' + n + '</span></button>';
+    });
+    fEl.innerHTML = f3;
+  }
+
+  var wEl = $('watchChips');
+  if (wEl) {
+    var words = watchWords();
+    var w4 = '<span class="filters-label">关注</span>';
+    if (!words.length) {
+      w4 += '<span class="filters-hint">在上方输入框填公司 / 模型 / 关键词，命中条目会无视热度置顶</span>';
+    } else {
+      words.forEach(function (w) {
+        var n = 0;
+        for (var i = 0; i < items.length; i++) if (items[i].watch && items[i].watch.indexOf(w) >= 0) n++;
+        w4 += '<button class="chip on" data-delw="' + esc(w) + '" title="点击移除该关注词">⭐ ' + esc(w) +
+              ' <span style="opacity:.7">' + n + '</span> ✕</button>';
+      });
+    }
+    wEl.innerHTML = w4;
+  }
 }
 
+function shortOf(id) {
+  var s = sourceById(id);
+  return s ? s.short : id;
+}
+function flashRowHtml(it, i, mode) {
+  var s = sourceById(it.sourceId) || { short: '未知' };
+  var n = it.clusterSize || 1;
+  var clump = n > 1 ? '<span class="clump">' + esc(it.clusterSrcs.map(shortOf).join('+')) + ' ' + n + ' 平台在热</span>' : '';
+  var lead = mode === 'release'
+    ? '<span class="idx evt">' + (it.evt ? (facetById(it.evt) || {}).icon : '📌') + '</span>'
+    : '<span class="idx">' + (i + 1) + '</span>';
+  var title = it.url
+    ? '<a class="tt" href="' + esc(it.url) + '" target="_blank" rel="noopener noreferrer">' + esc(it.title) + '</a>'
+    : '<span class="tt">' + esc(it.title) + '</span>';
+  var tail = mode === 'release'
+    ? '<span class="src age">' + esc(fmtAge(it.ts)) + ' · ' + esc(s.short) + '</span>'
+    : '<span class="src">' + esc(s.short) + '</span>';
+  return '<li>' + lead + title +
+    (it.watch && it.watch.length ? '<span class="tag watch">⭐关注</span>' : '') +
+    (it.hot ? '<span class="hot">' + esc(it.hot) + '</span>' : '') + clump + tail + '</li>';
+}
 function renderFlash() {
-  var items = topFlash(visibleItems(), 10);
-  var ul = $('flashList');
-  if (!items.length) {
-    ul.innerHTML = '<li style="color:var(--ink-3)">暂无数据，请点击「一键刷新」。</li>';
-    return;
+  var items = visibleItems();
+  var fs = $('flashSub');
+  if (fs) {
+    fs.textContent = settings.mergeSame
+      ? (state.mergedCount ? '已把 ' + state.mergedCount + ' 条同事件合并到各自主条目下' : '同事件已合并（本次没有跨平台重复）')
+      : '未合并同事件（可在工具栏打开 🔗）';
   }
-  ul.innerHTML = items.map(function (it, i) {
-    var s = sourceById(it.sourceId) || { short: '未知' };
-    var hot = it.hot ? '<span class="hot"></span>' : '';
-    return '<li><span class="idx">' + (i + 1) + '</span>' +
-      '<span class="tt">' + esc(it.title) + '</span>' +
-      (it.hot ? '<span class="hot">' + esc(it.hot) + '</span>' : '') +
-      '<span class="src">' + esc(s.short) + '</span></li>';
-  }).join('');
+  var ul = $('flashList');
+  var flashes = topFlash(items, 10);
+  if (!flashes.length) {
+    ul.innerHTML = (state.loading || state.booting) ? skelRows(4, 'flash')
+      : '<li style="color:var(--ink-3)">暂无条目。点「一键刷新」抓取实时热榜，或在设置里检查数据源与快照地址。</li>';
+  } else {
+    ul.innerHTML = flashes.map(function (it, i) { return flashRowHtml(it, i, 'hot'); }).join('');
+  }
+
+  var rl = $('releaseList');
+  if (rl) {
+    var rel = newReleaseItems(items, 8);
+    var low = lowHotSignalItems(items, 6);
+    var lowIds = {};
+    low.forEach(function (it) { lowIds[it.id] = 1; });
+    rl.innerHTML = rel.length
+      ? rel.map(function (it, i) { return flashRowHtml(it, i, 'release'); }).join('')
+      : skelRows(3, 'flash');
+    var lo = $('lowHotList');
+    if (lo) {
+      lo.innerHTML = low.length
+        ? low.map(function (it) {
+            return '<li><span class="idx evt">' + (it.evt ? (facetById(it.evt) || {}).icon : '📌') + '</span>' +
+              (it.url ? '<a class="tt" href="' + esc(it.url) + '" target="_blank" rel="noopener noreferrer">' + esc(it.title) + '</a>'
+                     : '<span class="tt">' + esc(it.title) + '</span>') +
+              '<span class="sig" title="' + esc(sigTip(it)) + '">信号 ' + it.signal + '</span>' +
+              '<span class="src">' + esc(shortOf(it.sourceId)) + '</span></li>';
+          }).join('')
+        : '<li style="color:var(--ink-3)">本次没有「热度低但信号高」的条目（新条目少或时间信息缺失）。</li>';
+    }
+  }
+}
+function sigTip(it) {
+  var p = it.signalParts || {}, out = [];
+  for (var k in p) if (p[k]) out.push(k + ' ' + p[k]);
+  return '信号分 ' + it.signal + '（' + out.join(' · ') + '）';
 }
 
 function itemHtml(it) {
@@ -1518,10 +2218,20 @@ function itemHtml(it) {
   var isOpen = !!state.expanded[it.id];
   var rankCls = it.rank <= 3 ? ' rank-' + it.rank : '';
   var sumCls = 'item-sum' + (it.summary ? (isOpen ? ' open' : '') : ' none');
-  var sumTxt = it.summary ? esc(it.summary) : '该数据源仅提供标题与热度值，未提供正文摘要，点「展开全文」可在本页直接抓取原文。';
-  var demoTag = it.demo ? '<span class="tag" style="--tg:#9c2b1f">示例数据</span>' : '';
-  var canOpen = !!it.summary || !!it.url;
-  return '<li class="item' + (it.emphasis ? ' emphasis' : '') + '" data-id="' + esc(it.id) + '">' +
+  var sumTxt = it.summary ? esc(it.summary)
+    : '该数据源仅提供标题与热度值，未提供正文摘要，点「展开全文」可在本页直接抓取原文。';
+  var f = it.evt ? facetById(it.evt) : null;
+  var chips = [];
+  if (f) chips.push('<span class="tag" style="--tg:' + f.color + '">' + f.icon + ' ' + esc(f.name) + '</span>');
+  (it.ents || []).slice(0, 2).forEach(function (e) { chips.push('<span class="tag ent">' + esc(e) + '</span>'); });
+  (it.nums || []).slice(0, 2).forEach(function (v) { chips.push('<span class="tag num">' + esc(v) + '</span>'); });
+  if (it.watch && it.watch.length) chips.push('<span class="tag watch">⭐ 关注 ' + esc(it.watch.join('/')) + '</span>');
+  var n = it.clusterSize || 1;
+  if (n > 1) chips.push('<span class="tag plain" title="' + esc(it.clusterSrcs.map(shortOf).join('、')) + '">🔗 ' + n + ' 平台在热</span>');
+  if (it.snap) chips.push('<span class="tag snap" title="' + esc(state.snap.at ? fmtShort(state.snap.at) : '') + '">📸 快照</span>');
+  var sig = '<span class="sig" title="' + esc(sigTip(it)) + '"><i><s style="width:' + Math.max(6, it.signal || 0) + '%"></s></i><b>' + (it.signal || 0) + '</b></span>';
+  return '<li class="item' + (it.emphasis ? ' emphasis' : '') + '" data-id="' + esc(it.id) + '"' +
+      (it.clusterParent ? ' data-parent="' + esc(it.clusterParent) + '"' : '') + '>' +
     '<span class="rank' + rankCls + '">' + it.rank + '</span>' +
     '<div class="item-main">' +
       '<div class="item-title">' + esc(it.title) + '</div>' +
@@ -1529,13 +2239,15 @@ function itemHtml(it) {
         (it.hot ? '<span class="hot">' + esc(it.hot) + '</span>' : '') +
         '<span class="tag" style="--tg:' + s.color + '">' + esc(s.short) + '</span>' +
         '<span class="tag plain">' + c.icon + ' ' + esc(c.name) + '</span>' +
+        '<span class="age' + (it.ts ? '' : ' unk') + '">' + esc(fmtAge(it.ts)) + '</span>' +
+        sig +
+        chips.join('') +
         (it.meta ? '<span>' + esc(it.meta) + '</span>' : '') +
-        demoTag +
       '</div>' +
       '<div class="' + sumCls + '">' + sumTxt + '</div>' +
       (isOpen && it.url ? artHtml(it.id) : '') +
       '<div class="item-acts">' +
-        (canOpen ? '<button class="mini" data-act="toggle">' + (isOpen ? '收起全文' : '展开全文') + '</button>' : '') +
+        (it.summary || it.url ? '<button class="mini" data-act="toggle">' + (isOpen ? '收起全文' : '展开全文') + '</button>' : '') +
         '<button class="mini" data-act="copy">复制此条</button>' +
         (it.url ? '<a class="mini" href="' + esc(it.url) + '" target="_blank" rel="noopener noreferrer">原文 ↗</a>' : '') +
       '</div>' +
@@ -1543,92 +2255,187 @@ function itemHtml(it) {
   '</li>';
 }
 
-/* 通用卡片 */
+/* 骨架行：抓取中 / 无数据时给视觉占位，不含任何伪造文字 */
+function skelRows(n, where) {
+  var out = '';
+  for (var i = 0; i < n; i++) {
+    out += '<li class="' + (where === 'flash' ? 'skel-row' : 'item skel-item') + '">' +
+      (where === 'flash' ? '' : '<span class="rank">·</span><div class="item-main">') +
+      '<span class="skel" style="width:' + (72 - i * 5) + '%"></span>' +
+      (where === 'flash' ? '' : '<span class="skel" style="width:38%;height:10px;margin-top:7px;display:block"></span></div>') +
+      '</li>';
+  }
+  return out;
+}
+
+/* 通用卡片：传 sections 则卡片内按要素分节，否则平铺 */
 function cardHtml(opts) {
+  var limit = opts.limit || 8;
   var open = !!state.moreOpen[opts.key];
-  var limit = 8;
-  var list = opts.items || [];
-  var show = open ? list : list.slice(0, limit);
-  var body = show.length
-    ? '<ul class="list">' + show.map(itemHtml).join('') + '</ul>'
-    : '<div class="empty">当前筛选条件下暂无条目</div>';
-  var more = list.length > limit
-    ? '<button class="more" data-more="' + esc(opts.key) + '">' + (open ? '收起 ▴' : '展开全部 ' + list.length + ' 条 ▾') + '</button>'
-    : '';
-  return '<section class="card" style="--c:' + opts.color + '">' +
+  var body = '', i;
+  var footMore = '';
+  if (opts.sections) {
+    for (i = 0; i < opts.sections.length; i++) {
+      var sec = opts.sections[i];
+      if (!sec.items.length) continue;
+      var key = opts.key + '#' + i;
+      var secLimit = sec.limit || limit;
+      var isOn = !!state.moreOpen[key];
+      var shown = isOn ? sec.items : sec.items.slice(0, secLimit);
+      body += '<div class="sub-h">' + (sec.icon || '') + ' ' + esc(sec.label) +
+              ' <span>' + sec.items.length + '</span></div>' +
+        '<ul class="list">' + shown.map(itemHtml).join('') + '</ul>' +
+        (sec.items.length > secLimit
+          ? '<button class="more" data-more="' + esc(key) + '">' + (isOn ? '收起 ▴' : '展开其余 ' + (sec.items.length - secLimit) + ' 条 ▾') + '</button>'
+          : '');
+    }
+    if (!body) body = opts.pendingHtml || '<div class="empty">' + esc(opts.emptyText || '当前筛选条件下暂无条目') + '</div>';
+  } else {
+    var list = opts.items || [];
+    var show = open ? list : list.slice(0, limit);
+    body = show.length
+      ? '<ul class="list">' + show.map(itemHtml).join('') + '</ul>'
+      : (opts.pendingHtml || '<div class="empty">' + esc(opts.emptyText || '当前筛选条件下暂无条目') + '</div>');
+    footMore = list.length > limit
+      ? '<button class="more" data-more="' + esc(opts.key) + '">' + (open ? '收起 ▴' : '展开全部 ' + list.length + ' 条 ▾') + '</button>'
+      : '';
+  }
+  return '<section class="card" data-card="' + esc(opts.key) + '" style="--c:' + opts.color + '">' +
     '<div class="card-head">' +
       '<div class="ico">' + (opts.icon || '📌') + '</div>' +
-      '<div class="nm">' + esc(opts.name) + '<span class="cnt">' + list.length + ' 条</span></div>' +
+      '<div class="nm">' + esc(opts.name) + '<span class="cnt">' + (opts.count == null ? (opts.items || []).length : opts.count) + ' 条</span></div>' +
       (opts.statusHtml || '') +
     '</div>' +
+    (opts.chipsHtml || '') +
     '<div class="card-body">' + body + '</div>' +
-    more +
-    (opts.footNote ? '<div class="card-foot"><span>' + opts.footNote + '</span></div>' : '') +
+    footMore +
+    (opts.footNote ? '<div class="card-foot"><span>' + opts.footNote + '</span>' + (opts.footRight || '') + '</div>' : '') +
   '</section>';
+}
+
+function pendingHtml(st) {
+  if (!st || !st.pending) return '';
+  return '<ul class="list">' + skelRows(st.skel || 6, 'item') + '</ul>';
+}
+
+function failedHtml(srcId, st) {
+  if (!st || st.pending || st.ok) return '';
+  return '<div class="empty fail">' +
+    '<div>抓取失败：' + esc(st.error || '未知原因') + '</div>' +
+    '<div class="fail-acts"><button class="mini" data-retry="' + esc(srcId) + '">重试此源</button>' +
+    '<span class="tip">' + (st.stale ? '下面的条目是上次抓到的结果，未刷新' : '失败期间不会用示例数据或旧数据顶替') + '</span></div></div>';
 }
 
 function badgeFor(s) {
   var st = state.status[s.id];
   if (st && st.pending) return '<span class="badge b-wait"><span class="rot">↻</span> 抓取中</span>';
+  if (s.isSnap) return '<span class="badge b-snap">📸 快照</span>';
   if (st && st.ok) return '<span class="badge b-ok">实时</span>';
-  if (st && st.demo) return '<span class="badge b-demo">示例数据</span>';
+  if (st && st.failed) return '<span class="badge b-fail">获取失败</span>';
+  if (st && st.stale) return '<span class="badge b-fail">失败·旧数据</span>';
   return '<span class="badge b-err">未获取</span>';
+}
+
+function sortLabel() {
+  return settings.sortMode === 'heat' ? '按热度'
+    : (settings.sortMode === 'time' ? '按发布时间' : '按信号分（热度 + 新鲜度 + 要素 + 关注）');
+}
+/* 分类卡片内的三档分节：发布类按时间倒序、低热度高信号单独占一屏、其余按当前排序 */
+function sectionsFor(list) {
+  var used = {}, rel = [], low = [], rest = [], i;
+  for (i = 0; i < list.length; i++) if (isReleaseish(list[i])) { rel.push(list[i]); used[list[i].id] = 1; }
+  sortItems(rel, 'time');
+  low = lowHotSignalItems(list.filter(function (it) { return !used[it.id]; }), 4);
+  for (i = 0; i < low.length; i++) used[low[i].id] = 1;
+  for (i = 0; i < list.length; i++) if (!used[list[i].id]) rest.push(list[i]);
+  sortItems(rest, null);
+  return [
+    { icon: '🆕', label: '发布 · 开源 · 论文（不看热度，看时间）', items: rel, limit: 6 },
+    { icon: '📌', label: '热度不高但值得关注', items: low, limit: 4 },
+    { icon: '🔥', label: settings.sortMode === 'heat' ? '高热热议' : (sortLabel() + '排序'), items: rest, limit: 8 }
+  ];
+}
+function groupBadge(list) {
+  var pend = 0, fail = 0, snap = 0, seen = {};
+  list.forEach(function (it) {
+    var id = it.sourceId;
+    if (seen[id]) return;
+    seen[id] = 1;
+    var st = state.status[id];
+    if (st && st.pending) pend++;
+    else if (st && st.ok && st.snap) snap++;
+    else if (st && !st.ok) fail++;
+  });
+  if (pend) return '<span class="badge b-wait"><span class="rot">↻</span> 抓取中 ' + pend + ' 源</span>';
+  if (fail) return '<span class="badge b-fail">' + fail + ' 源失败</span>';
+  return '<span class="badge b-ok">' + (snap ? '实时 + 快照' : '实时') + '</span>';
 }
 
 function renderMain() {
   var items = visibleItems();
   var main = $('main');
+  var hidden = freshHiddenCount();
   if (!items.length) {
-    main.innerHTML = '<section class="section"><div class="card"><div class="empty">' +
-      (state.items.length ? '没有符合筛选条件的条目，换个关键词或点「全部」试试。'
-                         : '还没有数据，点上方「↻ 一键刷新」获取今日热搜。') +
+    if (state.loading || (state.booting && !state.items.length)) {
+      var sk = '';
+      activeSources().slice(0, 6).forEach(function (s, i) {
+        sk += cardHtml({
+          key: 'skel-' + s.id, name: s.name, icon: s.icon, color: s.color, items: [],
+          statusHtml: '<span class="badge b-wait"><span class="rot">↻</span> 抓取中</span>',
+          pendingHtml: pendingHtml({ pending: true, skel: 5 })
+        });
+      });
+      main.innerHTML = '<section class="section"><h2 class="section-title">正在抓取 <span class="sub">骨架行只是占位，不含任何示例内容</span></h2><div class="grid">' + sk + '</div></section>';
+      return;
+    }
+    main.innerHTML = '<section class="section"><div class="card"><div class="empty fail">' +
+      '<div>' + (state.items.length
+        ? '没有符合当前筛选条件的条目。' + (hidden ? '其中 ' + hidden + ' 条因源未提供发布时间被「只看 24h」隐藏。' : '换个关键词，或点上方「全部」。')
+        : '还没有任何数据。点「↻ 一键刷新」抓取实时热榜；服务端快照失败时可在下方「数据源状态」逐源重试。') +
+      '</div>' +
+      '<div class="fail-acts"><button class="mini" data-act="clearFilters">清空筛选条件</button>' +
+      '<button class="mini" data-act="retryAll">重新抓取全部</button></div>' +
       '</div></div></section>';
     return;
   }
-  var html = '', i, g;
+  var html = '', i;
 
   if (state.view === 'category') {
-    html = '<section class="section"><h2 class="section-title">按内容分类 <span class="sub">共 ' + items.length + ' 条</span></h2><div class="grid">';
-    var groups = [];
+    html = '<section class="section"><h2 class="section-title">按内容分类 <span class="sub">共 ' + items.length + ' 条 · ' +
+      sortLabel() + (settings.mergeSame && state.mergedCount ? ' · 已合并 ' + state.mergedCount + ' 条同事件' : '') + '</span></h2><div class="grid">';
     for (i = 0; i < CATEGORIES.length; i++) {
       var c = CATEGORIES[i];
       var list = items.filter(function (it) { return it.category === c.id; });
-      if (list.length) groups.push({ c: c, list: list });
-    }
-    for (i = 0; i < groups.length; i++) {
-      g = groups[i];
-      g.list.sort(function (a, b) { return (b.hotRaw || 0) - (a.hotRaw || 0); });
-      var demoN = g.list.filter(function (x) { return x.demo; }).length;
-      var pendN = g.list.filter(function (x) {
-        var st2 = state.status[x.sourceId];
-        return x.demo && st2 && st2.pending;
-      }).length;
-      var badge = pendN
-        ? '<span class="badge b-wait"><span class="rot">↻</span> 抓取中</span>'
-        : (demoN ? '<span class="badge b-demo">含示例 ' + demoN + ' 条</span>'
-                 : '<span class="badge b-ok">实时</span>');
+      if (!list.length) continue;
       html += cardHtml({
-        key: 'cat-' + g.c.id, name: g.c.name, icon: g.c.icon, color: g.c.color, items: g.list,
-        statusHtml: badge,
-        footNote: '按热度排序 · 展开全文可在本页直接读原文正文'
+        key: 'cat-' + c.id, name: c.name, icon: c.icon, color: c.color, items: list,
+        count: list.length,
+        sections: sectionsFor(list),
+        statusHtml: groupBadge(list),
+        footNote: sortLabel() + ' · 「展开全文」可在本页直接读原文正文'
       });
     }
     html += '</div></section>';
   } else {
-    html = '<section class="section"><h2 class="section-title">按平台分区 <span class="sub">共 ' + items.length + ' 条</span></h2><div class="grid">';
+    html = '<section class="section"><h2 class="section-title">按平台分区 <span class="sub">共 ' + items.length + ' 条 · 📸 为服务端快照源</span></h2><div class="grid">';
     var srcs = activeSources();
     for (i = 0; i < srcs.length; i++) {
       var s = srcs[i];
       var l2 = items.filter((function (id) {
         return function (it) { return it.sourceId === id; };
       })(s.id));
-      if (!l2.length) continue;
-      l2.sort(function (a, b) { return a.rank - b.rank; });
       var st = state.status[s.id];
+      if (settings.sortMode === 'heat' || !l2.length) l2.sort(function (a, b) { return a.rank - b.rank; });
+      else sortItems(l2, null);
+      var total = (state.buckets[s.id] || []).length;
+      if (!l2.length && !total && !st) continue;
       html += cardHtml({
         key: 'src-' + s.id, name: s.name, icon: s.icon, color: s.color, items: l2,
+        count: total || l2.length,
         statusHtml: badgeFor(s),
-        footNote: '接口：' + esc(s.path) + (st && !st.ok && st.error ? ' · ' + esc(st.error) : '')
+        pendingHtml: pendingHtml(st) || failedHtml(s.id, st),
+        emptyText: st && st.ok ? '当前筛选条件下该源没有条目' : '该源暂无条目',
+        footNote: '接口：' + esc(shortPath(s)) + (st && !st.ok && st.error ? ' · ' + esc(st.error) : '')
       });
     }
     html += '</div></section>';
@@ -1640,22 +2447,29 @@ function renderStatus() {
   var on = activeSources();
   var rows = on.map(function (s) {
     var st = state.status[s.id];
-    var okTxt, cls;
-    if (!st) { okTxt = '未获取'; cls = 'b-err'; }
+    var okTxt, cls, act;
+    if (!st) { okTxt = s.isSnap ? '快照未取到' : '未获取'; cls = 'b-err'; }
     else if (st.pending) { okTxt = '抓取中…'; cls = 'b-wait'; }
     else if (st.ok) { okTxt = '正常（' + esc(st.via || '直连') + '）'; cls = 'b-ok'; }
-    else { okTxt = '降级为示例数据' + (st.error ? '（' + esc(st.error) + '）' : ''); cls = 'b-demo'; }
+    else { okTxt = '失败：' + esc(st.error || '未知原因'); cls = 'b-fail'; }
+    act = (st && st.ok) ? '' : '<button class="mini" data-retry="' + esc(s.id) + '">重试此源</button>';
     return '<tr><td><span class="dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' +
-      s.color + ';margin-right:6px"></span>' + esc(s.name) + '</td>' +
-      '<td><code>' + esc(s.path) + '</code></td>' +
+      s.color + ';margin-right:6px"></span>' + esc(s.name) + (s.isSnap ? ' <span class="b-snap tag plain">📸</span>' : '') + '</td>' +
+      '<td><code title="' + esc(shortPath(s)) + '">' + esc(shortPath(s)) + '</code></td>' +
       '<td>' + (st ? st.count + ' 条' : '--') + '</td>' +
-      '<td><span class="badge ' + cls + '">' + okTxt + '</span></td></tr>';
+      '<td><span class="badge ' + cls + '">' + okTxt + '</span> ' + act + '</td></tr>';
   }).join('');
+  var snapLine = settings.useSnapshot
+    ? ('快照地址：<code>' + esc(snapshotUrl()) + '</code>' +
+       (state.snap.loaded ? ' · 生成于 ' + esc(state.snap.at ? fmtShort(state.snap.at) : '') + '（' + esc(state.snap.at ? ago(state.snap.at) : '--') + '）'
+                          : ' · 本次未取到' + (state.snap.error ? '（' + esc(state.snap.error) + '）' : '')))
+    : '服务端快照已在设置里关闭';
   $('srcStatus').innerHTML =
     '<div class="card" style="--c:#888"><div class="card-body" style="padding:10px 12px">' +
-    '<table class="src-table"><thead><tr><th>数据源</th><th>接口</th><th>条目</th><th>状态</th></tr></thead>' +
+    '<table class="src-table"><thead><tr><th>数据源</th><th>接口</th><th>条目</th><th>状态 / 重试</th></tr></thead>' +
     '<tbody>' + rows + '</tbody></table>' +
-    '<div style="margin-top:8px;font-size:12px;color:var(--ink-3)">更新时间：' +
+    '<div style="margin-top:8px;font-size:12px;color:var(--ink-3)">' + snapLine + '</div>' +
+    '<div style="margin-top:4px;font-size:12px;color:var(--ink-3)">更新时间：' +
     (state.updatedAt ? esc(fmtTime(new Date(state.updatedAt))) : '--') +
     ' · 页面版本 v' + APP_VERSION + '</div>' +
     '</div></div>';
@@ -1700,12 +2514,26 @@ function itemToText(it) {
   var out = '【' + s.short + ' #' + it.rank + '】' + it.title;
   if (it.hot) out += '（热度 ' + it.hot + '）';
   out += '\n分类：' + c.name;
+  var tags = [];
+  if (it.evt) tags.push((facetById(it.evt) || {}).name);
+  if (it.ents && it.ents.length) tags.push('主体：' + it.ents.join('/'));
+  if (it.nums && it.nums.length) tags.push(it.nums.join(' '));
+  if (it.watch && it.watch.length) tags.push('⭐关注：' + it.watch.join('/'));
+  if (tags.length) out += '\n要素：' + tags.join(' · ');
+  out += '\n时间：' + fmtAge(it.ts) + ' · 信号分：' + (it.signal || 0);
+  if ((it.clusterSize || 1) > 1) out += '\n同事件：' + it.clusterSrcs.map(shortOf).join('+') + ' 共 ' + it.clusterSize + ' 个平台';
   if (it.meta) out += ' · ' + it.meta;
-  if (it.demo) out += ' · 示例数据';
   if (it.summary) out += '\n摘要：' + it.summary;
   else out += '\n摘要：该数据源未提供正文摘要';
   if (it.url) out += '\n原文：' + it.url;
   return out;
+}
+
+function modeNote() {
+  if (state.mode === 'live') return '各平台公开接口（实时）+ Actions 快照';
+  if (state.mode === 'partial') return '部分接口本次失败，失败的源未用旧数据顶替';
+  if (!state.items.length) return '所有接口本次均未返回数据';
+  return '数据来源：公开接口';
 }
 
 function buildReportText() {
@@ -1716,20 +2544,39 @@ function buildReportText() {
   L.push('　　每日热搜早报');
   L.push('　　' + fmtDate(now) + ' ' + WEEK[now.getDay()]);
   L.push('　　最后更新：' + (state.updatedAt ? fmtTime(new Date(state.updatedAt)) : '尚未获取'));
-  L.push('　　数据来源：' + (state.mode === 'live' ? '各平台公开热榜接口（实时）'
-    : state.mode === 'mixed' ? '公开热榜接口 + 内置示例数据（部分降级）'
-    : '内置示例数据（接口不可用）'));
-  L.push('　　条目总数：' + state.items.length);
+  L.push('　　数据来源：' + modeNote());
+  L.push('　　排序方式：' + sortLabel() + '　条目总数：' + state.items.length);
+  if (settings.watch) L.push('　　关注词：' + settings.watch);
   L.push(line);
 
   var items = visibleItems();
   var flashes = topFlash(items, 10);
   if (flashes.length) {
     L.push('');
-    L.push('【今日要闻 · 跨平台热度 Top ' + flashes.length + '】');
+    L.push('【今日要闻 · ' + sortLabel() + ' Top ' + flashes.length + '】');
     flashes.forEach(function (it, i) {
       var s = sourceById(it.sourceId) || { short: '未知' };
-      L.push(' ' + pad(i + 1) + '. ' + it.title + '　（' + s.short + (it.hot ? ' · ' + it.hot : '') + '）');
+      var n = it.clusterSize || 1;
+      L.push(' ' + pad(i + 1) + '. ' + it.title + '　（' + s.short + (it.hot ? ' · ' + it.hot : '') +
+        (n > 1 ? ' · ' + it.clusterSrcs.map(shortOf).join('+') + ' ' + n + ' 平台在热' : '') + '）');
+    });
+  }
+  var rel = newReleaseItems(items, 8);
+  if (rel.length) {
+    L.push('');
+    L.push('【🆕 今日新发布 · 发布/开源/论文，按时间倒序，不看热度】');
+    rel.forEach(function (it, i) {
+      var f = it.evt ? (facetById(it.evt) || {}).name : '';
+      L.push(' ' + pad(i + 1) + '. [' + f + '] ' + it.title + '　（' + shortOf(it.sourceId) + ' · ' + fmtAge(it.ts) + '）');
+      if (it.url) L.push('      ' + it.url);
+    });
+  }
+  var low = lowHotSignalItems(items, 6);
+  if (low.length) {
+    L.push('');
+    L.push('【📌 热度不高但值得关注】');
+    low.forEach(function (it) {
+      L.push(' · [信号 ' + it.signal + '] ' + it.title + '　（' + shortOf(it.sourceId) + (it.hot ? ' · ' + it.hot : '') + '）');
     });
   }
 
@@ -1737,28 +2584,36 @@ function buildReportText() {
     CATEGORIES.forEach(function (c) {
       var list = items.filter(function (it) { return it.category === c.id; });
       if (!list.length) return;
-      list.sort(function (a, b) { return (b.hotRaw || 0) - (a.hotRaw || 0); });
       L.push('');
       L.push('━━━ ' + c.name + '（' + list.length + ' 条）━━━');
-      list.forEach(function (it) {
-        var s = sourceById(it.sourceId) || { short: '未知' };
-        L.push((it.rank <= 3 ? '★ ' : '') + it.rank + '. ' + it.title +
-          '　[' + s.short + (it.hot ? ' · ' + it.hot : '') + ']' + (it.demo ? '（示例）' : ''));
-        if (it.summary) L.push('   摘要：' + it.summary);
-        if (it.meta) L.push('   ' + it.meta);
-        if (it.url) L.push('   原文：' + it.url);
+      sectionsFor(list).forEach(function (sec) {
+        if (!sec.items.length) return;
+        L.push('  ' + sec.icon + ' ' + sec.label + '（' + sec.items.length + '）');
+        sec.items.forEach(function (it) {
+          var s = sourceById(it.sourceId) || { short: '未知' };
+          L.push('    ' + (it.rank <= 3 ? '★ ' : '') + it.title +
+            '　[' + s.short + (it.hot ? ' · ' + it.hot : '') + ' · ' + fmtAge(it.ts) + ' · 信号 ' + it.signal + ']' +
+            (it.evt ? '〔' + (facetById(it.evt) || {}).name + '〕' : '') +
+            ((it.ents || []).length ? '〔' + it.ents.join('/') + '〕' : '') +
+            (it.watch && it.watch.length ? '⭐' : ''));
+          if (it.summary) L.push('      摘要：' + it.summary);
+          if (it.url) L.push('      原文：' + it.url);
+        });
       });
     });
   } else {
     activeSources().forEach(function (s) {
       var list = items.filter(function (it) { return it.sourceId === s.id; });
-      if (!list.length) return;
-      list.sort(function (a, b) { return a.rank - b.rank; });
+      var total = (state.buckets[s.id] || []).length;
+      if (!list.length && !total) return;
+      if (settings.sortMode === 'heat' || !list.length) list.sort(function (a, b) { return a.rank - b.rank; });
+      else sortItems(list, null);
       var st = state.status[s.id];
       L.push('');
-      L.push('━━━ ' + s.name + '（' + list.length + ' 条' + (st && !st.ok ? ' · 示例数据' : '') + '）━━━');
+      L.push('━━━ ' + s.name + '（' + (total || list.length) + ' 条' +
+        (st && !st.ok ? ' · 本次抓取失败：' + (st.error || '') : '') + '）━━━');
       list.forEach(function (it) {
-        L.push(it.rank + '. ' + it.title + (it.hot ? '　[' + it.hot + ']' : ''));
+        L.push(it.rank + '. ' + it.title + (it.hot ? '　[' + it.hot + ']' : '') + '　[' + fmtAge(it.ts) + ']');
         if (it.summary) L.push('   摘要：' + it.summary);
         if (it.meta) L.push('   ' + it.meta);
         if (it.url) L.push('   原文：' + it.url);
@@ -1801,11 +2656,26 @@ function renderSettingsForm() {
   $('setProxy').value = settings.proxy;
   $('setLimit').value = settings.perSourceLimit;
   $('setCache').value = settings.cacheMinutes;
+  $('setSortMode').value = settings.sortMode;
+  $('setWatch').value = settings.watch;
+  $('setFresh').checked = !!settings.freshOnly;
+  $('setMerge').checked = !!settings.mergeSame;
+  $('setAuto').checked = !!settings.autoRefresh;
+  $('setSnap').checked = !!settings.useSnapshot;
+  $('setSnapUrl').value = settings.snapshotUrl || '';
   var box = $('setSources');
-  box.innerHTML = SOURCES.map(function (s) {
+  var live = SOURCES.map(function (s) {
     return '<label class="sw"><input type="checkbox" data-sid="' + s.id + '"' +
       (isSourceOn(s.id) ? ' checked' : '') + '><span>' + (s.icon || '📌') + ' ' + esc(s.short) + '</span></label>';
   }).join('');
+  var snapNote = state.snap.sources.length
+    ? '<div class="hint">📸 服务端快照源（由 Actions 定时抓好，页面只读）：' +
+      state.snap.sources.map(function (s) { return esc(s.short); }).join('、') +
+      '。要关掉哪些请连同下面的快照总开关一起调整。</div>'
+    : '<div class="hint">📸 快照源：本次未取到。</div>';
+  box.innerHTML = live;
+  var snapBox = $('setSnapSources');
+  if (snapBox) snapBox.innerHTML = snapNote;
 }
 function openSettings() {
   renderSettingsForm();
@@ -1819,6 +2689,13 @@ function readSettingsForm() {
   next.proxy = String($('setProxy').value || '').trim();
   next.perSourceLimit = Math.min(50, Math.max(5, Number($('setLimit').value) || 15));
   next.cacheMinutes = Math.min(720, Math.max(1, Number($('setCache').value) || 30));
+  next.sortMode = $('setSortMode').value;
+  next.watch = String($('setWatch').value || '').trim();
+  next.freshOnly = $('setFresh').checked;
+  next.mergeSame = $('setMerge').checked;
+  next.autoRefresh = $('setAuto').checked;
+  next.useSnapshot = $('setSnap').checked;
+  next.snapshotUrl = String($('setSnapUrl').value || '').trim();
   var enabled = {};
   var boxes = $('setSources').querySelectorAll('input[data-sid]');
   for (var i = 0; i < boxes.length; i++) {
@@ -1858,6 +2735,74 @@ function bindEvents() {
     state.fCategory = b.getAttribute('data-fc');
     renderChips(); renderFlash(); renderMain();
   });
+  var fEl = $('facetChips');
+  if (fEl) fEl.addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-ff]');
+    if (!b) return;
+    state.fFacet = b.getAttribute('data-ff');
+    renderChips(); renderFlash(); renderMain();
+  });
+
+  /* 排序模式 / 只看 24h / 同事件合并 / 只看关注 */
+  $('sortSel').addEventListener('change', function () {
+    var next = clone(settings);
+    next.sortMode = $('sortSel').value;
+    settings = mergeSettings(next);
+    saveStore();
+    recompute();
+  });
+  function toggleSetting(el, key, label) {
+    el.addEventListener('click', function () {
+      settings[key] = !settings[key];
+      el.classList.toggle('on', !!settings[key]);
+      saveStore();
+      recompute();
+      toast(label + (settings[key] ? '已开启' : '已关闭'));
+    });
+    el.classList.toggle('on', !!settings[key]);
+  }
+  toggleSetting($('freshToggle'), 'freshOnly', '只看 24h 内');
+  toggleSetting($('mergeToggle'), 'mergeSame', '同事件合并');
+
+  var ow = $('onlyWatchChip');
+  if (ow) ow.addEventListener('click', function () {
+    state.onlyWatch = !state.onlyWatch;
+    ow.classList.toggle('on', state.onlyWatch);
+    renderChips(); renderFlash(); renderMain();
+  });
+
+  /* 关注词：输入框回车即加，chips 上的 ✕ 移除 */
+  var wIn = $('watchInput');
+  function addWatch() {
+    var v = String(wIn.value || '').trim();
+    if (!v) return;
+    var cur = settings.watch ? settings.watch.split(/[,，;；\s]+/) : [];
+    v.split(/[,，;；\s]+/).forEach(function (x) {
+      x = x.trim();
+      if (!x) return;
+      if (cur.map(function (y) { return y.toLowerCase(); }).indexOf(x.toLowerCase()) < 0) cur.push(x);
+    });
+    settings.watch = cur.join(' ').slice(0, 240);
+    wIn.value = '';
+    saveStore();
+    recompute();
+    toast('关注词已更新：' + settings.watch);
+  }
+  if (wIn) {
+    wIn.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); addWatch(); } });
+    $('btnWatchAdd').addEventListener('click', addWatch);
+  }
+  var wEl = $('watchChips');
+  if (wEl) wEl.addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-delw]');
+    if (!b) return;
+    var w = b.getAttribute('data-delw');
+    settings.watch = settings.watch.split(/[,，;；\s]+/).filter(function (x) {
+      return x && x.toLowerCase() !== w;
+    }).join(' ').slice(0, 240);
+    saveStore();
+    recompute();
+  });
 
   /* 搜索：兼容中文输入法（组合期间不重绘） */
   var composing = false, deb = null;
@@ -1876,7 +2821,7 @@ function bindEvents() {
     q.value = ''; q.focus(); applySearch();
   });
 
-  /* 条目区域：复制 / 展开摘要 / 展开更多 */
+  /* 条目区域：复制 / 展开摘要 / 展开更多 / 重试此源 */
   $('main').addEventListener('click', function (e) {
     var moreBtn = e.target.closest('button[data-more]');
     if (moreBtn) {
@@ -1885,15 +2830,24 @@ function bindEvents() {
       renderMain();
       return;
     }
+    var rt = e.target.closest('button[data-retry]');
+    if (rt) { retrySource(rt.getAttribute('data-retry')); return; }
     var actBtn = e.target.closest('button[data-act]');
     if (!actBtn) return;
+    var act0 = actBtn.getAttribute('data-act');
+    if (act0 === 'clearFilters') {
+      state.fSource = 'all'; state.fCategory = 'all'; state.fFacet = 'all';
+      state.onlyWatch = false; settings.freshOnly = false;
+      saveStore(); renderAll(); return;
+    }
+    if (act0 === 'retryAll') { refresh(false); return; }
     var li = actBtn.closest('.item');
     if (!li) return;
     var id = li.getAttribute('data-id');
     var it = null;
     for (var i = 0; i < state.items.length; i++) if (state.items[i].id === id) { it = state.items[i]; break; }
     if (!it) return;
-    var act = actBtn.getAttribute('data-act');
+    var act = act0;
     if (act === 'copy') {
       copyText(itemToText(it), '已复制该条热搜');
     } else if (act === 'toggle') {
@@ -1903,6 +2857,13 @@ function bindEvents() {
       /* 展开后才去抓原文：先渲染出占位块，抓完只补这一条，不整块重绘 */
       if (willOpen && it.url) loadArticle(it);
     }
+  });
+
+  /* 数据源状态表在页脚，不在 #main 里，重试按钮单独委托 */
+  $('srcStatus').addEventListener('click', function (e) {
+    var rt = e.target.closest('button[data-retry]');
+    if (!rt) return;
+    retrySource(rt.getAttribute('data-retry'));
   });
 
   /* 顶部工具按钮 */
@@ -1922,19 +2883,33 @@ function bindEvents() {
       exportedAt: fmtTime(new Date()),
       date: fmtDate(new Date()),
       mode: state.mode,
-      sourceNote: state.mode === 'live' ? '实时数据（公开热榜接口）' : (state.mode === 'mixed' ? '部分示例数据' : '内置示例数据'),
+      sourceNote: modeNote(),
       updatedAt: state.updatedAt,
+      snapshotAt: state.snap.at || 0,
+      sortMode: settings.sortMode,
+      freshOnly: !!settings.freshOnly,
+      watch: watchWords(),
+      mergedCount: state.mergedCount || 0,
       settings: { apiBase: settings.apiBase, perSourceLimit: settings.perSourceLimit },
       sources: activeSources().map(function (s) {
         var st = state.status[s.id] || {};
-        return { id: s.id, name: s.name, path: s.path, ok: !!st.ok, count: st.count || 0 };
+        return { id: s.id, name: s.name, path: shortPath(s), snapshot: !!s.isSnap,
+                 ok: !!st.ok, pending: !!st.pending, count: st.count || 0, error: st.error || '' };
       }),
       items: visibleItems().map(function (it) {
         return {
           source: (sourceById(it.sourceId) || {}).short || '',
           category: (categoryById(it.category) || {}).name || '',
-          rank: it.rank, title: it.title, hot: it.hot,
-          summary: it.summary, meta: it.meta, url: it.url, demo: !!it.demo
+          rank: it.rank, title: it.title, hot: it.hot, hotRaw: it.hotRaw,
+          summary: it.summary, meta: it.meta, url: it.url,
+          ts: it.ts || 0, published: it.ts ? new Date(it.ts).toISOString() : '',
+          ageHours: it.ageH >= 0 ? Math.round(it.ageH * 10) / 10 : null,
+          event: it.evt, facets: it.facets, entities: it.ents, numbers: it.nums,
+          watch: it.watch, signal: it.signal, signalParts: it.signalParts,
+          snapshot: !!it.snap,
+          clusterSize: it.clusterSize || 1,
+          clusterSrcs: it.clusterSrcs || [],
+          clusterParent: it.clusterParent || ''
         };
       })
     };
@@ -1962,7 +2937,9 @@ function bindEvents() {
   });
   $('btnClearCache').addEventListener('click', function () {
     stDel(STORAGE_KEY);
-    state.items = []; state.status = {}; state.updatedAt = 0; state.mode = 'demo';
+    _respCache = {};
+    state.items = []; state.buckets = {}; state.status = {}; state.updatedAt = 0; state.mode = 'empty';
+    state.snap = { loaded: false, at: 0, date: '', sources: [], error: '', retrying: false };
     renderAll();
     toast('缓存已清空');
   });
@@ -1999,20 +2976,20 @@ function maybeAutoRefresh() {
 function boot() {
   bindEvents();
   var hasCache = loadStore();
-  if (hasCache) {
-    state.booting = false;
-    renderAll();
-    toast('已载入缓存（' + ago(state.updatedAt) + '）');
-  } else {
-    state.mode = 'demo';
-    renderAll();
-  }
-  renderHeader();
+  if (!hasCache) state.mode = 'empty';
+  state.booting = !hasCache;
+  renderAll();
+  if (hasCache) toast('已载入缓存（' + ago(state.updatedAt) + '）');
+  /* 快照是一次请求的静态 JSON，先把它铺上，页面立刻有内容；
+     实时热榜随后串行覆盖，两者互不阻塞 */
+  if (settings.useSnapshot) loadSnapshot();
   var stale = !state.updatedAt || (Date.now() - state.updatedAt) > settings.cacheMinutes * 60 * 1000;
   if (settings.autoRefresh && stale) {
     refresh(hasCache);
   } else if (!hasCache) {
     refresh(true);
+  } else {
+    toast('缓存仍在 ' + settings.cacheMinutes + ' 分钟内，点「一键刷新」可强制重抓');
   }
 }
 
