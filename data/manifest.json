@@ -1,8 +1,8 @@
 {
  "schema": 1,
- "hash": "2bea4eef73074c95",
- "generatedAt": "2026-10-09T12:45:40.498Z",
- "generatedAtMs": 1791549940498,
+ "hash": "49e1ea613384a702",
+ "generatedAt": "2026-10-09T13:01:44.286Z",
+ "generatedAtMs": 1791550904286,
  "itemCount": 165,
  "okCount": 13,
  "sources": [
@@ -35,12 +35,6 @@
    "ok": true,
    "count": 3,
    "error": ""
-  },
-  {
-   "id": "jqzx",
-   "ok": false,
-   "count": 0,
-   "error": "接口有 18 条，但被 168h 时间窗全部过滤（最新一条 2026-04-10）"
   },
   {
    "id": "xinzhiyuan",
