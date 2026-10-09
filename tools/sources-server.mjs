@@ -99,7 +99,9 @@ export const SERVER_SOURCES = [
        而按 URL 去抓文章页又会被闸门挡回来。这里退一步用 Google News 的站限定
        RSS 取最新条目；抓不到时该源自动缺席，不影响其他源。 */
     id: 'jqzx', name: '机器之心', short: '机器之心', icon: '', color: '#e0653a',
-    fallbackCat: 'ai', max: 16, maxAgeH: 72,
+    /* 品牌词查询会混进几个月前的旧文，Google News 又不按时间排序：
+       所以自己按时间倒序，并把窗口放宽到 7 天，否则容易被全部滤掉 */
+    fallbackCat: 'ai', max: 14, maxAgeH: 168,
     async run() {
       /* Actions 上实测 q=site:jiqizhixin.com 与 q="机器之心" 都是 0 条。本机连不上
          Google 无法就地判断，所以把「RSS 本身为空」和「有内容但来源过滤没命中」分开
@@ -110,6 +112,7 @@ export const SERVER_SOURCES = [
       if (!all.length) throw new Error('Google News 返回空 RSS：' + String(xml).replace(/\s+/g, ' ').slice(0, 70));
       const hit = all.filter(function (x) { return /机器之心/.test(x.title); });
       if (!hit.length) throw new Error('RSS 有 ' + all.length + ' 条但无一条含「机器之心」，样例：' + all[0].title.slice(0, 50));
+      hit.sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
       return hit.map(function (x) {
         return {
           title: clean(String(x.title || '').replace(/\s*[-–—]\s*机器之心\s*$/, ''), 200),

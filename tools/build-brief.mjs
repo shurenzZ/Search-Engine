@@ -38,7 +38,15 @@ async function main() {
     try {
       const raws = await src.run();
       const done = finalize(src, raws, { now: now });
-      if (!done.length) throw new Error('接口返回 0 条');
+      if (!done.length) {
+        /* 「接口没数据」和「有数据但全被时间窗滤掉」是两件不同的事，混成一条会误导排查 */
+        if (raws.length) {
+          const newest = Math.max.apply(null, raws.map((r) => r.ts || 0));
+          throw new Error('接口有 ' + raws.length + ' 条，但被 ' + src.maxAgeH + 'h 时间窗全部过滤' +
+            (newest ? '（最新一条 ' + new Date(newest).toISOString().slice(0, 10) + '）' : ''));
+        }
+        throw new Error('接口返回 0 条');
+      }
       items.push(...done);
       meta.ok = true;
       meta.count = done.length;
