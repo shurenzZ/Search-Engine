@@ -1,10 +1,10 @@
 {
  "schema": 1,
- "hash": "971574960bec9b8c",
- "generatedAt": "2026-10-09T10:32:19.877Z",
- "generatedAtMs": 1791541939877,
- "itemCount": 132,
- "okCount": 11,
+ "hash": "1d89bcc75d85af1b",
+ "generatedAt": "2026-10-09T11:32:12.084Z",
+ "generatedAtMs": 1791545532084,
+ "itemCount": 164,
+ "okCount": 13,
  "sources": [
   {
    "id": "hf",
@@ -37,6 +37,24 @@
    "error": ""
   },
   {
+   "id": "jqzx",
+   "ok": false,
+   "count": 0,
+   "error": "接口返回 0 条"
+  },
+  {
+   "id": "xinzhiyuan",
+   "ok": true,
+   "count": 15,
+   "error": ""
+  },
+  {
+   "id": "leiphone",
+   "ok": true,
+   "count": 16,
+   "error": ""
+  },
+  {
    "id": "qbitai",
    "ok": true,
    "count": 10,
@@ -63,13 +81,13 @@
   {
    "id": "v2ex",
    "ok": true,
-   "count": 9,
+   "count": 8,
    "error": ""
   },
   {
    "id": "ghtrend",
    "ok": true,
-   "count": 9,
+   "count": 11,
    "error": ""
   }
  ]
