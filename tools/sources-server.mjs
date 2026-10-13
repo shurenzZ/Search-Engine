@@ -191,11 +191,16 @@ export function finalize(src, raws, opts) {
     ? list.filter(function (r) { return !r.ts || now - r.ts <= src.maxAgeH * 3600e3; })
     : list;
   const chosen = windowed.slice(0, src.max || 20);
+  /* id 不含 rank：榜单排名会浮动，位次进 id 会让同一内容跨快照换 id；同源重复标题用序号兜底 */
+  const seen = {};
   return chosen.map(function (r, i) {
     const title = clean(r.title, 200);
     const hotRaw = Number(r.hotRaw) > 0 ? Math.round(Number(r.hotRaw)) : 0;
+    let id = src.id + '-' + hash8(title);
+    if (seen[id] === undefined) seen[id] = 0;
+    else seen[id]++, id += '-x' + seen[id];
     return {
-      id: src.id + '-' + (i + 1) + '-' + hash8(title),
+      id: id,
       sourceId: src.id,
       rank: i + 1,
       title: title,

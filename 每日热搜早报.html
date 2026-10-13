@@ -784,6 +784,12 @@ function esc(s) {
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
+/* 只放行 http(s) 链接：esc 只转义字符不限制协议，外部数据若夹带 javascript: 等
+   伪协议，直接拼进 href 会在点击时执行脚本 */
+function safeUrl(u) {
+  var s = String(u == null ? '' : u).trim();
+  return /^https?:\/\//i.test(s) ? s : '';
+}
 function firstStr() {
   for (var i = 0; i < arguments.length; i++) {
     var v = arguments[i];
@@ -1554,8 +1560,10 @@ function makeItem(o) {
   var title = cleanText(o.title).slice(0, 200);
   var f = extractFacets(title, o.summary, o.tags);
   var cat = classify(title, o.summary, o.src, f.ents);
+  /* id 不含 rank：榜单排名会浮动，位次进 id 会让同一内容每次刷新都换 id，
+     跨快照的去重 / 聚类 / 状态记忆全部失稳。位次语义由 rank 字段单独承担 */
   return {
-    id: o.sourceId + '-' + o.rank + '-' + hash32(title),
+    id: o.sourceId + '-' + hash32(title),
     sourceId: o.sourceId,
     rank: o.rank,
     title: title,
@@ -1714,6 +1722,13 @@ function computeSignal(it) {
 function rebuildItems(buckets) {
   var all = [];
   for (var k in buckets) { if (buckets[k] && buckets[k].length) all = all.concat(buckets[k]); }
+  /* 同一来源出现重复标题时 id 会撞车（id = sourceId + 标题指纹），加序号兜底保证 DOM 唯一 */
+  var seen = {};
+  for (var i = 0; i < all.length; i++) {
+    if (seen[all[i].id] === undefined) { seen[all[i].id] = 0; continue; }
+    seen[all[i].id]++;
+    all[i].id = all[i].id + '-x' + seen[all[i].id];
+  }
   var words = watchWords();
   var bySrc = {};
   all.forEach(function (it) {
@@ -2178,8 +2193,8 @@ function flashRowHtml(it, i, mode) {
   var lead = mode === 'release'
     ? '<span class="idx evt">' + (it.evt ? (facetById(it.evt) || {}).icon : '📌') + '</span>'
     : '<span class="idx">' + (i + 1) + '</span>';
-  var title = it.url
-    ? '<a class="tt" href="' + esc(it.url) + '" target="_blank" rel="noopener noreferrer">' + esc(it.title) + '</a>'
+  var title = safeUrl(it.url)
+    ? '<a class="tt" href="' + esc(safeUrl(it.url)) + '" target="_blank" rel="noopener noreferrer">' + esc(it.title) + '</a>'
     : '<span class="tt">' + esc(it.title) + '</span>';
   var tail = mode === 'release'
     ? '<span class="src age">' + esc(fmtAge(it.ts)) + ' · ' + esc(s.short) + '</span>'
@@ -2219,7 +2234,7 @@ function renderFlash() {
       lo.innerHTML = low.length
         ? low.map(function (it) {
             return '<li><span class="idx evt">' + (it.evt ? (facetById(it.evt) || {}).icon : '📌') + '</span>' +
-              (it.url ? '<a class="tt" href="' + esc(it.url) + '" target="_blank" rel="noopener noreferrer">' + esc(it.title) + '</a>'
+              (safeUrl(it.url) ? '<a class="tt" href="' + esc(safeUrl(it.url)) + '" target="_blank" rel="noopener noreferrer">' + esc(it.title) + '</a>'
                      : '<span class="tt">' + esc(it.title) + '</span>') +
               '<span class="sig" title="' + esc(sigTip(it)) + '">信号 ' + it.signal + '</span>' +
               '<span class="src">' + esc(shortOf(it.sourceId)) + '</span></li>';
@@ -2271,7 +2286,7 @@ function itemHtml(it) {
       '<div class="item-acts">' +
         (it.summary || it.url ? '<button class="mini" data-act="toggle">' + (isOpen ? '收起全文' : '展开全文') + '</button>' : '') +
         '<button class="mini" data-act="copy">复制此条</button>' +
-        (it.url ? '<a class="mini" href="' + esc(it.url) + '" target="_blank" rel="noopener noreferrer">原文 ↗</a>' : '') +
+        (safeUrl(it.url) ? '<a class="mini" href="' + esc(safeUrl(it.url)) + '" target="_blank" rel="noopener noreferrer">原文 ↗</a>' : '') +
       '</div>' +
     '</div>' +
   '</li>';
@@ -2743,17 +2758,21 @@ function readSettingsForm() {
 /* 筛选行横向拖动：这几行是 overflow-x 滚动条，鼠标没有天然的横向滚动方式，
    不补拖拽的话看起来就像被截断了（触摸板/触屏本来就能滑，不需要接管） */
 function enableRowDrag(el) {
-  var down = false, startX = 0, startLeft = 0, moved = false;
+  var down = false, moved = false, startX = 0, startLeft = 0, pid = 0;
   el.addEventListener('pointerdown', function (e) {
     if (e.pointerType === 'touch' || e.button !== 0) return;
-    down = true; moved = false; startX = e.clientX; startLeft = el.scrollLeft;
-    el.classList.add('dragging');
-    if (el.setPointerCapture) { try { el.setPointerCapture(e.pointerId); } catch (x) {} }
+    down = true; moved = false; startX = e.clientX; startLeft = el.scrollLeft; pid = e.pointerId;
   });
   el.addEventListener('pointermove', function (e) {
     if (!down) return;
     var dx = e.clientX - startX;
-    if (Math.abs(dx) > 4) moved = true;
+    /* 捕获必须等确认是拖动再设置：按下就捕获会让浏览器把后续 click 重定向到容器本身，
+       芯片按钮永远收不到点击（表现为「标签无法选中」） */
+    if (!moved && Math.abs(dx) > 4) {
+      moved = true;
+      el.classList.add('dragging');
+      if (el.setPointerCapture) { try { el.setPointerCapture(pid); } catch (x) {} }
+    }
     if (moved) el.scrollLeft = startLeft - dx;
   });
   function end() {

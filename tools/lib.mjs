@@ -87,6 +87,7 @@ export function parseHot(v) {
   const n = parseFloat(m[1]);
   if (!Number.isFinite(n) || n <= 0) return 0;
   const u = (m[2] || '').toLowerCase();
+  /* kw 按「千万」=1e7 处理（k=1e3、w=1e4 都不是它的常见含义），实测个别榜单用它表示千万级热度 */
   const mul = { '': 1, k: 1e3, w: 1e4, 万: 1e4, m: 1e6, million: 1e6, 亿: 1e8, billion: 1e9, kw: 1e7 }[u];
   return Math.round(n * (mul || 1));
 }
@@ -144,9 +145,7 @@ function blockOf(xml, name, from) {
 
 function fieldOf(block, name) {
   const m = new RegExp('<' + name + '(?:\\s[^>]*)?>([\\s\\S]*?)</' + name + '>', 'i').exec(block);
-  if (m) return decodeEnt(stripHtml(m[1]));
-  const self = new RegExp('<' + name + '\\s[^>]*?/>', 'i').exec(block);
-  return self ? '' : '';
+  return m ? decodeEnt(stripHtml(m[1])) : '';
 }
 
 function attrOfFirst(block, name, attr) {

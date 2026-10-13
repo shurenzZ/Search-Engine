@@ -2,7 +2,7 @@
 /* 服务端定时抓取：产出 data/latest.json 供页面直读（raw.githubusercontent 的 CORS 是全开的）。
    用法：node tools/build-brief.mjs [--dry] [--only id,id] [--gap 1500] [--out data] */
 
-import { writeFile, mkdir, readdir, rm } from 'node:fs/promises';
+import { writeFile, rename, mkdir, readdir, rm } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -95,11 +95,19 @@ async function main() {
   }
 
   await mkdir(path.join(OUT_DIR, 'archive'), { recursive: true });
-  await writeFile(path.join(OUT_DIR, 'latest.json'), body, 'utf8');
-  await writeFile(path.join(OUT_DIR, 'archive', payload.date + '.json'), body, 'utf8');
-  await writeFile(path.join(OUT_DIR, 'manifest.json'), JSON.stringify(manifest, null, 1), 'utf8');
+  await writeAtomic(path.join(OUT_DIR, 'latest.json'), body);
+  await writeAtomic(path.join(OUT_DIR, 'archive', payload.date + '.json'), body);
+  await writeAtomic(path.join(OUT_DIR, 'manifest.json'), JSON.stringify(manifest, null, 1));
   await pruneArchive();
   console.log('已写入 ' + path.relative(ROOT, OUT_DIR) + '/latest.json 与 archive/' + payload.date + '.json');
+}
+
+/* 先写 .tmp 再同目录 rename：rename 是原子的，中途崩溃不会留下「latest 已更新、
+   manifest 还是旧版」的错位状态 */
+async function writeAtomic(file, data) {
+  const tmp = file + '.tmp';
+  await writeFile(tmp, data, 'utf8');
+  await rename(tmp, file);
 }
 
 async function pruneArchive() {

@@ -1,0 +1,7 @@
+# 统一行尾：所有文本文件入库为 LF，避免不同编辑器把工作区改成 CRLF 造成假 diff
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.gz binary
