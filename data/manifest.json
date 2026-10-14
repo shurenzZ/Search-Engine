@@ -1,10 +1,10 @@
 {
  "schema": 1,
- "hash": "fcaf6da30ddc888e",
- "generatedAt": "2026-10-14T17:08:38.973Z",
- "generatedAtMs": 1791997718973,
- "itemCount": 155,
- "okCount": 12,
+ "hash": "8e4c4f9eeacfbc41",
+ "generatedAt": "2026-10-14T20:41:08.604Z",
+ "generatedAtMs": 1792010468604,
+ "itemCount": 169,
+ "okCount": 13,
  "sources": [
   {
    "id": "hf",
@@ -33,14 +33,14 @@
   {
    "id": "deepmind",
    "ok": true,
-   "count": 6,
+   "count": 5,
    "error": ""
   },
   {
    "id": "xinzhiyuan",
-   "ok": false,
-   "count": 0,
-   "error": "fetch failed（ENOTFOUND）"
+   "ok": true,
+   "count": 15,
+   "error": ""
   },
   {
    "id": "leiphone",
