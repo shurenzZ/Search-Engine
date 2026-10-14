@@ -125,6 +125,11 @@ input,select{font-family:inherit;font-size:inherit;color:inherit}
 .chip:hover{border-color:var(--gold)}
 .chip.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700}
 .chip .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:middle}
+/* 论文直达：沿用 chip 外观的链接形态，悬停点亮文字 */
+a.chip{cursor:pointer}
+a.chip:hover{color:var(--ink)}
+a.chip .ext{font-size:10px;opacity:.55;margin-left:3px}
+#paperChips{padding:8px 0 2px}
 .filters-label{font-size:12px;color:var(--ink-3);flex:0 0 auto;padding-top:6px;letter-spacing:1px}
 .view-tabs{display:flex;gap:4px;background:#eee7d8;border-radius:999px;padding:3px}
 .view-tabs button{padding:5px 14px;border-radius:999px;font-size:13px;font-weight:600;color:var(--ink-2)}
@@ -413,6 +418,25 @@ code{
     <div class="chips" id="categoryChips" title="按住左键拖动，或 Shift+滚轮 横向查看"></div>
     <div class="chips" id="facetChips" title="按住左键拖动，或 Shift+滚轮 横向查看"></div>
     <div class="chips" id="watchChips" title="按住左键拖动，或 Shift+滚轮 横向查看"></div>
+  </div>
+
+  <!-- ============ 前沿论文平台直达 ============ -->
+  <div class="chips" id="paperChips" title="点击直达前沿科技论文平台，新标签页打开">
+    <span class="filters-label">📄 论文直达</span>
+    <a class="chip" href="https://arxiv.org/list/cs.AI/recent" target="_blank" rel="noopener noreferrer"
+       title="arXiv 人工智能分类的每日最新投稿列表">🔬 arXiv 最新<span class="ext">↗</span></a>
+    <a class="chip" href="https://huggingface.co/papers" target="_blank" rel="noopener noreferrer"
+       title="HuggingFace 社区按热度遴选的每日论文榜">🤗 HF 每日论文<span class="ext">↗</span></a>
+    <a class="chip" href="https://www.alphaxiv.org" target="_blank" rel="noopener noreferrer"
+       title="arXiv 论文的社区导读与讨论">💬 alphaXiv<span class="ext">↗</span></a>
+    <a class="chip" href="https://openreview.net" target="_blank" rel="noopener noreferrer"
+       title="NeurIPS / ICLR 等顶会的投稿与公开评审记录">⚖ OpenReview<span class="ext">↗</span></a>
+    <a class="chip" href="https://www.semanticscholar.org" target="_blank" rel="noopener noreferrer"
+       title="语义检索 + 引用图谱的学术搜索引擎">📚 Semantic Scholar<span class="ext">↗</span></a>
+    <a class="chip" href="https://scholar.google.com" target="_blank" rel="noopener noreferrer"
+       title="谷歌学术，全文检索与引用追踪">🎓 Google Scholar<span class="ext">↗</span></a>
+    <a class="chip" href="https://www.connectedpapers.com" target="_blank" rel="noopener noreferrer"
+       title="输入一篇论文，生成它的相关工作关联图谱">🕸 Connected Papers<span class="ext">↗</span></a>
   </div>
 
   <!-- ============ 今日要闻 / 新发布 / 值得关注 ============ -->
