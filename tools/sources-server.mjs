@@ -186,7 +186,8 @@ async function officialRss(url, kindTag) {
 /* 把源返回的原始条目补齐成快照 item：id 稳定、热度有展示串、按时间窗口过滤 */
 export function finalize(src, raws, opts) {
   const now = (opts && opts.now) || Date.now();
-  const list = (raws || []).filter(function (r) { return r && clean(r.title, 200); });
+  const list = (Array.isArray(raws) ? raws : []).filter(function (r) { return r && clean(r.title, 200); })
+    .map((r) => ({ ...r, ts: parseTime(r.ts) }));
   const windowed = src.maxAgeH > 0
     ? list.filter(function (r) { return !r.ts || now - r.ts <= src.maxAgeH * 3600e3; })
     : list;
@@ -195,7 +196,7 @@ export function finalize(src, raws, opts) {
   const seen = {};
   return chosen.map(function (r, i) {
     const title = clean(r.title, 200);
-    const hotRaw = Number(r.hotRaw) > 0 ? Math.round(Number(r.hotRaw)) : 0;
+    const hotRaw = parseHot(r.hotRaw);
     let id = src.id + '-' + hash8(title);
     if (seen[id] === undefined) seen[id] = 0;
     else seen[id]++, id += '-x' + seen[id];
@@ -205,11 +206,11 @@ export function finalize(src, raws, opts) {
       rank: i + 1,
       title: title,
       summary: clean(r.summary, 600),
-      url: r.url || '',
+      url: /^https?:\/\//i.test(String(r.url || '').trim()) ? String(r.url).trim() : '',
       hot: r.hotText || (hotRaw ? fmtNum(hotRaw) : ''),
       hotRaw: hotRaw,
       ts: r.ts || 0,
-      tags: (r.tags || []).slice(0, 4)
+      tags: (Array.isArray(r.tags) ? r.tags : []).map((tag) => clean(tag, 60)).filter(Boolean).slice(0, 4)
     };
   });
 }

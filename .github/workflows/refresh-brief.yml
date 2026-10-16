@@ -30,12 +30,11 @@ jobs:
         with:
           node-version: '20'
 
+      - name: 离线回归测试
+        run: node --test tests/*.test.mjs
+
       - name: 抓取并生成快照
         run: node tools/build-brief.mjs
-
-      - name: 源契约自检（只报告，不阻断提交）
-        run: node tools/verify-sources.mjs --server --report-only
-        continue-on-error: true
 
       - name: 提交快照
         run: |
@@ -46,6 +45,6 @@ jobs:
             echo "data/ 无变化，跳过提交"
           else
             git commit -m "data: 更新热搜快照 [skip ci]"
-            git pull --rebase origin main || true
+            git pull --rebase origin main
             git push origin HEAD:main
           fi

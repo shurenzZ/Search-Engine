@@ -23,6 +23,12 @@ const ONLY = (arg('only', '') || '').split(',').filter(Boolean);
 const ARCHIVE_KEEP_DAYS = 14;
 
 async function main() {
+  if (!Number.isFinite(GAP) || GAP < 0) throw new Error('--gap 必须是非负数字');
+  const unknown = ONLY.filter((id) => !SERVER_SOURCES.some((s) => s.id === id));
+  if (unknown.length) throw new Error('未知数据源：' + unknown.join(', '));
+  if (ONLY.length && !DRY && OUT_DIR === path.join(ROOT, 'data')) {
+    throw new Error('--only 请配合 --dry 或独立 --out 目录，避免用部分数据覆盖完整快照');
+  }
   const now = Date.now();
   const sources = ONLY.length ? SERVER_SOURCES.filter((s) => ONLY.includes(s.id)) : SERVER_SOURCES;
   const srcMeta = [];
@@ -91,9 +97,11 @@ async function main() {
   if (DRY) {
     console.log('--dry：未写入文件');
     console.log(JSON.stringify(items.slice(0, 2), null, 2));
+    if (!items.length) process.exitCode = 1;
     return;
   }
 
+  if (!items.length) throw new Error('所有源均无可用条目，保留现有快照');
   await mkdir(path.join(OUT_DIR, 'archive'), { recursive: true });
   await writeAtomic(path.join(OUT_DIR, 'latest.json'), body);
   await writeAtomic(path.join(OUT_DIR, 'archive', payload.date + '.json'), body);
@@ -102,8 +110,7 @@ async function main() {
   console.log('已写入 ' + path.relative(ROOT, OUT_DIR) + '/latest.json 与 archive/' + payload.date + '.json');
 }
 
-/* 先写 .tmp 再同目录 rename：rename 是原子的，中途崩溃不会留下「latest 已更新、
-   manifest 还是旧版」的错位状态 */
+/* 每个文件独立原子替换，manifest 最后写入；跨文件不是事务，读取方可用 hash 校验。 */
 async function writeAtomic(file, data) {
   const tmp = file + '.tmp';
   await writeFile(tmp, data, 'utf8');

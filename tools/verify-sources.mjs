@@ -24,7 +24,7 @@ const WANT_CLIENT = process.argv.includes('--client');
 const BOTH = !WANT_SERVER && !WANT_CLIENT;
 
 const TITLE_KEYS = ['title', 'name', 'word', 'query', 'keyword'];
-const URL_KEYS = ['link', 'url', 'mobileUrl', 'share_url', 'href'];
+const URL_KEYS = ['link', 'url', 'mobileUrl', 'share_url', 'href', 'html_url'];
 
 /* 从页面里取出 SOURCES 字面量：这样检查的是真配置，不是影子副本 */
 function readClientSources() {
@@ -104,6 +104,11 @@ async function checkOne(label, url, src) {
 }
 
 async function main() {
+  if (!Number.isFinite(GAP) || GAP < 0) throw new Error('--gap 必须是非负数字');
+  const selected = (BOTH || WANT_SERVER ? SERVER_SOURCES : [])
+    .concat(BOTH || WANT_CLIENT ? readClientSources().sources : []);
+  const unknown = ONLY.filter((id) => !selected.some((s) => s.id === id));
+  if (unknown.length) throw new Error('所选范围中没有数据源：' + unknown.join(', '));
   const results = [];
   let failures = 0;
 

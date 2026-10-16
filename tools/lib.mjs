@@ -52,8 +52,8 @@ export function fillDyn(p) {
 }
 
 export function fmtDate(d) {
-  const p = (n) => String(n).padStart(2, '0');
-  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  // 早报按北京时间归档，避免 Actions 的 UTC 日期在凌晨落后一天。
+  return new Date(d.getTime() + 8 * 3600e3).toISOString().slice(0, 10);
 }
 
 /* 只接受 2000 年之后、且不晚于未来 2 天的时间，避免把 '1604' 这类年份当成时间戳 */
@@ -67,7 +67,7 @@ export function parseTime(v) {
   if (v == null || v === '') return 0;
   if (typeof v === 'number' || /^\d{9,13}$/.test(String(v).trim())) {
     let n = Number(v);
-    if (n > 1e12) return sane(n);
+    if (n >= 1e11) return sane(n);
     if (n > 1e8) return sane(n * 1000);
     return 0;
   }
@@ -82,14 +82,15 @@ export function parseHot(v) {
   if (v == null || v === '') return 0;
   if (typeof v === 'number') return Number.isFinite(v) && v > 0 ? v : 0;
   const s = String(v).trim().replace(/,/g, '');
-  const m = /^([\d]+(?:\.\d+)?)\s*(亿|万|kw|w|k|m|million|billion)?/i.exec(s);
+  const m = /^([\d]+(?:\.\d+)?)\s*(亿|万|million|billion|kw|w|k|m)?/i.exec(s);
   if (!m) return 0;
   const n = parseFloat(m[1]);
   if (!Number.isFinite(n) || n <= 0) return 0;
   const u = (m[2] || '').toLowerCase();
   /* kw 按「千万」=1e7 处理（k=1e3、w=1e4 都不是它的常见含义），实测个别榜单用它表示千万级热度 */
   const mul = { '': 1, k: 1e3, w: 1e4, 万: 1e4, m: 1e6, million: 1e6, 亿: 1e8, billion: 1e9, kw: 1e7 }[u];
-  return Math.round(n * (mul || 1));
+  const result = Math.round(n * (mul || 1));
+  return Number.isFinite(result) ? result : 0;
 }
 
 export function fmtNum(n) {
@@ -149,8 +150,8 @@ function fieldOf(block, name) {
 }
 
 function attrOfFirst(block, name, attr) {
-  const m = new RegExp('<' + name + '\\s[^>]*?' + attr + '="([^"]+)"', 'i').exec(block);
-  return m ? m[1] : '';
+  const m = new RegExp('<' + name + '\\b[^>]*?\\s' + attr + '\\s*=\\s*(["\x27])([\\s\\S]*?)\\1', 'i').exec(block);
+  return m ? decodeEnt(m[2]) : '';
 }
 
 /* RSS 2.0 与 Atom 通吃：先找 item，再找 entry */
@@ -165,7 +166,12 @@ export function parseFeed(xml) {
   if (!blocks) return [];
   return blocks.map(function (b) {
     const title = clean(fieldOf(b, 'title'), 200);
-    let url = atom ? attrOfFirst(b, 'link', 'href') : clean(fieldOf(b, 'link'), 400);
+    const links = b.match(/<link\b[^>]*>/gi) || [];
+    const alternate = links.find((link) => {
+      const rel = attrOfFirst(link, 'link', 'rel');
+      return !rel || rel === 'alternate';
+    });
+    let url = atom ? attrOfFirst(alternate || '', 'link', 'href') : fieldOf(b, 'link').trim();
     if (!url) url = attrOfFirst(b, 'link', 'href');
     if (!url) { const m = /https?:\/\/[^\s<"']+/i.exec(b); url = m ? m[0] : ''; }
     const summary = clean(

@@ -1,0 +1,23 @@
+name: 离线回归检查
+
+on:
+  pull_request:
+    paths-ignore:
+      - 'data/**'
+  push:
+    paths-ignore:
+      - 'data/**'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: node --test tests/*.test.mjs
