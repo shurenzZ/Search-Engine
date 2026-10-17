@@ -1,10 +1,10 @@
 {
  "schema": 1,
- "hash": "d2d57daf74d576f5",
- "generatedAt": "2026-10-17T04:22:44.977Z",
- "generatedAtMs": 1792210964977,
- "itemCount": 153,
- "okCount": 12,
+ "hash": "7cb69529afa7b01e",
+ "generatedAt": "2026-10-17T08:48:53.286Z",
+ "generatedAtMs": 1792226933286,
+ "itemCount": 169,
+ "okCount": 13,
  "sources": [
   {
    "id": "hf",
@@ -14,9 +14,9 @@
   },
   {
    "id": "arxiv",
-   "ok": false,
-   "count": 0,
-   "error": "The operation was aborted due to timeout"
+   "ok": true,
+   "count": 16,
+   "error": ""
   },
   {
    "id": "openai",
