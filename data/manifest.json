@@ -1,9 +1,9 @@
 {
  "schema": 1,
- "hash": "47205d0ca539447f",
- "generatedAt": "2026-10-19T05:20:09.237Z",
- "generatedAtMs": 1792387209237,
- "itemCount": 170,
+ "hash": "cff06c3f6474df0e",
+ "generatedAt": "2026-10-19T11:16:07.143Z",
+ "generatedAtMs": 1792408567143,
+ "itemCount": 167,
  "okCount": 13,
  "sources": [
   {
@@ -51,7 +51,7 @@
   {
    "id": "qbitai",
    "ok": true,
-   "count": 10,
+   "count": 8,
    "error": ""
   },
   {
@@ -81,7 +81,7 @@
   {
    "id": "ghtrend",
    "ok": true,
-   "count": 13,
+   "count": 12,
    "error": ""
   }
  ]
