@@ -732,8 +732,10 @@ var CATEGORIES = [
     kw:'健康|养生|睡眠|熬夜|减肥|运动|健身|跑步|马拉松|心理|焦虑|抑郁|情绪|内耗|饮食|食谱|癌|病毒|流感|医生|医院|作息|体检|炎症|痴呆|血压|血糖|吸烟|喝酒|皮肤|护肤|咖啡|茶|减肥' },
   { id:'culture', name:'文化体育', icon:'🏆', color:'#9d174d',
     kw:'球|比赛|夺冠|冠军|奥运|亚运|世界杯|\\bNBA\\b|中超|国乒|男篮|女排|国足|破纪录|演唱会|电影|票房|演员|导演|综艺|电视剧|首映|歌手|音乐|专辑|展览|博物馆|文物|非遗|读书|小说|作家|票房|颁奖' },
-  { id:'game', name:'游戏动漫', icon:'🎮', color:'#7e22ce',
-    kw:'游戏|手游|端游|主机|\\bSteam\\b|王者荣耀|原神|英雄联盟|\\bLOL\\b|电竞|选手|赛季|版本更新|开服|联机|动漫|番剧|漫画|二次元|声优|手办|\\bcos\\b|\\bUP主\\b|攻略|副本|画师' }
+  { id:'game', name:'游戏', icon:'🎮', color:'#7e22ce',
+    kw:'游戏|手游|端游|主机|\\bSteam\\b|王者荣耀|原神|英雄联盟|\\bLOL\\b|电竞|选手|赛季|版本更新|开服|联机|攻略|副本|\\bCS2\\b|\\bCS:GO\\b|Counter[ -]Strike|反恐精英|\\bHLTV\\b' },
+  { id:'anime', name:'动漫', icon:'🎨', color:'#db2777',
+    kw:'动漫|番剧|漫画|二次元|声优|手办|\\bcos\\b|\\bUP主\\b|画师' }
 ];
 
 /* =========================================================
@@ -1665,6 +1667,9 @@ function countHits(re, text) {
 /* 词典长短不一，命中数除以词数开方，避免「摘要写得长」压过「标题真正相关」；
    抽到的实体是精确专有名词，权重最高 */
 function classify(title, summary, src, ents) {
+  /* 专项来源的分类优先，避免 CS2 英文标题因公司名或通用词误入其他分类。 */
+  var fixed = src && categoryById(src.category);
+  if (fixed) return fixed;
   var entTxt = ents && ents.length ? ents.join(' ') : '';
   var best = null, bestScore = 0;
   for (var i = 0; i < CATEGORIES.length; i++) {
@@ -1841,6 +1846,7 @@ function snapshotSources(metas) {
       icon: cleanText(m.icon || '📌').slice(0, 12),
       color: /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(m.color) ? m.color : '#8a8377',
       fallbackCat: categoryById(m.fallbackCat) ? m.fallbackCat : 'tech', dayList: !!m.dayList,
+      category: categoryById(m.category) ? m.category : '',
       defaultOn: m.defaultOn !== false, isSnap: true, kind: 'snapshot',
       path: 'Actions 快照', ok: !!m.ok, count: Math.max(0, Number(m.count) || 0), error: String(m.error || '')
     };
@@ -1875,7 +1881,8 @@ function ingestSnapshot(payload) {
     var n = Math.min(buckets[m.id].length, settings.perSourceLimit);
     state.status[m.id] = n
       ? { ok: true, count: n, via: 'Actions 快照', snap: true }
-      : { ok: false, failed: true, count: 0, snap: true, error: m.error || '本轮快照里没有该源的条目' };
+      : { ok: !!m.ok, failed: !m.ok, count: 0, snap: true,
+          error: m.ok ? '' : (m.error || '本轮快照里没有该源的条目') };
   });
   state.snap.loaded = true;
   state.snap.at = at;

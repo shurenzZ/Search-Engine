@@ -13,7 +13,7 @@
    · 公共 RSSHub 镜像的 /jiqizhixin 路由 404/503，Bing 的 RSS 忽略 site: 限定。
    要接它只能自建 RSSHub，或接入它的付费数据服务。 */
 
-import { getJson, getText, parseFeed, parseTime, parseHot, clean, fmtNum, hash8 } from './lib.mjs';
+import { getJson, getText, parseFeed, parseTime, parseHot, clean, fmtNum, fmtDate, hash8 } from './lib.mjs';
 
 /* GitHub Trending 是 HTML 页，没有 API；按 article 切块解析，不受 REST 配额限制 */
 export function parseTrending(html) {
@@ -41,6 +41,43 @@ export function parseTrending(html) {
     });
   }
   return out;
+}
+
+/* 大赛按 BO3.gg Tier 1 分级，只保留最近 7 天已结束的比赛。 */
+export function normalizeCs2Match(row, now = Date.now()) {
+  if (!row || row.discipline_id !== 1 || row.status !== 'finished' || row.tournament?.tier_rank !== 1) return null;
+  const ts = parseTime(row.start_date);
+  const team1 = clean(row.team1?.name, 60), team2 = clean(row.team2?.name, 60);
+  if (!ts || ts > now || now - ts > 7 * 86400000 || !team1 || !team2 || !/^[a-z0-9][a-z0-9-]*$/.test(row.slug)) return null;
+  const hasScore = [row.team1_score, row.team2_score].every((score) => Number.isInteger(score) && score >= 0);
+  const score = hasScore ? '大比分 ' + row.team1_score + ':' + row.team2_score : '比分暂缺';
+  const date = new Date(ts + 8 * 3600e3);
+  const time = fmtDate(new Date(ts)) + ' ' + String(date.getUTCHours()).padStart(2, '0') + ':' + String(date.getUTCMinutes()).padStart(2, '0');
+  const bo = Number.isInteger(row.bo_type) && row.bo_type > 0 ? ' · BO' + row.bo_type : '';
+  return {
+    title: team1 + ' vs ' + team2 + ' · ' + time,
+    summary: '已结束 · ' + score + '。赛事：' + (clean(row.tournament?.name, 120) || '赛事名称暂缺') + '（Tier 1）' +
+      '。开赛：' + time + '（北京时间）' + bo + '。状态与比分以快照抓取时为准。',
+    url: 'https://bo3.gg/matches/' + row.slug,
+    ts, hotRaw: 0, hotText: '', tags: ['CS2', '大赛赛果', '已结束']
+  };
+}
+
+async function cs2Matches() {
+  const now = Date.now();
+  const params = new URLSearchParams({
+    scope: 'widget-matches', 'page[offset]': '0', 'page[limit]': '30', sort: '-start_date',
+    'filter[matches.status][in]': 'finished', 'filter[matches.discipline_id][eq]': '1',
+    'filter[matches.tier_rank][eq]': '1', with: 'teams,tournament'
+  });
+  const data = await getJson('https://api.bo3.gg/api/v1/matches?' + params);
+  if (!Array.isArray(data?.results)) throw new Error('BO3.gg 赛事接口结构异常（缺少 results）');
+  const seen = new Set();
+  return data.results.map((row) => normalizeCs2Match(row, now)).filter((row) => {
+    if (!row || seen.has(row.url)) return false;
+    seen.add(row.url);
+    return true;
+  }).sort((a, b) => b.ts - a.ts);
 }
 
 export const SERVER_SOURCES = [
@@ -165,6 +202,11 @@ export const SERVER_SOURCES = [
         };
       }).filter(Boolean);
     }
+  },
+  {
+    id: 'cs2matches', name: 'CS2 大赛赛果 · BO3.gg', short: 'CS2赛果', icon: '🏆', color: '#e07814',
+    category: 'game', fallbackCat: 'game', max: 30, maxAgeH: 168, allowEmpty: true,
+    async run() { return cs2Matches(); }
   },
   {
     id: 'ghtrend', name: 'GitHub Trending', short: 'GH趋势', icon: '📈', color: '#24292e',

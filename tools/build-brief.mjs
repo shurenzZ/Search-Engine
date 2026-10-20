@@ -39,12 +39,13 @@ async function main() {
     const meta = {
       id: src.id, name: src.name, short: src.short, icon: src.icon, color: src.color,
       fallbackCat: src.fallbackCat, dayList: !!src.dayList, defaultOn: true,
+      category: src.category || '',
       ok: false, count: 0, error: ''
     };
     try {
       const raws = await src.run();
       const done = finalize(src, raws, { now: now });
-      if (!done.length) {
+      if (!done.length && !src.allowEmpty) {
         /* 「接口没数据」和「有数据但全被时间窗滤掉」是两件不同的事，混成一条会误导排查 */
         if (raws.length) {
           const newest = Math.max.apply(null, raws.map((r) => r.ts || 0));
@@ -97,11 +98,11 @@ async function main() {
   if (DRY) {
     console.log('--dry：未写入文件');
     console.log(JSON.stringify(items.slice(0, 2), null, 2));
-    if (!items.length) process.exitCode = 1;
+    if (!items.length && srcMeta.some((s) => !s.ok)) process.exitCode = 1;
     return;
   }
 
-  if (!items.length) throw new Error('所有源均无可用条目，保留现有快照');
+  if (!items.length && srcMeta.some((s) => !s.ok)) throw new Error('所有源均无可用条目，保留现有快照');
   await mkdir(path.join(OUT_DIR, 'archive'), { recursive: true });
   await writeAtomic(path.join(OUT_DIR, 'latest.json'), body);
   await writeAtomic(path.join(OUT_DIR, 'archive', payload.date + '.json'), body);

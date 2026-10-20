@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { spawnSync } from 'node:child_process';
 import { parseTime, parseHot, parseFeed, fmtDate } from '../tools/lib.mjs';
-import { finalize } from '../tools/sources-server.mjs';
+import { finalize, SERVER_SOURCES, normalizeCs2Match } from '../tools/sources-server.mjs';
 
 const html = readFileSync(new URL('../每日热搜早报.html', import.meta.url), 'utf8');
 const source = html.match(/<script>([\s\S]*?)<\/script>/)[1];
@@ -255,6 +255,21 @@ test('所有源失败时保留磁盘快照，成功时 manifest 与正文哈希�
     assert.equal(manifest.hash, createHash('sha256').update(body).digest('hex').slice(0, 16));
     assert.equal(manifest.itemCount, 1);
     assert.equal(await readFile(join(dir, 'archive', JSON.parse(body).date + '.json'), 'utf8'), body);
+    await writeFile(mock, 'globalThis.fetch = async () => new Response(' + JSON.stringify(JSON.stringify({ results: [matchFixture()] })) + ');');
+    const cs2Args = args.map((value) => value === 'hf' ? 'cs2matches' : value);
+    const cs2 = spawnSync(process.execPath, cs2Args, { cwd: new URL('..', import.meta.url), encoding: 'utf8' });
+    assert.equal(cs2.status, 0, cs2.stderr);
+    const cs2Payload = JSON.parse(await readFile(latest, 'utf8'));
+    assert.equal(cs2Payload.sources[0].category, 'game');
+    assert.equal(cs2Payload.sources[0].ok, true);
+    assert.equal(cs2Payload.items[0].sourceId, 'cs2matches');
+    await writeFile(mock, `globalThis.fetch = async () => new Response('{"results":[]}');`);
+    const empty = spawnSync(process.execPath, cs2Args, { cwd: new URL('..', import.meta.url), encoding: 'utf8' });
+    assert.equal(empty.status, 0, empty.stderr);
+    const emptyPayload = JSON.parse(await readFile(latest, 'utf8'));
+    assert.equal(emptyPayload.sources[0].ok, true);
+    assert.equal(emptyPayload.sources[0].count, 0);
+    assert.deepEqual(emptyPayload.items, []);
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
@@ -293,4 +308,137 @@ test('自检脚本拒绝不存在或不属于当前范围的数据源', () => {
   const result = spawnSync(process.execPath, ['tools/verify-sources.mjs', '--client', '--only', 'hf'], { cwd:new URL('..', import.meta.url), encoding:'utf8' });
   assert.equal(result.status, 1);
   assert.match(result.stderr, /所选范围中没有数据源/);
+});
+
+test('游戏和动漫独立分类，普通热榜也能识别 CS2', () => {
+  const ctx = browser();
+  assert.equal(ctx.run('categoryById("game").name'), '游戏');
+  assert.equal(ctx.run('categoryById("anime").name'), '动漫');
+  assert.equal(ctx.run('classify("CS2 比赛", "", sourceById("weibo"), []).id'), 'game');
+  assert.equal(ctx.run('classify("动漫番剧新作公布", "", sourceById("weibo"), []).id'), 'anime');
+  ctx.run('renderChips();');
+  assert.match(ctx.document.getElementById('categoryChips').innerHTML, /data-fc="game">🎮 游戏/);
+  assert.match(ctx.document.getElementById('categoryChips').innerHTML, /data-fc="anime">🎨 动漫/);
+});
+
+test('CS2 大赛来源分类在快照、筛选、导出和缓存恢复时一致', () => {
+  const storage = new Map();
+  const ctx = browser(storage);
+  const p = snapshot('OpenAI 与 NVIDIA 合作提供赛事分析');
+  p.sources = [{ id: 'cs2matches', name: 'CS2 大赛赛果 · BO3.gg', short: 'CS2赛果', category: 'game', fallbackCat: 'game', ok: true }];
+  p.items[0].sourceId = 'cs2matches';
+  p.items[0].tags = ['CS2'];
+  ingest(ctx, p);
+  assert.equal(ctx.run('state.items[0].category'), 'game');
+  ctx.run('state.fCategory = "game";');
+  assert.equal(ctx.run('visibleItems().length'), 1);
+  assert.match(ctx.run('buildReportText()'), /游戏/);
+  assert.match(ctx.run('itemToText(state.items[0])'), /CS2赛果/);
+  const restored = browser(storage);
+  assert.equal(restored.run('loadStore()'), true);
+  assert.equal(restored.run('state.items[0].category'), 'game');
+  assert.equal(restored.run('sourceById("cs2matches").category'), 'game');
+});
+
+test('非法来源固定分类会回退到正常分类规则', () => {
+  const ctx = browser();
+  const p = snapshot();
+  p.sources[0].category = 'nonexistent';
+  ingest(ctx, p);
+  assert.equal(ctx.run('sourceById("hf").category'), '');
+  assert.equal(ctx.run('state.items[0].category'), 'ai');
+});
+
+
+function matchFixture(status = 'finished', offsetHours = -1) {
+  return {
+    id: 123, slug: 'alpha-vs-beta-test', discipline_id: 1, status,
+    start_date: new Date(Date.now() + offsetHours * 3600e3).toISOString(),
+    team1: { name: 'Alpha' }, team2: { name: 'Beta' }, tournament: { name: 'CS2 Test Cup', tier_rank: 1 },
+    team1_score: 0, team2_score: 1, bo_type: 3
+  };
+}
+
+test('CS2 大赛赛果保留零比分和北京时间，比分更正不改变条目 ID', () => {
+  const raw = matchFixture();
+  const first = normalizeCs2Match(raw);
+  const next = normalizeCs2Match({ ...raw, team1_score: 1 });
+  assert.match(first.summary, /已结束 · 大比分 0:1/);
+  assert.match(first.summary, /CS2 Test Cup/);
+  assert.match(first.summary, /（北京时间） · BO3/);
+  assert.equal(first.url, 'https://bo3.gg/matches/alpha-vs-beta-test');
+  assert.equal(first.hotRaw, 0);
+  const src = SERVER_SOURCES.find((s) => s.id === 'cs2matches');
+  assert.equal(finalize(src, [first])[0].id, finalize(src, [next])[0].id);
+});
+
+test('CS2 缺失比分不按零处理', () => {
+  const missing = normalizeCs2Match({ ...matchFixture(), team1_score: null });
+  assert.match(missing.summary, /已结束 · 比分暂缺/);
+});
+
+test('CS2 只保留最近 7 天合法的 Tier 1 已结束赛果', () => {
+  assert.equal(normalizeCs2Match({ ...matchFixture(), discipline_id: 2 }), null);
+  assert.equal(normalizeCs2Match(matchFixture('current')), null);
+  assert.equal(normalizeCs2Match(matchFixture('upcoming', 2)), null);
+  assert.equal(normalizeCs2Match({ ...matchFixture(), status: 'cancelled' }), null);
+  assert.equal(normalizeCs2Match({ ...matchFixture(), tournament: { name: 'Small Cup', tier_rank: 2 } }), null);
+  assert.equal(normalizeCs2Match({ ...matchFixture(), tournament: { name: 'Unknown Cup' } }), null);
+  assert.equal(normalizeCs2Match({ ...matchFixture(), team1: null }), null);
+  assert.equal(normalizeCs2Match({ ...matchFixture(), slug: 'https://evil.test/' }), null);
+  assert.equal(normalizeCs2Match(matchFixture('finished', -169)), null);
+  assert.equal(normalizeCs2Match(matchFixture('finished', 1)), null);
+  assert.ok(normalizeCs2Match(matchFixture('finished', -167)));
+});
+
+test('CS2 服务端按顶级赛果查询，并在本地再次过滤小赛与未结束比赛', async (t) => {
+  let requested = 0;
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    requested++;
+    const p = new URL(url).searchParams;
+    assert.equal(p.get('filter[matches.status][in]'), 'finished');
+    assert.equal(p.get('filter[matches.discipline_id][eq]'), '1');
+    assert.equal(p.get('filter[matches.tier_rank][eq]'), '1');
+    assert.equal(p.get('sort'), '-start_date');
+    const rows = Array.from({ length: 18 }, (_, i) => ({
+      ...matchFixture('finished', -i - 1), slug: 'finished-match-' + i,
+      team1: { name: 'Alpha ' + i }
+    }));
+    rows.push(matchFixture('current'), matchFixture('upcoming', 1),
+      { ...matchFixture(), tournament: { name: 'Small Cup', tier_rank: 3 } }, rows[0]);
+    return new Response(JSON.stringify({ results: rows }));
+  });
+  const src = SERVER_SOURCES.find((s) => s.id === 'cs2matches');
+  assert.equal(SERVER_SOURCES.some((s) => s.id === 'cs2steam'), false);
+  const rows = finalize(src, await src.run());
+  assert.equal(requested, 1);
+  assert.equal(rows.length, 18);
+  assert.ok(rows.every((row) => row.tags[1] === '大赛赛果' && row.tags[2] === '已结束'));
+  assert.ok(rows.every((row, i) => i === 0 || row.ts <= rows[i - 1].ts));
+  const ctx = browser();
+  const p = snapshot();
+  p.sources = [{ ...src, ok: true }];
+  p.items = rows;
+  ingest(ctx, p);
+  ctx.run('state.fCategory = "game";');
+  assert.equal(ctx.run('visibleItems().length'), 15);
+  assert.match(ctx.run('buildReportText()'), /CS2 Test Cup/);
+  assert.match(ctx.run('buildReportText()'), /Tier 1/);
+});
+
+test('没有大赛赛果时快照仍显示源正常，不伪造条目', () => {
+  const ctx = browser();
+  const p = snapshot();
+  p.sources = [{ id: 'cs2matches', name: 'CS2 大赛赛果', category: 'game', ok: true, count: 0 }];
+  p.items = [];
+  ingest(ctx, p);
+  assert.equal(ctx.run('state.status.cs2matches.ok'), true);
+  assert.equal(ctx.run('state.status.cs2matches.failed'), false);
+  assert.equal(ctx.run('state.items.length'), 0);
+});
+
+test('CS2 赛事接口结构变化时明确失败', async (t) => {
+  t.mock.method(globalThis, 'fetch', async () => new Response('{}'));
+  const src = SERVER_SOURCES.find((s) => s.id === 'cs2matches');
+  await assert.rejects(src.run(), /赛事接口结构异常/);
 });
