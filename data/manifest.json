@@ -1,10 +1,10 @@
 {
  "schema": 1,
- "hash": "b11b4c8d840fb6f3",
- "generatedAt": "2026-10-19T22:20:03.482Z",
- "generatedAtMs": 1792448403482,
- "itemCount": 143,
- "okCount": 11,
+ "hash": "8b8c3d6cd6b4f9e4",
+ "generatedAt": "2026-10-20T01:09:04.854Z",
+ "generatedAtMs": 1792458544854,
+ "itemCount": 179,
+ "okCount": 14,
  "sources": [
   {
    "id": "hf",
@@ -14,9 +14,9 @@
   },
   {
    "id": "arxiv",
-   "ok": false,
-   "count": 0,
-   "error": "接口有 20 条，但被 72h 时间窗全部过滤（最新一条 2026-10-16）"
+   "ok": true,
+   "count": 16,
+   "error": ""
   },
   {
    "id": "openai",
@@ -50,9 +50,9 @@
   },
   {
    "id": "qbitai",
-   "ok": false,
-   "count": 0,
-   "error": "fetch failed（UND_ERR_CONNECT_TIMEOUT）"
+   "ok": true,
+   "count": 6,
+   "error": ""
   },
   {
    "id": "infoq",
@@ -76,6 +76,12 @@
    "id": "v2ex",
    "ok": true,
    "count": 10,
+   "error": ""
+  },
+  {
+   "id": "cs2matches",
+   "ok": true,
+   "count": 14,
    "error": ""
   },
   {
