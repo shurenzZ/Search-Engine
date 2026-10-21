@@ -1,10 +1,10 @@
 {
  "schema": 1,
- "hash": "7a31116308f65ee1",
- "generatedAt": "2026-10-21T02:02:35.076Z",
- "generatedAtMs": 1792548155076,
- "itemCount": 169,
- "okCount": 13,
+ "hash": "ae4a3ef8c3e22405",
+ "generatedAt": "2026-10-21T07:36:39.763Z",
+ "generatedAtMs": 1792568199763,
+ "itemCount": 184,
+ "okCount": 14,
  "sources": [
   {
    "id": "hf",
@@ -14,9 +14,9 @@
   },
   {
    "id": "arxiv",
-   "ok": false,
-   "count": 0,
-   "error": "The operation was aborted due to timeout"
+   "ok": true,
+   "count": 16,
+   "error": ""
   },
   {
    "id": "openai",
@@ -27,7 +27,7 @@
   {
    "id": "googleai",
    "ok": true,
-   "count": 2,
+   "count": 3,
    "error": ""
   },
   {
@@ -75,7 +75,7 @@
   {
    "id": "v2ex",
    "ok": true,
-   "count": 10,
+   "count": 9,
    "error": ""
   },
   {
@@ -87,7 +87,7 @@
   {
    "id": "ghtrend",
    "ok": true,
-   "count": 15,
+   "count": 14,
    "error": ""
   }
  ]
