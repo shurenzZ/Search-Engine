@@ -1,10 +1,10 @@
 {
  "schema": 1,
- "hash": "5ac9f11efe817380",
- "generatedAt": "2026-10-21T21:41:01.933Z",
- "generatedAtMs": 1792618861933,
- "itemCount": 178,
- "okCount": 14,
+ "hash": "9a686ef69037cca0",
+ "generatedAt": "2026-10-22T00:14:35.644Z",
+ "generatedAtMs": 1792628075644,
+ "itemCount": 162,
+ "okCount": 13,
  "sources": [
   {
    "id": "hf",
@@ -14,9 +14,9 @@
   },
   {
    "id": "arxiv",
-   "ok": true,
-   "count": 16,
-   "error": ""
+   "ok": false,
+   "count": 0,
+   "error": "HTTP 429"
   },
   {
    "id": "openai",
