@@ -1,9 +1,9 @@
 {
  "schema": 1,
- "hash": "edae0acf0671a3f9",
- "generatedAt": "2026-10-24T12:13:44.463Z",
- "generatedAtMs": 1792844024463,
- "itemCount": 173,
+ "hash": "09b4265c077764e1",
+ "generatedAt": "2026-10-24T15:59:35.276Z",
+ "generatedAtMs": 1792857575276,
+ "itemCount": 169,
  "okCount": 14,
  "sources": [
   {
@@ -51,7 +51,7 @@
   {
    "id": "qbitai",
    "ok": true,
-   "count": 10,
+   "count": 5,
    "error": ""
   },
   {
@@ -81,7 +81,7 @@
   {
    "id": "cs2matches",
    "ok": true,
-   "count": 6,
+   "count": 7,
    "error": ""
   },
   {
