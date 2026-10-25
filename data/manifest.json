@@ -1,9 +1,9 @@
 {
  "schema": 1,
- "hash": "cc39e79bce28e7e8",
- "generatedAt": "2026-10-25T16:49:28.572Z",
- "generatedAtMs": 1792946968572,
- "itemCount": 156,
+ "hash": "0ca8abd0887f6b30",
+ "generatedAt": "2026-10-25T19:35:54.986Z",
+ "generatedAtMs": 1792956954986,
+ "itemCount": 158,
  "okCount": 13,
  "sources": [
   {
@@ -16,7 +16,7 @@
    "id": "arxiv",
    "ok": false,
    "count": 0,
-   "error": "The operation was aborted due to timeout"
+   "error": "接口有 20 条，但被 72h 时间窗全部过滤（最新一条 2026-10-22）"
   },
   {
    "id": "openai",
@@ -81,7 +81,7 @@
   {
    "id": "cs2matches",
    "ok": true,
-   "count": 14,
+   "count": 16,
    "error": ""
   },
   {
