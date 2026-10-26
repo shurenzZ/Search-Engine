@@ -1,9 +1,9 @@
 {
  "schema": 1,
- "hash": "6809ba17aed14a98",
- "generatedAt": "2026-10-26T11:32:48.839Z",
- "generatedAtMs": 1793014368839,
- "itemCount": 179,
+ "hash": "5d5d6ac878eb2bdf",
+ "generatedAt": "2026-10-26T17:38:55.156Z",
+ "generatedAtMs": 1793036335156,
+ "itemCount": 181,
  "okCount": 13,
  "sources": [
   {
@@ -15,7 +15,7 @@
   {
    "id": "arxiv",
    "ok": true,
-   "count": 16,
+   "count": 13,
    "error": ""
   },
   {
@@ -27,7 +27,7 @@
   {
    "id": "googleai",
    "ok": true,
-   "count": 2,
+   "count": 3,
    "error": ""
   },
   {
@@ -81,7 +81,7 @@
   {
    "id": "cs2matches",
    "ok": true,
-   "count": 18,
+   "count": 22,
    "error": ""
   },
   {
