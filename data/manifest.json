@@ -1,10 +1,10 @@
 {
  "schema": 1,
- "hash": "26178fd79937f74a",
- "generatedAt": "2026-10-27T06:50:04.362Z",
- "generatedAtMs": 1793083804362,
- "itemCount": 184,
- "okCount": 13,
+ "hash": "dce48f01e3179e65",
+ "generatedAt": "2026-10-27T07:28:57.695Z",
+ "generatedAtMs": 1793086137695,
+ "itemCount": 194,
+ "okCount": 14,
  "sources": [
   {
    "id": "hf",
@@ -50,9 +50,9 @@
   },
   {
    "id": "qbitai",
-   "ok": false,
-   "count": 0,
-   "error": "接口有 10 条，但被 72h 时间窗全部过滤（最新一条 2026-10-23）"
+   "ok": true,
+   "count": 10,
+   "error": ""
   },
   {
    "id": "infoq",
