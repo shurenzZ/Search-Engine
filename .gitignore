@@ -7,3 +7,7 @@
 # 临时输出与 Node 调试日志
 *.tmp
 npm-debug.log*
+
+# 桌面依赖与安装包
+node_modules/
+dist/

@@ -2,7 +2,7 @@
 
 把微博、百度、知乎、抖音、今日头条等平台的实时热榜，加上 HuggingFace 论文、各家 AI 官方博客、GitHub Trending、掘金 / V2EX 等「发布类」信息，汇总成一份按**要素**而非只按热度展示的今日早报。
 
-**页面是单文件 HTML、纯前端、零依赖，双击即可打开**；浏览器跨域拿不到的源由 GitHub Actions 在服务端定时抓好，产出仓库内的静态 JSON 供页面直读。
+提供 **Windows / macOS 桌面应用**，也保留单文件 HTML 浏览器版。两者共用界面与数据处理逻辑；浏览器跨域拿不到的源由 GitHub Actions 定时抓好，产出静态 JSON 供页面读取。
 
 ## ✨ 功能特性
 
@@ -21,6 +21,45 @@
 - ⚙️ **设置**：API 基地址、代理模式、每平台条数、缓存时长、默认排序、关注词、只看 24h、同事件合并、自动刷新、快照开关与快照地址、数据源开关、清空缓存
 - ⌨️ **快捷键**：`R` 刷新，`/` 聚焦搜索，`Esc` 关闭弹窗或清空搜索
 - 📱 **移动端适配**：卡片式布局，桌面多列自适应到手机单列
+- 🎨 **三种外观**：浅色 / 深色 / 跟随系统，侧边栏与设置均可切换，立即生效并保存在本机；桌面窗口外观同步变化
+- 🖥 **原生桌面体验**：系统另存为、系统剪贴板、应用内完整原文阅读、应用菜单、窗口缩放、单实例；内置真实离线快照并明确标记时间
+
+## 🖥 桌面版
+
+安装包下载：[GitHub Releases 最新版本](https://github.com/shurenzZ/Search-Engine/releases/latest)。
+
+桌面版使用 Electron，保留全部分类、CS2 Tier 1 赛果、要素与信号分、搜索、筛选、关注、排序、合并、全文展开、来源状态、重试、自动刷新和导出功能。安装后无需另外安装 Node.js。
+
+“展开全文”继续在卡片内提取正文；点击“原文 ↗”、今日要闻或论文链接时，会在应用内的独立原文阅读窗口打开完整网页。阅读工具栏提供后退、前进、刷新与“在浏览器打开”。远程网页使用独立沙盒视图，不开放应用原生桥接；网站的登录、验证和访问限制仍由原站决定，加载失败时可用工具栏重试或交给系统浏览器。
+
+| 平台 | 产物 | 使用方式 |
+| --- | --- | --- |
+| Windows x64 | `DailyBrief-3.0.0-win-x64.exe`、`.zip` | EXE 选择安装位置；或解压 ZIP 后运行 `每日热搜早报.exe` |
+| macOS Apple Silicon | `DailyBrief-3.0.0-mac-arm64.dmg`、`.zip` | DMG 中将应用拖到 Applications；适用于 M 系列芯片 |
+| macOS Intel | `DailyBrief-3.0.0-mac-x64.dmg`、`.zip` | 同上，适用于 Intel 芯片 |
+
+本机构建产物位于 `dist/`，不提交到 Git。图标由本地矢量源 `desktop/assets/icon.svg` 生成，同时提供 PNG、ICO、ICNS，已接入应用、Dock 和 Windows 安装程序。
+
+开发与打包需要 **Node.js 22.12+，建议 24**：
+
+```bash
+npm ci
+npx install-electron --no     # 下载 Electron 运行时，首次启动也会自动下载
+npm start                     # 运行桌面版
+npm test                      # 离线回归
+npm run test:desktop          # 真实窗口检查；临时用户目录，阻止测试联网
+npm run icons                 # 从 SVG 自动生成 PNG / ICO / ICNS；打包前自动执行
+npm run dist:mac              # macOS 上生成 Apple Silicon / Intel 的 DMG 和 ZIP
+npm run dist:win              # 生成 Windows x64 安装程序和 ZIP
+```
+
+跨平台构建使用 [electron-builder](https://www.electron.build/)。已提供 `.github/workflows/desktop.yml`：手动运行，或推送 `desktop-v*` 标签，分别在 macOS、Windows 原生 runner 中测试并打包，产物可从 Actions 下载。不会自动发布 Release。
+
+桌面版使用独立的本地配置和缓存，与浏览器存储隔离。默认先取 GitHub 最新快照，断网或远端不可用时使用安装包附带的真实快照，保留原始生成时间，标记为「离线快照 / 上次结果」。自定义 API、代理与快照地址仍可在设置中配置。
+
+应用以沙盒和上下文隔离运行，不向页面开放 Node.js。桌面页面使用受限 `brief://app/` 协议，脚本通过 CSP 哈希授权；主页面桥接仅提供文本保存、复制和主题选择，阅读工具栏使用独立的导航桥接，均校验来源与参数。远程原文网页没有应用桥接。参考 [Electron 安全说明](https://www.electronjs.org/docs/latest/tutorial/security)。
+
+当前安装包没有商业代码签名证书：macOS 使用 ad-hoc 签名，未做 Apple 公证；Windows 未做 Authenticode 签名。首次在其他电脑安装可能出现系统安全提示，正式公开分发前需配置对应签名证书。Windows 安装和 Intel Mac 运行需在对应设备复验。
 
 ## 🚀 使用方式
 
@@ -31,7 +70,7 @@
 
 抓取结果缓存到 `localStorage`（键名 `hot_daily_brief_v1`，内部结构版本 `cv`，版本不一致只保留设置、丢弃条目）。
 
-本地工具使用 Node.js 20 或更新版本，无需安装 npm 依赖。离线回归测试与联网自检分开运行：
+浏览器版仍可直接打开；单独运行快照工具与离线回归只需 Node.js 20+，无需安装 Electron。离线回归测试与联网自检分开运行：
 
 ```bash
 node --test tests/*.test.mjs         # 离线回归，不访问外部接口
@@ -111,13 +150,21 @@ HTTP 部署默认读取页面同目录的 `data/latest.json`；GitHub Pages / ra
 ## 📁 目录
 
 ```
-每日热搜早报.html              页面（单文件，双击可用）
+每日热搜早报.html              共用界面（浏览器可直接打开）
+package.json / package-lock.json  桌面运行、测试、双端打包配置
+desktop/main.cjs              桌面窗口、应用协议、系统剪贴板与保存对话框
+desktop/preload.cjs           最小原生桥接
+desktop/security.cjs          外链、导出校验与 CSP
+desktop/assets/               图标 SVG / PNG / ICO / ICNS
+tools/smoke-desktop.cjs        真实 Electron 窗口验证与预览截图
+tests/desktop.test.mjs         桌面边界检查
 tools/build-brief.mjs          服务端快照生成器（Node ESM，零依赖）
 tools/sources-server.mjs       快照源注册表与字段映射
 tools/verify-sources.mjs       源契约自检
 tools/lib.mjs                  抓取 / 解析共用工具
 tests/regression.test.mjs      零依赖离线回归测试
 .github/workflows/check.yml    推送与 PR 的回归检查
+.github/workflows/desktop.yml  Windows / macOS 原生构建与产物上传
 .github/workflows/refresh-brief.yml  每 30 分钟抓取并提交快照
 data/                          latest.json + archive/ + manifest.json（由机器人提交）
 ```

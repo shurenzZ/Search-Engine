@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>原文阅读</title>
+<style>
+:root{color-scheme:light;--bg:#eef1f5;--ink:#4c5570;--line:#cbd2de;--hover:#e5e9f0}
+@media(prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#121729;--ink:#b4bacb;--line:#333b56;--hover:#1f263c}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:13px "PingFang SC","Microsoft YaHei UI","Microsoft YaHei",system-ui,sans-serif}
+.toolbar{height:52px;display:flex;align-items:center;gap:7px;padding:0 13px;border-bottom:1px solid var(--line)}
+button{height:30px;min-width:32px;padding:0 9px;font:inherit;color:inherit;border:1px solid var(--line);border-radius:8px;background:none;cursor:pointer;white-space:nowrap}
+button:hover{background:var(--hover)}button:disabled{opacity:.35;cursor:default}:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+.location{flex:1;min-width:0;padding:0 8px}.location strong{display:block;font-weight:550;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.location span{display:block;font-size:11.5px;opacity:.65;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}
+</style>
+</head>
+<body>
+<header class="toolbar" aria-label="原文阅读工具栏">
+  <button id="back" title="后退" aria-label="后退" disabled>←</button><button id="forward" title="前进" aria-label="前进" disabled>→</button><button id="reload" title="刷新原文" aria-label="刷新原文">↻</button>
+  <div class="location"><strong id="title">原文阅读</strong><span id="status" role="status" aria-live="polite">正在加载网页…</span></div>
+  <button id="external">在浏览器打开 ↗</button>
+</header>
+<script>
+const $ = (id) => document.getElementById(id);
+for (const command of ['back', 'forward', 'reload', 'external']) {
+  $(command).addEventListener('click', () => window.reader.command(command).catch(() => { $('status').textContent = '操作失败，请重试'; }));
+}
+window.reader.onState((state) => {
+  $('back').disabled = !state.canBack;
+  $('forward').disabled = !state.canForward;
+  $('title').textContent = state.title || '原文阅读';
+  $('status').textContent = state.error || ((state.loading ? '加载中 · ' : '') + state.url);
+  $('status').title = state.url;
+});
+</script>
+</body>
+</html>

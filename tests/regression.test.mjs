@@ -21,7 +21,7 @@ function browser(storage = new Map()) {
   const ctx = vm.createContext({
     console, URL, Blob, AbortController, setTimeout, clearTimeout,
     location: { href: 'https://example.test/brief/index.html' },
-    document: { getElementById: element },
+    document: { getElementById: element, querySelectorAll: () => [] },
     localStorage: {
       getItem: (k) => storage.get(k) || null,
       setItem: (k, v) => storage.set(k, v), removeItem: (k) => storage.delete(k)
@@ -224,6 +224,44 @@ test('本地 HTTP 部署读取同目录快照，file 页面保留远程兜底', 
   assert.match(ctx.run('guessSnapshotUrl()'), /^https:\/\/raw\.githubusercontent\.com\//);
 });
 
+test('三种颜色模式正确解析并保存，旧缓存和非法值默认跟随系统', () => {
+  const storage = new Map();
+  const ctx = browser(storage);
+  ctx.window = { matchMedia: () => ({ matches: true }) };
+  const attrs = new Map();
+  ctx.document.documentElement = { setAttribute: (key, value) => attrs.set(key, value) };
+  ctx.document.querySelectorAll = () => [];
+  assert.equal(ctx.run('settings.theme'), 'system');
+  assert.equal(ctx.run('mergeSettings({theme:"bad"}).theme'), 'system');
+  assert.equal(ctx.run('resolvedTheme("system", true)'), 'dark');
+  assert.equal(ctx.run('resolvedTheme("system", false)'), 'light');
+  assert.equal(ctx.run('resolvedTheme("light", true)'), 'light');
+  ctx.run('chooseTheme("dark")');
+  assert.equal(attrs.get('data-theme'), 'dark');
+  const restored = browser(storage);
+  restored.run('loadStore()');
+  assert.equal(restored.run('settings.theme'), 'dark');
+  ctx.run('chooseTheme("light")');
+  assert.equal(attrs.get('data-theme'), 'light');
+  ctx.run('chooseTheme("invalid")');
+  assert.equal(ctx.run('settings.theme'), 'light');
+});
+
+test('随包离线快照明确标为上次结果，时间与离线标记在缓存中保留', () => {
+  const storage = new Map();
+  const ctx = browser(storage);
+  const payload = snapshot();
+  payload.desktopFallback = true;
+  ingest(ctx, payload);
+  assert.equal(ctx.run('state.snap.fallback'), true);
+  assert.equal(ctx.run('state.status.hf.ok'), false);
+  assert.equal(ctx.run('state.status.hf.stale'), true);
+  const restored = browser(storage);
+  restored.run('loadStore()');
+  assert.equal(restored.run('state.snap.fallback'), true);
+  assert.equal(restored.run('state.snap.at'), payload.generatedAtMs);
+});
+
 test('生成器在出网前拒绝错误参数和覆盖完整快照的部分抓取', () => {
   for (const args of [['--only', 'unknown-source'], ['--gap', '-1'], ['--only', 'hf']]) {
     const result = spawnSync(process.execPath, ['tools/build-brief.mjs', ...args], { cwd: new URL('..', import.meta.url), encoding: 'utf8' });
@@ -317,8 +355,8 @@ test('游戏和动漫独立分类，普通热榜也能识别 CS2', () => {
   assert.equal(ctx.run('classify("CS2 比赛", "", sourceById("weibo"), []).id'), 'game');
   assert.equal(ctx.run('classify("动漫番剧新作公布", "", sourceById("weibo"), []).id'), 'anime');
   ctx.run('renderChips();');
-  assert.match(ctx.document.getElementById('categoryChips').innerHTML, /data-fc="game">🎮 游戏/);
-  assert.match(ctx.document.getElementById('categoryChips').innerHTML, /data-fc="anime">🎨 动漫/);
+  assert.match(ctx.document.getElementById('categoryChips').innerHTML, /data-fc="game">[\s\S]*?nav-name">游戏<\/span>/);
+  assert.match(ctx.document.getElementById('categoryChips').innerHTML, /data-fc="anime">[\s\S]*?nav-name">动漫<\/span>/);
 });
 
 test('CS2 大赛来源分类在快照、筛选、导出和缓存恢复时一致', () => {

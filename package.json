@@ -1,0 +1,74 @@
+{
+  "name": "daily-hot-brief",
+  "version": "3.0.0",
+  "description": "每日热搜早报 · 聚合热榜、科技发布、论文与 CS2 大赛赛果",
+  "author": "shurenzZ",
+  "license": "MIT",
+  "private": true,
+  "main": "desktop/main.cjs",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test tests/*.test.mjs",
+    "test:desktop": "electron tools/smoke-desktop.cjs",
+    "icons": "node tools/build-icons.cjs",
+    "pack": "electron-builder --dir --publish never",
+    "predist:mac": "npm run icons",
+    "dist:mac": "electron-builder --mac --arm64 --x64 --publish never",
+    "predist:win": "npm run icons",
+    "dist:win": "electron-builder --win --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "45.0.0",
+    "electron-builder": "26.15.3",
+    "sharp": "0.35.5"
+  },
+  "build": {
+    "appId": "com.shurenzz.dailybrief",
+    "productName": "每日热搜早报",
+    "artifactName": "DailyBrief-${version}-${os}-${arch}.${ext}",
+    "directories": {
+      "output": "dist",
+      "buildResources": "desktop/assets"
+    },
+    "files": [
+      "desktop/**",
+      "每日热搜早报.html",
+      "data/latest.json",
+      "package.json"
+    ],
+    "asar": true,
+    "mac": {
+      "category": "public.app-category.news",
+      "icon": "desktop/assets/icon.icns",
+      "identity": "-",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "dmg": {
+      "title": "每日热搜早报",
+      "window": {
+        "width": 540,
+        "height": 360
+      }
+    },
+    "win": {
+      "icon": "desktop/assets/icon.ico",
+      "target": [
+        "nsis",
+        "zip"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "deleteAppDataOnUninstall": false
+    }
+  }
+}
