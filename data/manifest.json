@@ -1,8 +1,8 @@
 {
  "schema": 1,
- "hash": "32e3a11b1f11c3b1",
- "generatedAt": "2026-10-28T01:43:40.115Z",
- "generatedAtMs": 1793151820115,
+ "hash": "79e026fa131e2ecd",
+ "generatedAt": "2026-10-28T07:29:52.147Z",
+ "generatedAtMs": 1793172592147,
  "itemCount": 195,
  "okCount": 14,
  "sources": [
@@ -33,7 +33,7 @@
   {
    "id": "deepmind",
    "ok": true,
-   "count": 4,
+   "count": 3,
    "error": ""
   },
   {
@@ -75,7 +75,7 @@
   {
    "id": "v2ex",
    "ok": true,
-   "count": 9,
+   "count": 10,
    "error": ""
   },
   {
