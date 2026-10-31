@@ -1,10 +1,10 @@
 {
  "schema": 1,
- "hash": "38054059f88f4e1a",
- "generatedAt": "2026-10-31T00:46:36.659Z",
- "generatedAtMs": 1793407596659,
- "itemCount": 197,
- "okCount": 14,
+ "hash": "fccb9dc44d54497f",
+ "generatedAt": "2026-10-31T06:59:10.373Z",
+ "generatedAtMs": 1793429950373,
+ "itemCount": 182,
+ "okCount": 13,
  "sources": [
   {
    "id": "hf",
@@ -56,9 +56,9 @@
   },
   {
    "id": "infoq",
-   "ok": true,
-   "count": 16,
-   "error": ""
+   "ok": false,
+   "count": 0,
+   "error": "HTTP 502"
   },
   {
    "id": "sspai",
@@ -75,7 +75,7 @@
   {
    "id": "v2ex",
    "ok": true,
-   "count": 8,
+   "count": 9,
    "error": ""
   },
   {
