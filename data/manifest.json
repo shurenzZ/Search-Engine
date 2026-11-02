@@ -1,9 +1,9 @@
 {
  "schema": 1,
- "hash": "64aedafe9a347ab1",
- "generatedAt": "2026-11-01T22:50:17.681Z",
- "generatedAtMs": 1793573417681,
- "itemCount": 179,
+ "hash": "847975e4c6d92786",
+ "generatedAt": "2026-11-02T02:28:56.859Z",
+ "generatedAtMs": 1793586536859,
+ "itemCount": 180,
  "okCount": 13,
  "sources": [
   {
@@ -14,9 +14,9 @@
   },
   {
    "id": "arxiv",
-   "ok": false,
-   "count": 0,
-   "error": "接口有 20 条，但被 72h 时间窗全部过滤（最新一条 2026-10-29）"
+   "ok": true,
+   "count": 16,
+   "error": ""
   },
   {
    "id": "openai",
@@ -44,9 +44,9 @@
   },
   {
    "id": "leiphone",
-   "ok": true,
-   "count": 16,
-   "error": ""
+   "ok": false,
+   "count": 0,
+   "error": "The operation was aborted due to timeout"
   },
   {
    "id": "qbitai",
@@ -75,7 +75,7 @@
   {
    "id": "v2ex",
    "ok": true,
-   "count": 9,
+   "count": 10,
    "error": ""
   },
   {
