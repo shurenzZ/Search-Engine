@@ -1,10 +1,10 @@
 {
  "schema": 1,
- "hash": "4663b1a22d0555ba",
- "generatedAt": "2026-11-02T09:57:15.205Z",
- "generatedAtMs": 1793613435205,
- "itemCount": 197,
- "okCount": 14,
+ "hash": "71f8f6c0e894697e",
+ "generatedAt": "2026-11-02T20:20:46.925Z",
+ "generatedAtMs": 1793650846925,
+ "itemCount": 164,
+ "okCount": 12,
  "sources": [
   {
    "id": "hf",
@@ -14,9 +14,9 @@
   },
   {
    "id": "arxiv",
-   "ok": true,
-   "count": 16,
-   "error": ""
+   "ok": false,
+   "count": 0,
+   "error": "接口有 20 条，但被 72h 时间窗全部过滤（最新一条 2026-10-30）"
   },
   {
    "id": "openai",
@@ -27,13 +27,13 @@
   {
    "id": "googleai",
    "ok": true,
-   "count": 2,
+   "count": 3,
    "error": ""
   },
   {
    "id": "deepmind",
    "ok": true,
-   "count": 3,
+   "count": 4,
    "error": ""
   },
   {
@@ -44,9 +44,9 @@
   },
   {
    "id": "leiphone",
-   "ok": true,
-   "count": 16,
-   "error": ""
+   "ok": false,
+   "count": 0,
+   "error": "HTTP 502"
   },
   {
    "id": "qbitai",
@@ -81,13 +81,13 @@
   {
    "id": "cs2matches",
    "ok": true,
-   "count": 27,
+   "count": 25,
    "error": ""
   },
   {
    "id": "ghtrend",
    "ok": true,
-   "count": 16,
+   "count": 15,
    "error": ""
   }
  ]
