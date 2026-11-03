@@ -1,10 +1,10 @@
 {
  "schema": 1,
- "hash": "71f8f6c0e894697e",
- "generatedAt": "2026-11-02T20:20:46.925Z",
- "generatedAtMs": 1793650846925,
- "itemCount": 164,
- "okCount": 12,
+ "hash": "819a5da1c662fa93",
+ "generatedAt": "2026-11-03T02:38:56.432Z",
+ "generatedAtMs": 1793673536432,
+ "itemCount": 180,
+ "okCount": 13,
  "sources": [
   {
    "id": "hf",
@@ -44,9 +44,9 @@
   },
   {
    "id": "leiphone",
-   "ok": false,
-   "count": 0,
-   "error": "HTTP 502"
+   "ok": true,
+   "count": 16,
+   "error": ""
   },
   {
    "id": "qbitai",
