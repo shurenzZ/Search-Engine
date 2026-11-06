@@ -1,10 +1,10 @@
 {
  "schema": 1,
- "hash": "41981eed4e2f9b0b",
- "generatedAt": "2026-11-06T09:53:48.588Z",
- "generatedAtMs": 1793958828588,
- "itemCount": 199,
- "okCount": 14,
+ "hash": "ee284b2e1a83ad18",
+ "generatedAt": "2026-11-06T17:28:37.527Z",
+ "generatedAtMs": 1793986117527,
+ "itemCount": 185,
+ "okCount": 13,
  "sources": [
   {
    "id": "hf",
@@ -14,9 +14,9 @@
   },
   {
    "id": "arxiv",
-   "ok": true,
-   "count": 16,
-   "error": ""
+   "ok": false,
+   "count": 0,
+   "error": "HTTP 429"
   },
   {
    "id": "openai",
@@ -75,7 +75,7 @@
   {
    "id": "v2ex",
    "ok": true,
-   "count": 9,
+   "count": 8,
    "error": ""
   },
   {
@@ -87,7 +87,7 @@
   {
    "id": "ghtrend",
    "ok": true,
-   "count": 15,
+   "count": 18,
    "error": ""
   }
  ]
