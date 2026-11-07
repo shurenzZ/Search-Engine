@@ -1,9 +1,9 @@
 {
  "schema": 1,
- "hash": "3fe5ce87f42665c0",
- "generatedAt": "2026-11-07T09:14:55.679Z",
- "generatedAtMs": 1794042895679,
- "itemCount": 202,
+ "hash": "a4768c094d9f5b58",
+ "generatedAt": "2026-11-07T15:42:24.100Z",
+ "generatedAtMs": 1794066144100,
+ "itemCount": 195,
  "okCount": 14,
  "sources": [
   {
@@ -75,7 +75,7 @@
   {
    "id": "v2ex",
    "ok": true,
-   "count": 10,
+   "count": 6,
    "error": ""
   },
   {
@@ -87,7 +87,7 @@
   {
    "id": "ghtrend",
    "ok": true,
-   "count": 18,
+   "count": 15,
    "error": ""
   }
  ]
