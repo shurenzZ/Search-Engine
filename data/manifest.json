@@ -1,10 +1,10 @@
 {
  "schema": 1,
- "hash": "951fbd9bd447c6b2",
- "generatedAt": "2026-11-08T02:27:50.963Z",
- "generatedAtMs": 1794104870963,
- "itemCount": 196,
- "okCount": 14,
+ "hash": "5e0817ee4996d437",
+ "generatedAt": "2026-11-08T09:29:14.818Z",
+ "generatedAtMs": 1794130154818,
+ "itemCount": 186,
+ "okCount": 13,
  "sources": [
   {
    "id": "hf",
@@ -75,20 +75,20 @@
   {
    "id": "v2ex",
    "ok": true,
-   "count": 6,
+   "count": 10,
    "error": ""
   },
   {
    "id": "cs2matches",
    "ok": true,
-   "count": 28,
+   "count": 29,
    "error": ""
   },
   {
    "id": "ghtrend",
-   "ok": true,
-   "count": 15,
-   "error": ""
+   "ok": false,
+   "count": 0,
+   "error": "HTTP 504"
   }
  ]
 }
