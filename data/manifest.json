@@ -1,10 +1,10 @@
 {
  "schema": 1,
- "hash": "0e493c72266368db",
- "generatedAt": "2026-11-09T07:56:49.386Z",
- "generatedAtMs": 1794211009386,
- "itemCount": 181,
- "okCount": 13,
+ "hash": "c2f96120423a170a",
+ "generatedAt": "2026-11-09T18:45:58.556Z",
+ "generatedAtMs": 1794249958556,
+ "itemCount": 182,
+ "okCount": 14,
  "sources": [
   {
    "id": "hf",
@@ -15,7 +15,7 @@
   {
    "id": "arxiv",
    "ok": true,
-   "count": 16,
+   "count": 10,
    "error": ""
   },
   {
@@ -27,7 +27,7 @@
   {
    "id": "googleai",
    "ok": true,
-   "count": 3,
+   "count": 2,
    "error": ""
   },
   {
@@ -81,14 +81,14 @@
   {
    "id": "cs2matches",
    "ok": true,
-   "count": 25,
+   "count": 22,
    "error": ""
   },
   {
    "id": "ghtrend",
-   "ok": false,
-   "count": 0,
-   "error": "HTTP 504"
+   "ok": true,
+   "count": 11,
+   "error": ""
   }
  ]
 }
