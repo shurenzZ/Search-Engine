@@ -1,9 +1,9 @@
 {
  "schema": 1,
- "hash": "aebfea853e1a89d2",
- "generatedAt": "2026-11-09T00:52:05.276Z",
- "generatedAtMs": 1794185525276,
- "itemCount": 180,
+ "hash": "0e493c72266368db",
+ "generatedAt": "2026-11-09T07:56:49.386Z",
+ "generatedAtMs": 1794211009386,
+ "itemCount": 181,
  "okCount": 13,
  "sources": [
   {
@@ -14,9 +14,9 @@
   },
   {
    "id": "arxiv",
-   "ok": false,
-   "count": 0,
-   "error": "接口有 20 条，但被 72h 时间窗全部过滤（最新一条 2026-11-05）"
+   "ok": true,
+   "count": 16,
+   "error": ""
   },
   {
    "id": "openai",
@@ -75,20 +75,20 @@
   {
    "id": "v2ex",
    "ok": true,
-   "count": 10,
+   "count": 9,
    "error": ""
   },
   {
    "id": "cs2matches",
    "ok": true,
-   "count": 30,
+   "count": 25,
    "error": ""
   },
   {
    "id": "ghtrend",
-   "ok": true,
-   "count": 9,
-   "error": ""
+   "ok": false,
+   "count": 0,
+   "error": "HTTP 504"
   }
  ]
 }
