@@ -1,8 +1,8 @@
 {
  "schema": 1,
- "hash": "5cffac167f110d5d",
- "generatedAt": "2026-11-15T21:46:55.733Z",
- "generatedAtMs": 1794779215733,
+ "hash": "28049b30c943af6b",
+ "generatedAt": "2026-11-16T02:02:05.774Z",
+ "generatedAtMs": 1794794525774,
  "itemCount": 175,
  "okCount": 13,
  "sources": [
@@ -16,7 +16,7 @@
    "id": "arxiv",
    "ok": false,
    "count": 0,
-   "error": "接口有 20 条，但被 72h 时间窗全部过滤（最新一条 2026-11-12）"
+   "error": "HTTP 429"
   },
   {
    "id": "openai",
