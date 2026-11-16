@@ -1,10 +1,10 @@
 {
  "schema": 1,
- "hash": "99812d82a695ebb8",
- "generatedAt": "2026-11-16T09:38:22.823Z",
- "generatedAtMs": 1794821902823,
- "itemCount": 186,
- "okCount": 14,
+ "hash": "dba645059ec28c18",
+ "generatedAt": "2026-11-16T19:51:41.188Z",
+ "generatedAtMs": 1794858701188,
+ "itemCount": 178,
+ "okCount": 13,
  "sources": [
   {
    "id": "hf",
@@ -14,9 +14,9 @@
   },
   {
    "id": "arxiv",
-   "ok": true,
-   "count": 16,
-   "error": ""
+   "ok": false,
+   "count": 0,
+   "error": "接口有 20 条，但被 72h 时间窗全部过滤（最新一条 2026-11-13）"
   },
   {
    "id": "openai",
@@ -51,7 +51,7 @@
   {
    "id": "qbitai",
    "ok": true,
-   "count": 6,
+   "count": 10,
    "error": ""
   },
   {
@@ -63,7 +63,7 @@
   {
    "id": "sspai",
    "ok": true,
-   "count": 9,
+   "count": 10,
    "error": ""
   },
   {
@@ -87,7 +87,7 @@
   {
    "id": "ghtrend",
    "ok": true,
-   "count": 12,
+   "count": 15,
    "error": ""
   }
  ]
