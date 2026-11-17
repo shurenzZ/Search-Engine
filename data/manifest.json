@@ -1,10 +1,10 @@
 {
  "schema": 1,
- "hash": "dba645059ec28c18",
- "generatedAt": "2026-11-16T19:51:41.188Z",
- "generatedAtMs": 1794858701188,
- "itemCount": 178,
- "okCount": 13,
+ "hash": "1c43208fe9fb49e7",
+ "generatedAt": "2026-11-17T02:54:55.332Z",
+ "generatedAtMs": 1794884095332,
+ "itemCount": 193,
+ "okCount": 14,
  "sources": [
   {
    "id": "hf",
@@ -14,9 +14,9 @@
   },
   {
    "id": "arxiv",
-   "ok": false,
-   "count": 0,
-   "error": "接口有 20 条，但被 72h 时间窗全部过滤（最新一条 2026-11-13）"
+   "ok": true,
+   "count": 16,
+   "error": ""
   },
   {
    "id": "openai",
@@ -75,7 +75,7 @@
   {
    "id": "v2ex",
    "ok": true,
-   "count": 10,
+   "count": 9,
    "error": ""
   },
   {
