@@ -1,9 +1,9 @@
 {
  "schema": 1,
- "hash": "efea125f95333259",
- "generatedAt": "2026-11-19T09:29:58.017Z",
- "generatedAtMs": 1795080598017,
- "itemCount": 194,
+ "hash": "223592554f018faf",
+ "generatedAt": "2026-11-19T18:39:54.665Z",
+ "generatedAtMs": 1795113594665,
+ "itemCount": 190,
  "okCount": 14,
  "sources": [
   {
@@ -27,13 +27,13 @@
   {
    "id": "googleai",
    "ok": true,
-   "count": 11,
+   "count": 12,
    "error": ""
   },
   {
    "id": "deepmind",
    "ok": true,
-   "count": 9,
+   "count": 8,
    "error": ""
   },
   {
@@ -81,13 +81,13 @@
   {
    "id": "cs2matches",
    "ok": true,
-   "count": 6,
+   "count": 5,
    "error": ""
   },
   {
    "id": "ghtrend",
    "ok": true,
-   "count": 19,
+   "count": 16,
    "error": ""
   }
  ]
