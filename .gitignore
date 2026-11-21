@@ -11,3 +11,9 @@ npm-debug.log*
 # 桌面依赖与安装包
 node_modules/
 dist/
+
+# HTTP 条件请求的本地响应副本
+data/.http-cache/
+
+# 本机七天试运行记录
+/trial/

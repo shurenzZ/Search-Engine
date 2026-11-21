@@ -1,19 +1,4 @@
-/* 服务端源注册表：这些接口对浏览器不开 CORS，只能由 Actions 在服务端抓取后产出快照。
-   每个源独立失败，互不影响；输出统一 item 形状，语义抽取（要素/信号分）只在页面里做一次。
-
-   机器之心没有可用来源，已实测排除（2026-10-09）：
-   · /rss、/articles、/library、文章页、gmis 子站对数据中心 IP 一律返回
-     「机器之心·数据服务」闸门页，换 Googlebot UA 结果相同；
-   · /api/v1/articles.json 是废弃缓存：page=1 与 page=2 内容一致、条目无链接无时间、
-     正文停在 2022-2023，还混着 title-1507881175 占位数据；
-   · robots.txt 声明的 /shared/sitemap.xml.gz 能取到 30136 条 URL 与发布日期，
-     但 sitemap 里没有标题（<image:title> 出现 0 次），按 URL 回抓文章页又是闸门页；
-   · Google News RSS 品牌词查询在 Actions 上返回 18 条含「机器之心」的条目，
-     但最新一条是 2026-04-10 —— 只能喂半年前的旧闻，与「早报」定位冲突，故不接；
-   · 公共 RSSHub 镜像的 /jiqizhixin 路由 404/503，Bing 的 RSS 忽略 site: 限定。
-   要接它只能自建 RSSHub，或接入它的付费数据服务。 */
-
-import { getJson, getText, parseFeed, parseTime, parseHot, clean, fmtNum, fmtDate, hash8 } from './lib.mjs';
+import { getJson, getText, parseFeed, parseTime, parseHot, clean, fmtNum, fmtDate, hash8, sleep } from './lib.mjs';
 
 /* GitHub Trending 是 HTML 页，没有 API；按 article 切块解析，不受 REST 配额限制 */
 export function parseTrending(html) {
@@ -82,7 +67,7 @@ async function cs2Matches() {
 
 export const SERVER_SOURCES = [
   {
-    id: 'hf', name: 'HuggingFace 每日论文', short: 'HF论文', icon: '📄', color: '#f59e0b',
+    id: 'hf', tier: 2, name: 'HuggingFace 每日论文', short: 'HF论文', icon: '📄', color: '#f59e0b',
     fallbackCat: 'ai', max: 24, maxAgeH: 96,
     async run() {
       const d = await getJson('https://huggingface.co/api/daily_papers?limit=30');
@@ -95,10 +80,11 @@ export const SERVER_SOURCES = [
         if (p.projectPage) tags.push('有项目页');
         return {
           title: clean(p.title, 200),
-          url: 'https://huggingface.co/papers/' + p.id,
+          url: 'https://arxiv.org/abs/' + encodeURIComponent(p.id),
+          discoveryUrl: 'https://huggingface.co/papers/' + encodeURIComponent(p.id),
           summary: clean(p.summary, 600),
-          /* 入选榜单的日期比投稿日期更能代表「今天值得看」 */
-          ts: parseTime(p.submittedOnDailyAt) || parseTime(p.publishedAt),
+          ts: parseTime(p.publishedAt),
+          attentionAt: parseTime(e.submittedOnDailyAt || p.submittedOnDailyAt),
           hotRaw: parseHot(p.upvotes),
           hotText: p.upvotes ? fmtNum(p.upvotes) + ' 赞' : '',
           tags: tags
@@ -108,14 +94,33 @@ export const SERVER_SOURCES = [
   },
   {
     id: 'arxiv', name: 'arXiv 最新投稿', short: 'arXiv', icon: '🔬', color: '#b45309',
-    fallbackCat: 'academic', max: 16, maxAgeH: 72,
+    fallbackCat: 'academic', max: 40, maxAgeH: 72,
     async run() {
-      const xml = await getText('https://export.arxiv.org/api/query?search_query=' +
-        encodeURIComponent('cat:cs.AI OR cat:cs.CL OR cat:cs.LG OR cat:cs.CV') +
-        '&sortBy=submittedDate&sortOrder=descending&max_results=20');
-      return parseFeed(xml).map(function (x) {
-        return Object.assign({}, x, { tags: ['论文'], hotText: '' });
-      });
+      const categories = ['cs.AI', 'cs.CL', 'cs.LG', 'cs.CV'];
+      const rows = [], seen = new Set();
+      // 轮流从四个分类取条目，包含修订版；重叠分类只占一个名额。
+      for (const category of categories) {
+        if (rows.length) await sleep(3100);
+        const query = new URLSearchParams({search_query:'cat:' + category,
+          sortBy:'lastUpdatedDate', sortOrder:'descending', max_results:'50'});
+        const xml = await getText('https://export.arxiv.org/api/query?' + query);
+        const records = parseFeed(xml).filter(x => /arxiv\.org\/abs\//i.test(x.url) && x.primaryCategory === category);
+        const initial = records.filter(x => /v1$/.test(x.url));
+        const revised = records.filter(x => !/v1$/.test(x.url));
+        const order = [];
+        while (initial.length || revised.length) order.push(...initial.splice(0,3), ...revised.splice(0,1));
+        rows.push(order);
+      }
+      const result = [];
+      for (let i = 0; i < 50; i++) {
+        for (const group of rows) {
+          const x = group[i];
+          if (!x || seen.has(x.url)) continue;
+          seen.add(x.url);
+          result.push({...x, updatedAt:/v(?:[2-9]|\d{2,})$/.test(x.url) ? x.updatedAt : 0, tags:['论文','预印本']});
+        }
+      }
+      return result;
     }
   },
   {
@@ -134,86 +139,127 @@ export const SERVER_SOURCES = [
     fallbackCat: 'ai', max: 12, maxAgeH: 336,
     async run() { return officialRss('https://deepmind.google/blog/rss.xml', '官方'); }
   },
-  {
-    id: 'xinzhiyuan', name: '新智元', short: '新智元', icon: '🥇', color: '#c2410c',
-    fallbackCat: 'ai', max: 16, maxAgeH: 96,
-    async run() { return officialRss('https://www.aiera.com.cn/feed', '报道'); }
-  },
-  {
-    id: 'leiphone', name: '雷锋网', short: '雷锋网', icon: '⛰️', color: '#0d9488',
-    fallbackCat: 'tech', max: 16, maxAgeH: 96,
-    async run() { return officialRss('https://www.leiphone.com/feed', '报道'); }
-  },
-  {
-    id: 'qbitai', name: '量子位（AI 媒体）', short: '量子位', icon: '📡', color: '#0f766e',
-    fallbackCat: 'ai', max: 16, maxAgeH: 72,
-    async run() { return officialRss('https://www.qbitai.com/feed', '报道'); }
-  },
-  {
-    id: 'infoq', name: 'InfoQ 中文', short: 'InfoQ', icon: '🧱', color: '#2b6cb0',
-    fallbackCat: 'tech', max: 16, maxAgeH: 96,
-    async run() { return officialRss('https://www.infoq.cn/feed', '报道'); }
-  },
-  {
-    id: 'sspai', name: '少数派', short: '少数派', icon: '🍊', color: '#e8563f',
-    fallbackCat: 'tech', max: 12, maxAgeH: 96,
-    async run() { return officialRss('https://sspai.com/feed', '报道'); }
-  },
-  {
-    /* article_rank 返回的 ctime/mtime 恒为 0，只能按「今日热榜」对待而不是按发布时间过滤 */
-    id: 'juejin', name: '掘金热榜', short: '掘金', icon: '⛏️', color: '#1e80ff',
-    fallbackCat: 'tech', max: 20, maxAgeH: 96, dayList: true,
+  ...['pytorch/pytorch', 'huggingface/transformers', 'vllm-project/vllm'].map(repo => ({
+    id: 'release-' + repo.split('/')[1], name: repo + ' 正式版本', short: repo.split('/')[1],
+    icon: '📦', color: '#334155', fallbackCat: 'tech', max: 8, maxAgeH: 48, allowEmpty: true,
     async run() {
-      const d = await getJson('https://api.juejin.cn/content_api/v1/content/article_rank?category_id=1&type=hot');
-      const arr = (d && Array.isArray(d.data)) ? d.data : [];
-      return arr.map(function (row) {
-        const c = (row && row.content) || {};
-        if (!c.title) return null;
-        const cc = (row && row.content_counter) || {};
-        const author = row && row.author && row.author.name ? row.author.name : '';
-        return {
-          title: clean(c.title, 200),
-          url: 'https://juejin.cn/post/' + c.content_id,
-          summary: clean(c.brief, 600),
-          ts: parseTime(c.ctime) || parseTime(c.mtime),
-          hotRaw: parseHot(cc.view),
-          hotText: cc.view ? fmtNum(cc.view) + ' 阅读' : '',
-          tags: author ? [author] : []
-        };
-      }).filter(Boolean);
+      const rows = await getJson('https://api.github.com/repos/' + repo + '/releases?per_page=20');
+      if (!Array.isArray(rows)) throw new Error('GitHub Releases 响应格式异常');
+      return rows.filter(r => !r.draft && !r.prerelease && r.tag_name && r.html_url).map(r => ({
+        title: repo + ' ' + r.tag_name, summary: clean(r.body, 600), ts: parseTime(r.published_at),
+        url: r.html_url, eventKey: repo + '@' + r.tag_name, publisher: repo, tags: ['正式发布','开源']
+      }));
     }
-  },
+  })),
+  { id: 'research-search', name: '机构原文检索', short: '机构原文', icon: '🔍', color: '#405b8a',
+    fallbackCat: 'tech', max: 10, maxAgeH: 48, allowEmpty: true, run: searchOriginals },
+  { id: 'crossref', name: 'Crossref 学术核验', short: 'Crossref', icon: '📑', color: '#486b70',
+    fallbackCat: 'academic', tier: 2, max: 24, maxAgeH: 0, allowEmpty: true, run: verifyPapers },
   {
-    id: 'v2ex', name: 'V2EX 今日热议', short: 'V2EX', icon: '💬', color: '#187cd0',
-    fallbackCat: 'tech', max: 20, maxAgeH: 48, dayList: true,
-    async run() {
-      const d = await getJson('https://www.v2ex.com/api/topics/hot.json');
-      const arr = Array.isArray(d) ? d : [];
-      return arr.map(function (t) {
-        if (!t || !t.title) return null;
-        return {
-          title: clean(t.title, 200),
-          url: t.url || '',
-          summary: clean(t.content, 600),
-          ts: parseTime(t.last_touched) || parseTime(t.created),
-          hotRaw: parseHot(t.replies),
-          hotText: t.replies ? t.replies + ' 回复' : '',
-          tags: t.node && t.node.title ? [t.node.title] : []
-        };
-      }).filter(Boolean);
-    }
-  },
-  {
-    id: 'cs2matches', name: 'CS2 大赛赛果 · BO3.gg', short: 'CS2赛果', icon: '🏆', color: '#e07814',
+    id: 'cs2matches', tier: 2, name: 'CS2 大赛赛果 · BO3.gg', short: 'CS2赛果', icon: '🏆', color: '#e07814',
     category: 'game', fallbackCat: 'game', max: 30, maxAgeH: 168, allowEmpty: true,
     async run() { return cs2Matches(); }
   },
   {
-    id: 'ghtrend', name: 'GitHub Trending', short: 'GH趋势', icon: '📈', color: '#24292e',
+    id: 'ghtrend', tier: 4, name: 'GitHub Trending', short: 'GH趋势', icon: '📈', color: '#24292e',
     fallbackCat: 'tech', max: 25, maxAgeH: 0, dayList: true,
     async run() { return parseTrending(await getText('https://github.com/trending?since=daily')); }
   }
 ];
+
+const institutions = ['research.google', 'deepmind.google', 'openai.com', 'anthropic.com', 'ai.meta.com', 'microsoft.com'];
+function institutionLink(value) {
+  try {
+    const u = new URL(value);
+    return u.protocol === 'https:' && !u.username && !u.password && institutions.includes(u.hostname.replace(/^www\./, '')) &&
+      /\/(research|news|blog|index|publications|science)\//i.test(u.pathname) ? u : null;
+  } catch { return null; }
+}
+
+async function searchOriginals() {
+  const cutoff = Math.floor((Date.now() - 2 * 86400000) / 1000);
+  let candidates;
+  if (process.env.BRAVE_SEARCH_API_KEY) {
+    const query = institutions.map(host => 'site:' + host).join(' OR ') + ' research';
+    const response = await fetch('https://api.search.brave.com/res/v1/web/search?' + new URLSearchParams({q:query, freshness:'pd', count:'20'}), {
+      headers: {'X-Subscription-Token':process.env.BRAVE_SEARCH_API_KEY}, signal:AbortSignal.timeout(15000)
+    });
+    if (!response.ok) throw new Error('Brave Search HTTP ' + response.status);
+    candidates = (await response.json()).web?.results || [];
+  } else {
+    // 免费的 HN Search 以 URL 为检索字段；所有命中均回到机构网页取标题和发布日期。
+    const domains = await Promise.all(institutions.map(host => getJson('https://hn.algolia.com/api/v1/search_by_date?' +
+      new URLSearchParams({tags:'story', query:host, restrictSearchableAttributes:'url', numericFilters:'created_at_i>' + cutoff, hitsPerPage:'5'}))));
+    candidates = domains.flatMap(result => result.hits);
+  }
+  const urls = [...new Set(candidates.map(row => institutionLink(row?.url)?.href).filter(Boolean))].slice(0, 10);
+  const results = await Promise.allSettled(urls.map(async url => {
+    const res = await fetch(url, {signal:AbortSignal.timeout(12000), redirect:'error'});
+    if (!res.ok) throw new Error('机构原文 HTTP ' + res.status);
+    const html = await res.text();
+    const title = clean(/<title[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1], 200);
+    const tag = (html.match(/<meta\b[^>]*>/gi) || []).find(tag => /["']article:published_time["']/i.test(tag));
+    const date = /content=["']([^"']+)/i.exec(tag || '')?.[1] || /"datePublished"\s*:\s*"([^"]+)"/i.exec(html)?.[1];
+    return {title, url, ts:parseTime(date), publisher:new URL(url).hostname, tags:['机构原文']};
+  }));
+  if (urls.length && results.every(result => result.status === 'rejected')) throw new Error('机构原文均无法读取');
+  return results.filter(r => r.status === 'fulfilled').map(r => r.value).filter(r => r.title);
+}
+
+let lastCrossrefRequest = 0;
+async function crossrefJson(url) {
+  await sleep(Math.max(0, 1200 - (Date.now() - lastCrossrefRequest)));
+  lastCrossrefRequest = Date.now();
+  try { return await getJson(url); }
+  catch (error) {
+    if (error.status !== 429 || error.retryAfter > 30) throw error;
+    await sleep(Math.max(2000, error.retryAfter * 1000));
+    lastCrossrefRequest = Date.now();
+    return getJson(url);
+  }
+}
+
+async function verifyPapers({ papers = [], previous = new Map() } = {}) {
+  const tracked = new Map();
+  for (const row of [...papers, ...previous.values()]) {
+    if (row.sourceId === 'arxiv' && /^arxiv:[\w./-]+$/.test(row.eventKey)) tracked.set(row.eventKey, row);
+  }
+  const list = [...tracked.values()].sort((a,b) => a.eventKey.localeCompare(b.eventKey));
+  const start = list.length ? Math.floor(Date.now() / 1800000) * 4 % list.length : 0;
+  const selected = list.slice(start).concat(list.slice(0,start)).slice(0,4);
+  const rows = [];
+  for (const paper of selected) {
+    const endpoint = 'https://api.crossref.org/works';
+    const preprint = '10.48550/' + paper.eventKey.replace('arxiv:', 'arXiv.');
+    let doi = paper.doi;
+    if (!doi) {
+      // 只接受出版社登记的明确关联。相似标题和同名作者不能证明是同一论文。
+      const query = new URLSearchParams({filter:'relation.object:' + preprint, rows:'5'});
+      const related = (await crossrefJson(endpoint + '?' + query)).message.items.find(work =>
+        ['journal-article','proceedings-article'].includes(work.type) && (work.relation?.['has-preprint'] || [])
+          .some(ref => String(ref.id).toLowerCase() === preprint.toLowerCase()));
+      doi = related?.DOI;
+    }
+    if (!doi) continue;
+    const work = (await crossrefJson(endpoint + '/' + encodeURIComponent(doi))).message;
+    if (work?.DOI?.toLowerCase() !== doi.toLowerCase()) continue;
+    const parts = work.published?.['date-parts']?.[0];
+    const date = parts?.length === 3 ? Date.UTC(parts[0], parts[1]-1, parts[2]) : 0;
+    const base = { eventKey:paper.eventKey, doi, title:paper.title, url:paper.url,
+      ts:paper.publishedAt, recordUrl:'https://doi.org/' + doi, publisher:work.publisher || 'Crossref', tags:['论文','学术记录'] };
+    if (date && date >= Math.floor(paper.publishedAt / 86400000) * 86400000) rows.push({...base, updatedAt:date, updateType:'正式发表'});
+    const notices = (await crossrefJson(endpoint + '?' + new URLSearchParams({filter:'updates:' + doi, rows:'10'}))).message.items;
+    for (const notice of notices) {
+      const relation = (notice['update-to'] || []).find(link => link.DOI?.toLowerCase() === doi.toLowerCase());
+      const kind = {retraction:'撤稿', correction:'更正', withdrawal:'撤稿'}[relation?.type];
+      if (kind && relation.updated?.timestamp) rows.unshift({...base, updatedAt:relation.updated.timestamp,
+        recordUrl:'https://doi.org/' + notice.DOI, updateType:kind});
+    }
+  }
+  // 每个关联展示最新状态；已撤稿的原文不能被较晚的普通元数据更新重新提升。
+  const order = {撤稿:0, 更正:1, 正式发表:2};
+  return rows.sort((a,b) => order[a.updateType] - order[b.updateType] || b.updatedAt - a.updatedAt);
+}
 
 async function officialRss(url, kindTag) {
   const list = parseFeed(await getText(url));
@@ -228,33 +274,52 @@ async function officialRss(url, kindTag) {
 /* 把源返回的原始条目补齐成快照 item：id 稳定、热度有展示串、按时间窗口过滤 */
 export function finalize(src, raws, opts) {
   const now = (opts && opts.now) || Date.now();
-  const list = (Array.isArray(raws) ? raws : []).filter(function (r) { return r && clean(r.title, 200); })
-    .map((r) => ({ ...r, ts: parseTime(r.ts) }));
-  const windowed = src.maxAgeH > 0
-    ? list.filter(function (r) { return !r.ts || now - r.ts <= src.maxAgeH * 3600e3; })
-    : list;
-  const chosen = windowed.slice(0, src.max || 20);
-  /* id 不含 rank：榜单排名会浮动，位次进 id 会让同一内容跨快照换 id；同源重复标题用序号兜底 */
-  const seen = {};
-  return chosen.map(function (r, i) {
-    const title = clean(r.title, 200);
-    const hotRaw = parseHot(r.hotRaw);
-    let id = src.id + '-' + hash8(title);
-    if (seen[id] === undefined) seen[id] = 0;
-    else seen[id]++, id += '-x' + seen[id];
-    return {
-      id: id,
-      sourceId: src.id,
-      rank: i + 1,
-      title: title,
-      summary: clean(r.summary, 600),
-      url: /^https?:\/\//i.test(String(r.url || '').trim()) ? String(r.url).trim() : '',
-      hot: r.hotText || (hotRaw ? fmtNum(hotRaw) : ''),
-      hotRaw: hotRaw,
-      ts: r.ts || 0,
-      tags: (Array.isArray(r.tags) ? r.tags : []).map((tag) => clean(tag, 60)).filter(Boolean).slice(0, 4)
-    };
-  });
+  const seen = new Set();
+  const items = [];
+  for (const row of raws || []) {
+    if (!row || !clean(row.title, 200)) continue;
+    const url = canonicalUrl(row.url);
+    const paper = /^https?:\/\/(?:www\.)?arxiv\.org\/(?:abs|pdf)\/([\w./-]+?)(?:v\d+)?(?:\.pdf)?$/i.exec(url);
+    const doi = String(row.doi || '').trim().toLowerCase();
+    const eventKey = row.eventKey || (paper ? 'arxiv:' + paper[1] : doi ? 'doi:' + doi : url);
+    const key = eventKey || clean(row.title, 200);
+    if (seen.has(key)) continue;
+    const publishedAt = parseTime(row.ts);
+    const updatedAt = parseTime(row.updatedAt);
+    const attentionAt = parseTime(row.attentionAt);
+    const update = updatedAt > 0 && (row.updateType || (src.id === 'cs2matches' ? '比赛赛果' : updatedAt > publishedAt && src.id === 'arxiv'));
+    const eventKind = row.updateType || (src.id === 'cs2matches' ? '比赛赛果' : update ? '论文修订' : attentionAt > publishedAt || src.dayList ? '近期受关注' : publishedAt ? '首次发布' : '发现');
+    const ts = update ? updatedAt : eventKind === '近期受关注' ? attentionAt : publishedAt;
+    if (ts > now || (ts && src.maxAgeH && now - ts > src.maxAgeH * 3600e3)) continue;
+    seen.add(key);
+    const id = src.id + '-' + hash8(key);
+    const prior = opts?.previous?.get(id);
+    const firstSeenAt = prior?.firstSeenAt || now;
+    const eventSeenAt = prior?.ts === ts && prior?.eventKind === eventKind ? prior.eventSeenAt || firstSeenAt : now;
+    const hotRaw = parseHot(row.hotRaw);
+    items.push({
+      id, sourceId: src.id, rank: items.length + 1, title: clean(row.title, 200), url,
+      summary: clean(row.summary, 600), hot: row.hotText || fmtNum(hotRaw), hotRaw,
+      eventKey, doi, eventKind, publishedAt, updatedAt, attentionAt, firstSeenAt, eventSeenAt, ts,
+      discoveryUrl: canonicalUrl(row.discoveryUrl), recordUrl: canonicalUrl(row.recordUrl),
+      tier: row.tier || src.tier || 1, publisher: clean(row.publisher || (src.id === 'hf' ? 'arXiv 预印本' : '') || src.short || src.id, 100),
+      tags: (Array.isArray(row.tags) ? row.tags : []).map(tag => clean(tag, 60)).filter(Boolean).slice(0, 4)
+    });
+    if (items.length >= (src.max || 20)) break;
+  }
+  return items;
 }
 
-export const SNAPSHOT_SCHEMA = 1;
+function canonicalUrl(value) {
+  try {
+    const url = new URL(value);
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) return '';
+    for (const key of [...url.searchParams.keys()]) {
+      if (/^(utm_|fbclid$|gclid$)/i.test(key)) url.searchParams.delete(key);
+    }
+    url.hash = '';
+    return url.href.replace(/\/(?=$)/, '').replace(/^http:\/\/arxiv\.org\//, 'https://arxiv.org/');
+  } catch { return ''; }
+}
+
+export const SNAPSHOT_SCHEMA = 2;

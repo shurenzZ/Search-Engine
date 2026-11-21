@@ -1,6 +1,14 @@
 /* 服务端抓取与契约自检共用的工具函数。
    页面里的 ES5 版本（每日热搜早报.html）保持同一套规则；改这里时同步改页面。 */
 
+import { mkdir, readFile, writeFile, rename } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import path from 'node:path';
+let cacheDir = '';
+export async function enableRequestCache(dir) {
+  await mkdir(dir, {recursive:true});
+  cacheDir = dir;
+}
 export const DAY = 86400000;
 export const UA = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
@@ -11,25 +19,39 @@ export const UA = {
 export function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 
 async function request(url, asText) {
-  const res = await fetch(url, {
-    headers: UA,
-    redirect: 'follow',
-    signal: AbortSignal.timeout(20000),
-    cache: 'no-store'
-  });
+  const endpoint = new URL(url);
+  const cacheable = cacheDir && ['api.github.com','export.arxiv.org','openai.com','blog.google','deepmind.google'].includes(endpoint.hostname);
+  const file = cacheable && path.join(cacheDir, createHash('sha256').update(url).digest('hex') + '.json');
+  let old;
+  if (file) {
+    try { old = JSON.parse(await readFile(file, 'utf8')); }
+    catch (error) { if (error.code !== 'ENOENT' && !(error instanceof SyntaxError)) throw error; }
+  }
+  const headers = {...UA, 'User-Agent':'DailyBrief/3.1 (+https://github.com/shurenzZ/Search-Engine)'};
+  if (old?.etag) headers['If-None-Match'] = old.etag;
+  if (old?.modified) headers['If-Modified-Since'] = old.modified;
+  const res = await fetch(url, {headers, redirect:'follow', signal:AbortSignal.timeout(20000)});
+  if (res.status === 304 && old) return old.data;
   if (!res.ok) {
     const e = new Error('HTTP ' + res.status);
     e.status = res.status;
+    e.retryAfter = Number(res.headers.get('retry-after')) || 0;
     e.rateRemain = Number(res.headers.get('x-ratelimit-remaining'));
     e.rateReset = Number(res.headers.get('x-ratelimit-reset'));
     throw e;
   }
-  if (asText) return res.text();
   const txt = await res.text();
-  try { return JSON.parse(txt); }
-  catch (e) { throw new Error('返回非 JSON：' + txt.slice(0, 60)); }
+  let data;
+  try { data = asText ? txt : JSON.parse(txt); }
+  catch { throw new Error('返回非 JSON：' + txt.slice(0, 60)); }
+  const etag = res.headers.get('etag'), modified = res.headers.get('last-modified');
+  if (file && (etag || modified)) {
+    const temp = file + '.' + process.pid + '.tmp';
+    await writeFile(temp, JSON.stringify({etag, modified, data}));
+    await rename(temp, file);
+  }
+  return data;
 }
-
 export const getJson = (url) => request(url, false);
 export const getText = (url) => request(url, true);
 
@@ -177,9 +199,11 @@ export function parseFeed(xml) {
     const summary = clean(
       fieldOf(b, 'content:encoded') || fieldOf(b, 'description') ||
       fieldOf(b, 'summary') || fieldOf(b, 'content') || '', 600);
-    const date = fieldOf(b, 'pubDate') || fieldOf(b, 'published') ||
-      fieldOf(b, 'dc:date') || fieldOf(b, 'updated') || fieldOf(b, 'date');
-    return { title: title, url: url, summary: summary, ts: parseTime(date) };
+    const publishedAt = parseTime(fieldOf(b, 'pubDate') || fieldOf(b, 'published') ||
+      fieldOf(b, 'dc:date') || fieldOf(b, 'date'));
+    return { title, url, summary, ts: publishedAt, publishedAt,
+      updatedAt: parseTime(fieldOf(b, 'updated')), doi: fieldOf(b, 'arxiv:doi'),
+      primaryCategory: attrOfFirst(b, 'arxiv:primary_category', 'term') };
   }).filter(function (x) { return x.title; });
 }
 

@@ -1,10 +1,10 @@
 {
- "schema": 1,
- "hash": "26178fd79937f74a",
- "generatedAt": "2026-10-27T06:50:04.362Z",
- "generatedAtMs": 1793083804362,
- "itemCount": 184,
- "okCount": 13,
+ "schema": 2,
+ "hash": "ac1bf80d02351122",
+ "generatedAt": "2026-11-21T01:25:15.931Z",
+ "generatedAtMs": 1795224315931,
+ "itemCount": 122,
+ "okCount": 12,
  "sources": [
   {
    "id": "hf",
@@ -15,7 +15,7 @@
   {
    "id": "arxiv",
    "ok": true,
-   "count": 16,
+   "count": 40,
    "error": ""
   },
   {
@@ -27,67 +27,55 @@
   {
    "id": "googleai",
    "ok": true,
-   "count": 3,
+   "count": 12,
    "error": ""
   },
   {
    "id": "deepmind",
    "ok": true,
-   "count": 6,
-   "error": ""
-  },
-  {
-   "id": "xinzhiyuan",
-   "ok": true,
-   "count": 15,
-   "error": ""
-  },
-  {
-   "id": "leiphone",
-   "ok": true,
-   "count": 16,
-   "error": ""
-  },
-  {
-   "id": "qbitai",
-   "ok": false,
-   "count": 0,
-   "error": "接口有 10 条，但被 72h 时间窗全部过滤（最新一条 2026-10-23）"
-  },
-  {
-   "id": "infoq",
-   "ok": true,
-   "count": 16,
-   "error": ""
-  },
-  {
-   "id": "sspai",
-   "ok": true,
-   "count": 10,
-   "error": ""
-  },
-  {
-   "id": "juejin",
-   "ok": true,
-   "count": 20,
-   "error": ""
-  },
-  {
-   "id": "v2ex",
-   "ok": true,
    "count": 8,
+   "error": ""
+  },
+  {
+   "id": "release-pytorch",
+   "ok": true,
+   "count": 0,
+   "error": ""
+  },
+  {
+   "id": "release-transformers",
+   "ok": true,
+   "count": 0,
+   "error": ""
+  },
+  {
+   "id": "release-vllm",
+   "ok": true,
+   "count": 0,
+   "error": ""
+  },
+  {
+   "id": "research-search",
+   "ok": true,
+   "count": 7,
+   "error": ""
+  },
+  {
+   "id": "crossref",
+   "ok": true,
+   "count": 0,
    "error": ""
   },
   {
    "id": "cs2matches",
    "ok": true,
-   "count": 24,
+   "count": 3,
    "error": ""
   },
   {
    "id": "ghtrend",
    "ok": true,
-   "count": 14,
+   "count": 16,
    "error": ""
   }
  ]

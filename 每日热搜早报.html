@@ -403,7 +403,6 @@ details .body ul{margin:4px 0;padding-left:18px}
   .top-stories{grid-column:span 2;grid-row:auto}
   .top-stories .flash-list{max-height:none;display:grid;grid-template-columns:1fr 1fr;column-gap:28px}
   .top-stories .flash-list li:first-child{grid-column:span 2}
-  .top-stories .flash-list li:nth-child(n+8){display:none}
   .overview-card:not(.top-stories) .flash-list{max-height:260px}
   .overview-card{padding:18px 18px 10px}
 }
@@ -475,7 +474,7 @@ details .body ul{margin:4px 0;padding-left:18px}
         <div class="mast-date"><time id="dateText">--</time><span id="weekText"></span></div>
         <div class="mast-title">
           <div class="brand"><h1>今日早报</h1><span id="stateBadge" class="state-badge state-loading">准备中</span></div>
-          <p class="brand-sub">从热闹中，发现值得关注的事。全网热榜、前沿发布与每日新知，按信号分排好。</p>
+          <p class="brand-sub">跟踪机构发布、论文与开源版本，查看原文和更新日期。</p>
         </div>
       </div>
       <div class="pulse" id="pulse" role="group" aria-label="今日信号谱：每根刻度是一条资讯，高度为信号分，点击分类可筛选"></div>
@@ -484,7 +483,7 @@ details .body ul{margin:4px 0;padding-left:18px}
         <div class="stat"><span class="stat-label">条目</span><b id="countText">0</b></div>
         <div class="stat"><span class="stat-label">数据源</span><b id="srcText">--</b></div>
       </div>
-      <p class="source-note" id="sourceNote" aria-live="polite">正在连接公开热榜接口…</p>
+      <p class="source-note" id="sourceNote" aria-live="polite">正在读取公开来源…</p>
     </div>
   </header>
   <div class="toolbar" aria-label="搜索与筛选">
@@ -557,57 +556,12 @@ details .body ul{margin:4px 0;padding-left:18px}
           <li>打开后先读一次「服务端快照 JSON」（一个静态文件，一次请求），页面立刻有内容；随后浏览器直连的实时热榜逐个覆盖。</li>
           <li>接口失败时该源显示失败原因与「重试此源」，<b>不会用示例数据或旧数据冒充实时数据</b>。本页面已不含任何内置示例条目。</li>
         </ul>
-        <h4>2. 要素、信号分与「值得关注」</h4>
-        <ul>
-          <li>每条都会在本地用关键词词典抽出<b>要素</b>（发布上线 / 新模型 / 开源项目 / 论文研究 / 融资并购 / 政策监管 / 事故风险 …）与<b>主体</b>（公司 / 模型 / 产品 / 人物 / 机构），并抽取标题里的金额、涨跌幅、版本号。全部是正则匹配，不调用任何模型、不需要 Key。</li>
-          <li><b>信号分 = 源内热度百分位 + 新鲜度 + 要素权重 + 主体命中 + 跨平台同现 + 关注词命中</b>（0-100，鼠标悬浮可看每一项的得分）。</li>
-          <li>热度跨平台不可比（微博 780 万、知乎 4 万、HN 300 分），所以热度只按<b>同一源内的百分位</b>计分，接口不给热度值的源（IT之家、AI 新闻、快照源）不会再被系统性埋没。</li>
-          <li>分类卡片内固定分三档：🆕 发布 · 开源 · 论文（按时间倒序，不看热度）→ 📌 热度不高但值得关注 → 🔥 按当前排序。</li>
-        </ul>
-        <h4>3. 关注词 / 只看 24h / 同事件合并</h4>
-        <ul>
-          <li>工具栏「⭐ 关注」输入框填公司、模型或关键词，回车即加；命中条目加 24 分信号分并在分类内置顶，chip 上点 ✕ 移除。</li>
-          <li>「🕐 只看 24h 内」按条目真实发布时间过滤；没有发布时间且不属于「当日榜」的源会被隐藏，空态会写明隐藏了多少条。</li>
-          <li>「🔗 同事件合并」把同一事件在多平台的热搜合成一行，显示「N 平台在热」并累加热度；切到「按平台」视图时仍然各平台独立完整展示。</li>
-        </ul>
-        <h4>4. 如何刷新</h4>
-        <ul>
-          <li>点「↻ 一键刷新」重新抓取全部实时源，进度形如「抓取中 7/13」，每个源抓到就地更新，不必等全部完成。</li>
-          <li>默认开启 13 个实时源，串行抓取约 25-30 秒；在「设置 → 启用的实时数据源」里关掉一个约省 2 秒。</li>
-          <li>数据缓存到浏览器 <code>localStorage</code>（键名 <code>hot_daily_brief_v1</code>），下次打开先秒显缓存，再按「缓存时长」判断是否自动刷新。</li>
-          <li>GitHub 源受匿名配额限制（搜索接口 10 次/分钟、按 IP 计），页面每轮只请求一次并按 30 分钟缓存；被限流时会显示几点几分恢复，且不会反复重试。</li>
-        </ul>
-        <h4>5. 服务端快照（浏览器拿不到的源）</h4>
-        <ul>
-          <li>HuggingFace 每日论文、arXiv、OpenAI / Google AI / DeepMind 官方博客、新智元、量子位、雷锋网、InfoQ、少数派、掘金、V2EX、GitHub Trending 都<b>不开 CORS</b>，浏览器直连必然失败，公共 CORS 代理目前已全部失效。</li>
-          <li>这些源由仓库里的 <code>.github/workflows/refresh-brief.yml</code> 在 GitHub 服务端定时（每 30 分钟）抓取，生成 <code>data/latest.json</code> 提交回仓库；页面从 <code>raw.githubusercontent.com</code>（CORS 全开）读取。</li>
-          <li>换到自己的 fork：默认按当前页面地址自动推断 raw 地址；推断不出来就在「设置 → 快照 JSON 地址」里手填。</li>
-          <li>快照只做数据搬运，<b>要素与信号分仍只在页面这一份词典里计算</b>，不会出现两套规则打架。</li>
-        </ul>
-        <h4>6. 如何替换 / 增加实时数据源</h4>
-        <ul>
-          <li>默认使用免费开源的 <b>60s API</b>（<code>https://60s.viki.moe</code>，MIT 协议，已开启 CORS，可直接被本地页面调用）。</li>
-          <li>在脚本里的 <code>SOURCES</code> 数组新增一项即可，例如：
-            <br><code>{id:'xxx', name:'平台名', short:'简称', icon:'🆕', color:'#1e88e5', path:'/v2/xxx', kind:'list', defaultOn:true, fallbackCat:'tech'}</code>
-          </li>
-          <li><code>path</code> 可以是完整地址（以 <code>http</code> 开头则不拼基地址），里面可写 <code>{today-minus-7}</code> 这类相对日期；数组或 <code>altPaths</code> 表示多个候选地址，失败自动顺延。</li>
-          <li><code>pick</code>：数据不在 <code>data</code> 根数组时写点分路径，如 <code>pick:'items'</code>（GitHub 搜索）、<code>pick:'metals'</code>。</li>
-          <li><code>titleField</code> / <code>summaryField</code>：字段名不是 <code>title</code> / <code>description</code> 时指定，如 GitHub 用 <code>titleField:'full_name'</code>。</li>
-          <li><code>hotField</code> / <code>timeField</code>：声明期望的热度与时间字段，<code>node tools/verify-sources.mjs --client</code> 会逐源断言这些字段还在不在——接口悄悄改字段名时只有这里能发现。</li>
-          <li><code>noProxy + cacheKey + cacheTtl</code>：给有配额上限的接口用，本轮与 TTL 内只出网一次，且绝不把地址外发给第三方代理。</li>
-          <li><code>kind</code>：<code>list</code>=返回数组；<code>newsItems</code>=<code>data.news</code> 为对象数组；<code>news</code>=<code>data.news</code> 为字符串数组。</li>
-          <li><code>dayList:true</code>：该源给不出发布时间但本身就是「今天的榜」（掘金、Trending、历史上的今天），这样「只看 24h」不会把它误删。</li>
-          <li><b>限流说明</b>：60s 公共实例约「每 2 秒 1 次请求」（超限返回 <code>429</code> + <code>Retry-After</code>）。所有出网请求走串行闸门，间隔不小于 <code>REQ_GAP</code>（初始 2000 毫秒，被限流自动放慢、恢复后自动提速）；整轮结束后还会对可恢复的失败源补抓一轮。</li>
-          <li><b>B站接口</b>（<code>/v2/bili</code>）目前上游 500（B站反爬导致解析失败），已默认关闭；上游修复后在设置里打开即可，无需改代码。</li>
-          <li>代理模式：直连失败时才用 1 个公共 CORS 代理兜底（这些公共代理 2026-10 实测大多已失效）；需要稳定跨域请在设置里填自建 Worker 作为自定义代理。接口自身返回 5xx / 401 / 403 时直接降级，换代理没有意义。</li>
-        </ul>
-        <h4>7. 关于「原文内容」</h4>
-        <ul>
-          <li>知乎、百度、IT之家、夸克、AI 新闻以及快照里的各家博客本身就带正文摘要，页面直接内联展示。</li>
-          <li>点条目里的「展开全文」，会就地抓取该条原文页面并抽出正文，不用跳出去；结果按链接记忆，重复展开不再请求。</li>
-          <li>微博、抖音、头条等榜单接口只提供标题与热度值，其原文页多为脚本渲染或需登录，能否抓到正文取决于源站；抓不到时点「原文 ↗」跳转始终可用。</li>
-          <li>单条正文最多展示 4000 字，超出会截断并提示。</li>
-        </ul>
+        <h4>信息来源与时间</h4>
+        <p>早报收录机构公告、论文和正式软件版本。论文原始发表、后续修订、入榜和系统首次发现时间分别记录，展开条目可查看出处。首页显示近 48 小时的有日期事件，今日新发布覆盖近 24 小时。</p>
+        <h4>排序与搜索</h4>
+        <p>信号分优先考虑原始出处和事件时间，再计入主题、关注词和少量热度。同一事件的几个收录渠道合并展示。搜索和关注词均支持常用中英文别名，例如“开放权重”和“open-weight”。</p>
+        <h4>更新</h4>
+        <p>服务端每半小时生成快照。页面可直接读取 GitHub 和 Hacker News 搜索接口；设置中可关闭各来源。桌面端在远端不可用时显示随包快照及其生成时间。</p>
         <h4>8. 快捷键</h4>
         <ul>
           <li><code>R</code> 刷新　<code>/</code> 聚焦搜索　<code>Esc</code> 关闭弹窗或清空搜索</li>
@@ -634,11 +588,6 @@ details .body ul{margin:4px 0;padding-left:18px}
     <div class="modal-body">
       <div class="field"><label for="setTheme">颜色模式</label><select id="setTheme"><option value="light">浅色</option><option value="dark">深色</option><option value="system">跟随系统</option></select><div class="hint">立即生效并自动保存，系统模式会随操作系统外观变化。</div></div>
       <div class="field">
-        <label for="setApiBase">API 基地址</label>
-        <input type="text" id="setApiBase" placeholder="https://60s.viki.moe">
-        <div class="hint">默认使用 60s API。可换成你自己的反向代理地址，例如 <code>https://your-worker.workers.dev</code>。</div>
-      </div>
-      <div class="field">
         <label for="setProxyMode">代理模式</label>
         <select id="setProxyMode">
           <option value="auto">自动（直连失败时自动尝试公共 CORS 代理，推荐）</option>
@@ -664,15 +613,15 @@ details .body ul{margin:4px 0;padding-left:18px}
       <div class="field">
         <label for="setSortMode">默认排序</label>
         <select id="setSortMode">
-          <option value="signal">信号优先（热度 + 新鲜度 + 要素 + 关注）</option>
+          <option value="signal">信号优先（出处、事件时间与主题）</option>
           <option value="heat">热度优先（传统热榜序）</option>
           <option value="time">时间优先（最新的排前面）</option>
         </select>
       </div>
       <div class="field">
         <label for="setWatch">关注词</label>
-        <input type="text" id="setWatch" placeholder="OpenAI DeepSeek 融资 机器人">
-        <div class="hint">空格或逗号分隔，最多 12 个。命中的条目会加 24 分信号分并在分类内置顶。</div>
+        <input type="text" id="setWatch" placeholder="OpenAI, 推理模型, open weights">
+        <div class="hint">用逗号分隔，最多 12 个。命中关注词加 10 分，英文短语可包含空格。</div>
       </div>
       <div class="switches">
         <label class="sw"><input type="checkbox" id="setFresh"><span>🕐 只看 24 小时内</span></label>
@@ -711,8 +660,8 @@ details .body ul{margin:4px 0;padding-left:18px}
    ========================================================= */
 var STORAGE_KEY = 'hot_daily_brief_v1';
 /* 缓存结构版本：与 APP_VERSION 分开，升版只作废条目、保留用户设置 */
-var CACHE_SCHEMA = 2;
-var APP_VERSION = '3.0.0';
+var CACHE_SCHEMA = 3;
+var APP_VERSION = '4.0.0';
 var WEEK = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
 
 /* 服务端快照的兜底仓库：页面从别处打开（file://）时用它拼出 raw 地址 */
@@ -720,7 +669,7 @@ var SNAPSHOT_REPO = 'shurenzz/Search-Engine';
 
 var DEFAULT_SETTINGS = {
   theme: 'system',
-  apiBase: 'https://60s.viki.moe',
+
   proxyMode: 'auto',
   proxy: '',
   perSourceLimit: 15,
@@ -766,33 +715,15 @@ function easeGap() { REQ_GAP = Math.max(REQ_GAP_MIN, REQ_GAP - 200); }
    hotField/timeField=声明期望字段（tools/verify-sources.mjs 会逐源断言）；
    noProxy+cacheKey+cacheTtl=有配额上限的接口不走代理、本轮与 TTL 内只取一次
    --------------------------------------------------------- */
+var SNAPSHOT_IDS = new Set(['hf','arxiv','openai','googleai','deepmind','release-pytorch','release-transformers','release-vllm','research-search','crossref','cs2matches','ghtrend']);
 var SOURCES = [
-  { id:'weibo',    name:'微博热搜',      short:'微博',   icon:'🔥', color:'#e6162d', path:'/v2/weibo',              kind:'list', defaultOn:true,  fallbackCat:'society', searchUrl:'https://s.weibo.com/weibo?q=' },
-  { id:'baidu',    name:'百度热搜榜',    short:'百度',   icon:'🔎', color:'#2932e1', path:'/v2/baidu/hot',          kind:'list', defaultOn:true,  fallbackCat:'society', searchUrl:'https://www.baidu.com/s?wd=' },
-  { id:'zhihu',    name:'知乎热榜',      short:'知乎',   icon:'💡', color:'#0084ff', path:'/v2/zhihu',              kind:'list', defaultOn:true,  fallbackCat:'society', searchUrl:'https://www.zhihu.com/search?type=content&q=' },
-  { id:'douyin',   name:'抖音热点榜',    short:'抖音',   icon:'🎵', color:'#fe2c55', path:'/v2/douyin',             kind:'list', defaultOn:true,  fallbackCat:'life',    searchUrl:'https://www.douyin.com/search/' },
-  { id:'toutiao',  name:'今日头条热榜',  short:'头条',   icon:'📰', color:'#f04142', path:'/v2/toutiao',            kind:'list', defaultOn:true,  fallbackCat:'society', searchUrl:'https://so.toutiao.com/search?keyword=' },
-  { id:'itnews',   name:'IT之家 · 科技快讯', short:'IT之家', icon:'💻', color:'#c62f2f', path:'/v2/it-news',    kind:'list', defaultOn:true,  fallbackCat:'tech', summaryField:'description', hotField:'none', timeField:'none' },
-  { id:'itrank',   name:'IT之家 · 热榜',  short:'IT热榜', icon:'🏆', color:'#a4231f', path:'/v2/it-news/rank',  kind:'list', defaultOn:true,  fallbackCat:'tech', hotField:'none', timeField:'none' },
-  { id:'ainews',   name:'AI 新闻',       short:'AI新闻', icon:'🤖', color:'#7c3aed', path:'/v2/ai-news',            kind:'newsItems', defaultOn:true, fallbackCat:'ai', summaryField:'detail', timeField:'date' },
-  { id:'quark',    name:'夸克热点',      short:'夸克',   icon:'🔷', color:'#0ea5e9', path:'/v2/quark',              kind:'list', defaultOn:true,  fallbackCat:'society', summaryField:'summary', hotField:'like_count', timeField:'published_at' },
-  { id:'hn',       name:'Hacker News 首页', short:'HN',  icon:'🌐', color:'#ff6600', path:'/v2/hacker-news/top',    kind:'list', defaultOn:true,  fallbackCat:'tech', hotField:'score', hotLabel:' 分', timeField:'created_at' },
-  { id:'hnnew',    name:'Hacker News 最新', short:'HN新', icon:'🌱', color:'#ff8c3a', path:'/v2/hacker-news/new',   kind:'list', defaultOn:true,  fallbackCat:'tech', hotField:'score', hotLabel:' 分', timeField:'created_at' },
-  { id:'world60s', name:'60秒读懂世界',  short:'60秒',   icon:'⏱️', color:'#0ea5e9', path:'/v2/60s',                kind:'news', defaultOn:true,  fallbackCat:'world' },
+  { id:'hn', name:'Hacker News · 技术讨论', short:'HN', icon:'🌐', color:'#cc5500',
+    path:'https://hn.algolia.com/api/v1/search?tags=front_page&hitsPerPage=30', pick:'hits', kind:'list',
+    hotField:'points', hotLabel:' 分', timeField:'created_at', defaultOn:true, fallbackCat:'tech', tier:4 },
   { id:'ghnew',    name:'GitHub 近期新建仓库', short:'GH新', icon:'🐙', color:'#24292e',
     path:'https://api.github.com/search/repositories?q=created:%3E{today-minus-7}+stars:%3E200&sort=stars&order=desc&per_page=20',
     kind:'list', pick:'items', titleField:'full_name', summaryField:'description', defaultOn:true, fallbackCat:'tech',
     hotField:'stargazers_count', timeField:'created_at', hotLabel:' star', noProxy:true, cacheKey:'ghnew', cacheTtl:1800000 },
-  /* B站接口目前上游 500（B站反爬导致解析失败），默认关闭，修好后打开开关即可 */
-  { id:'bili',     name:'B站热门',       short:'B站',    icon:'📺', color:'#fb7299', path:'/v2/bili',               kind:'list', defaultOn:false, fallbackCat:'game',    searchUrl:'https://search.bilibili.com/all?keyword=' },
-  { id:'rednote',  name:'小红书热点',    short:'小红书', icon:'📕', color:'#ff2442', path:'/v2/rednote',            kind:'list', defaultOn:false, fallbackCat:'life',    searchUrl:'https://www.xiaohongshu.com/search_result?keyword=', hotField:'score' },
-  { id:'tieba',    name:'百度贴吧热议',  short:'贴吧',   icon:'💬', color:'#3385ff', path:'/v2/baidu/tieba',        kind:'list', defaultOn:false, fallbackCat:'society', searchUrl:'https://tieba.baidu.com/f/search/res?qw=' },
-  { id:'douban',   name:'豆瓣电影口碑榜', short:'豆瓣',  icon:'🎬', color:'#2e963d', path:'/v2/douban/weekly/movie',kind:'list', defaultOn:false, fallbackCat:'culture', searchUrl:'https://search.douban.com/movie/subject_search?search_text=', hotField:'rating_count', summaryField:'card_subtitle' },
-  { id:'doubanShow',name:'豆瓣全球口碑综艺', short:'综艺', icon:'🎤', color:'#2e963d', path:'/v2/douban/weekly/show_global', kind:'list', defaultOn:false, fallbackCat:'culture', hotField:'rating_count', summaryField:'card_subtitle' },
-  { id:'teleplay', name:'百度剧集榜',    short:'剧集',   icon:'📽️', color:'#7e22ce', path:'/v2/baidu/teleplay',     kind:'list', defaultOn:false, fallbackCat:'culture', summaryField:'desc', hotField:'score', hotLabel:' 热度' },
-  { id:'hbbest',   name:'Hacker News 历史最佳', short:'HN最佳', icon:'🥇', color:'#e05a00', path:'/v2/hacker-news/best', kind:'list', defaultOn:false, fallbackCat:'tech', hotField:'score', hotLabel:' 分', timeField:'created_at' },
-  { id:'histoday', name:'历史上的今天',  short:'史今',   icon:'📜', color:'#8a5a00', path:'/v2/today-in-history',   kind:'list', pick:'items', summaryField:'description', dayList:true, defaultOn:false, fallbackCat:'culture', hotField:'none', timeField:'none' },
-  /* 与快照源同名的项可留空：快照里的 sources[] 会由页面自动登记，不需要在这里重复声明 */
 ];
 
 /* ---------------------------------------------------------
@@ -828,13 +759,13 @@ var CATEGORIES = [
    base = 该要素在信号分里的权重；kw 是一条 alternation，编译一次全局复用
    ========================================================= */
 var FACETS = [
-  { id:'model',    name:'新模型',   icon:'🧠', color:'#9333ea', base:30, kw:'大模型|新模型|开源模型|基础模型|多模态|MoE|蒸馏|微调|权重|基座|推理模型|参数规模' },
-  { id:'release',  name:'发布上线', icon:'🚀', color:'#7c3aed', base:26, kw:'发布|推出|上线|官宣|首发|亮相|开售|上市|正式版|新版本|公测|内测|预约|实装|揭幕' },
+  { id:'model',    name:'新模型',   icon:'🧠', color:'#9333ea', base:30, kw:'大模型|新模型|开源模型|基础模型|多模态|MoE|蒸馏|微调|权重|基座|推理模型|参数规模|reasoning model|open[- ]weights?|multimodal|language model' },
+  { id:'release',  name:'发布上线', icon:'🚀', color:'#7c3aed', base:26, kw:'发布|推出|上线|官宣|首发|亮相|开售|上市|正式版|新版本|公测|内测|预约|实装|揭幕|introducing|announc(?:e|ing)|release[ds]?|now available|正式发布' },
   { id:'incident', name:'事故风险', icon:'⚠️', color:'#9c2b1f', base:24, kw:'事故|故障|宕机|崩了|泄露|漏洞|被黑|遭到攻击|召回|起火|爆炸|坠机|断供|停摆|瘫痪' },
-  { id:'opensource',name:'开源项目', icon:'📦', color:'#0f766e', base:24, kw:'开源|GitHub|GitLab|仓库|代码库|框架|Star|Hugging ?Face' },
+  { id:'opensource',name:'开源项目', icon:'📦', color:'#0f766e', base:24, kw:'开源|GitHub|GitLab|仓库|代码库|框架|open[- ]source|Hugging ?Face' },
   { id:'funding',  name:'融资并购', icon:'💰', color:'#1d4ed8', base:24, kw:'融资|获投|领投|跟投|增资|估值|并购|收购|控股|举牌|\\bIPO\\b|招股|上市' },
   { id:'policy',   name:'政策监管', icon:'⚖️', color:'#b45309', base:22, kw:'政策|新规|监管|处罚|罚款|立案调查|征求意见|立法|条例|标准|禁令|制裁|合规|约谈|反垄断' },
-  { id:'paper',    name:'论文研究', icon:'📄', color:'#0369a1', base:22, kw:'论文|arXiv|研究团队|研究称|发表|期刊|\\bNature\\b|\\bScience\\b|科研成果|突破|首次实现|提出一种|实验表明' },
+  { id:'paper',    name:'论文研究', icon:'📄', color:'#0369a1', base:22, kw:'论文|arXiv|研究团队|研究称|发表|期刊|\\bNature\\b|\\bScience\\b|科研成果|突破|首次实现|提出一种|实验表明|preprint|research paper|we propose' },
   { id:'price',    name:'价格成本', icon:'🏷️', color:'#15803d', base:16, kw:'涨价|降价|定价|起售|售价|免费|优惠|折|成本|报价|调价|收费' },
   { id:'person',   name:'人事组织', icon:'👤', color:'#9d174d', base:16, kw:'任命|离职|辞职|加盟|开除|裁员|\\bCEO\\b|\\bCTO\\b|首席|创始人|当选|调任|接棒' },
   { id:'bench',    name:'评测跑分', icon:'📊', color:'#0e7490', base:16, kw:'评测|实测|跑分|基准|benchmark|对比|排名|榜单|得分|性能提升|胜率|盲测' },
@@ -989,7 +920,7 @@ function fmtAge(ts) {
 }
 function watchWords() {
   var raw = String(settings.watch || '');
-  var arr = raw.split(/[,，;；\s]+/);
+  var arr = raw.split(/[,，;；\n]+/);
   var out = [], seen = {};
   for (var i = 0; i < arr.length; i++) {
     var w = arr[i].trim().toLowerCase();
@@ -1023,7 +954,7 @@ function tsOf(it) { return (it && it.ts) || 0; }
 /* 唯一的排序实现：屏幕、TXT、JSON 三处必须同序，否则导出结果和看到的不一样 */
 function sortItems(list, mode) {
   var m = mode || settings.sortMode || 'signal';
-  var pinWatch = m !== 'time';
+  var pinWatch = m === 'heat';
   list.sort(function (a, b) {
     if (pinWatch) {
       var w = ((b.watch && b.watch.length) ? 1 : 0) - ((a.watch && a.watch.length) ? 1 : 0);
@@ -1110,7 +1041,7 @@ function saveStore() {
     mode: state.mode,
     status: state.status,
     items: Object.keys(state.buckets).reduce(function (all, id) { return all.concat(state.buckets[id]); }, []),
-    snapshot: { at: state.snap.at, date: state.snap.date, sources: state.snap.sources, fallback: !!state.snap.fallback }
+    snapshot: { at: state.snap.at, date: state.snap.date, sources: state.snap.sources, fallback: !!state.snap.fallback, error: state.snap.error }
   };
   stSet(STORAGE_KEY, JSON.stringify(payload));
 }
@@ -1119,12 +1050,16 @@ function loadStore() {
   if (!raw) return false;
   try {
     var d = JSON.parse(raw);
-    if (d && d.settings) settings = mergeSettings(d.settings);
-    if (d && d.snapshot) {
+    if (d && d.settings) {
+      settings = mergeSettings(d.settings);
+      if (Number(d.cv) < CACHE_SCHEMA) settings.watch = settings.watch.trim().split(/[,，;；\s]+/).join(', ');
+    }
+    if (d && Number(d.cv) === CACHE_SCHEMA && d.snapshot) {
       state.snap.sources = snapshotSources(d.snapshot.sources);
       state.snap.at = saneTs(Number(d.snapshot.at)) || 0;
       state.snap.date = String(d.snapshot.date || '');
       state.snap.fallback = !!d.snapshot.fallback;
+      state.snap.error = String(d.snapshot.error || '');
       state.snap.loaded = state.snap.sources.length > 0;
     }
     /* 条目只在结构版本一致时复用：旧版缓存里混着已删除的示例数据，不能让它复活 */
@@ -1137,13 +1072,14 @@ function loadStore() {
         return makeItem({
           sourceId: it.sourceId, rank: it.rank, title: it.title, summary: it.summary,
           hot: it.hot, hotRaw: it.hotRaw, url: it.url, meta: it.meta, tags: it.tags,
-          ts: it.ts, src: src, snap: it.snap, snapAt: it.snapAt
+          evidence: it, ts: it.ts, src: src, snap: it.snap, snapAt: it.snapAt
         });
       });
       state.buckets = regroup(state.items);
       /* 缓存里的 signal / hotPct / 簇关系都是上一次会话算的，重新派生一遍再用 */
       state.items = rebuildItems(state.buckets);
       state.status = d.status || {};
+      restoreSourceStatus();
       state.mode = d.mode === 'live' || d.mode === 'partial' ? d.mode : 'empty';
       state.updatedAt = Math.min(Date.now(), saneTs(Number(d.updatedAt)) || 0);
       return true;
@@ -1170,7 +1106,6 @@ function mergeSettings(s) {
   }
   out.perSourceLimit = Math.min(50, Math.max(5, Number(out.perSourceLimit) || 15));
   out.cacheMinutes = Math.min(720, Math.max(1, Number(out.cacheMinutes) || 30));
-  out.apiBase = safeUrl(out.apiBase) || DEFAULT_SETTINGS.apiBase;
   out.proxy = safeUrl(out.proxy);
   if (['light', 'dark', 'system'].indexOf(out.theme) < 0) out.theme = 'system';
   out.autoRefresh = out.autoRefresh !== false;
@@ -1248,12 +1183,11 @@ function sleep(ms) {
 /* 一个数据源可配置多个候选地址：path 写成数组，或用 altPaths 追加备用地址，
    主接口挂掉时自动顺延到下一个，不需要人工干预；path 里可用 {today-minus-7} 取相对日期 */
 function buildTargets(src) {
-  var base = String(settings.apiBase || '').replace(/\/+$/, '');
   var list = Array.isArray(src.path) ? src.path : [src.path];
   var alt = Array.isArray(src.altPaths) ? src.altPaths : [];
   return list.concat(alt).map(function (p) {
     p = fillDyn(p);
-    return /^https?:/i.test(p) ? p : base + p;
+    return p;
   });
 }
 
@@ -1570,7 +1504,7 @@ function extractItems(json, src) {
 }
 
 /* 豆瓣把关注度放在 rating_count 里；rating 是评分（9.6），不能当热度 */
-var HOT_KEYS = ['hot_value', 'hot_index', 'hot_num', 'like_count', 'stargazers_count',
+var HOT_KEYS = ['points', 'hot_value', 'hot_index', 'hot_num', 'like_count', 'stargazers_count',
                 'rating_count', 'replies', 'hot', 'num', 'score'];
 var HOT_LABELS = { like_count: ' 互动', stargazers_count: ' star', rating_count: ' 人评价', replies: ' 回复' };
 var HOT_STR_KEYS = ['hot_value_desc', 'score_desc', 'hot_desc', 'hot_text', 'score', 'hot'];
@@ -1623,7 +1557,7 @@ function buildMeta(raw, src) {
   var rc = firstNum(raw.rating_count);
   if (rc && !cc) parts.push(fmtNum(rc) + ' 人评价');
   if (raw.unit) parts.push(String(raw.unit));
-  if (src.id === 'baidu' && raw.type_desc) parts.push(raw.type_desc);
+
   return parts.join(' · ');
 }
 
@@ -1711,6 +1645,10 @@ function makeItem(o) {
   o.url = safeUrl(o.url);
   o.rank = Math.max(1, Math.floor(firstNum(o.rank) || 1));
   var title = cleanText(o.title).slice(0, 200);
+  var e = o.evidence || {};
+  var tier = [1, 2, 3, 4].includes(e.tier) ? e.tier : (o.src && o.src.tier) || 4;
+  var eventKind = ['首次发布','论文修订','重要更新','近期受关注','正式发表','更正','撤稿','比赛赛果','发现'].includes(e.eventKind)
+    ? e.eventKind : o.sourceId === 'ghnew' ? '首次发布' : '发现';
   var f = extractFacets(title, o.summary, o.tags);
   var cat = classify(title, o.summary, o.src, f.ents);
   /* id 不含 rank：榜单排名会浮动，位次进 id 会让同一内容每次刷新都换 id，
@@ -1718,6 +1656,15 @@ function makeItem(o) {
   return {
     id: o.sourceId + '-' + hash32(title),
     sourceId: o.sourceId,
+    eventKey: cleanText(e.eventKey || o.url).slice(0, 1500),
+    doi: cleanText(e.doi || '').toLowerCase().slice(0, 300),
+    academicStatus: ['更正','撤稿','正式发表'].includes(e.academicStatus) ? e.academicStatus : '',
+    tier: tier, publisher: cleanText(e.publisher || (o.src && o.src.short) || o.sourceId),
+    eventKind: eventKind, publishedAt: parseTimeLoose(e.publishedAt || (eventKind === '首次发布' ? o.ts : 0)),
+    updatedAt: parseTimeLoose(e.updatedAt), attentionAt: parseTimeLoose(e.attentionAt),
+    firstSeenAt: parseTimeLoose(e.firstSeenAt) || o.snapAt || Date.now(),
+    eventSeenAt: parseTimeLoose(e.eventSeenAt) || o.snapAt || Date.now(),
+    discoveryUrl: safeUrl(e.discoveryUrl), recordUrl: safeUrl(e.recordUrl),
     rank: o.rank,
     title: title,
     hot: o.hot,
@@ -1748,13 +1695,17 @@ function normalizeItem(raw, src, idx) {
   summary = cleanText(summary);
   if (summary.length > 600) summary = summary.slice(0, 600) + '…';
   var h = pickHot(raw, src);
-  var url = firstStr(raw.link, raw.url, raw.mobileUrl, raw.share_url, raw.href, raw.html_url);
+  var url = firstStr(raw.html_url, raw.link, raw.url, raw.mobileUrl, raw.share_url, raw.href);
+  if (src.id === 'hn' && !url && /^\d+$/.test(raw.objectID)) url = 'https://news.ycombinator.com/item?id=' + raw.objectID;
   if (!url && src.searchUrl) url = src.searchUrl + encodeURIComponent(title);
   var rank = firstNum(raw.rank) || (idx + 1);
   return makeItem({
     sourceId: src.id, rank: rank, title: title, summary: summary,
     hot: h.hotText, hotRaw: h.hotRaw, url: url, meta: buildMeta(raw, src),
-    tags: pickTags(raw), ts: pickTime(raw), src: src
+    tags: pickTags(raw), ts: src.id === 'hn' ? 0 : pickTime(raw), src: src,
+    evidence: {eventKind:src.id === 'hn' ? '近期受关注' : '首次发布', tier:src.id === 'ghnew' ? 2 : 4,
+      attentionAt:src.id === 'hn' ? parseTimeLoose(raw.created_at) : 0,
+      publisher:src.id === 'ghnew' ? raw.owner && raw.owner.login : 'Hacker News'}
   });
 }
 
@@ -1791,11 +1742,22 @@ function classify(title, summary, src, ents) {
 /* =========================================================
    7. 派生计算：关注词命中 → 同事件聚类 → 信号分 → 排序
    ========================================================= */
+var TERM_GROUPS = [
+  ['推理模型','reasoning model','reasoning llm'], ['开放权重','open weight','open-weight'],
+  ['大语言模型','大模型','large language model','llm'], ['强化学习','reinforcement learning'],
+  ['人工智能','artificial intelligence'], ['开源','open source','open-source'],
+  ['多模态','multimodal'], ['英伟达','nvidia'], ['深度求索','deepseek'], ['通义千问','qwen'],
+  ['谷歌','google'], ['深度思维','deepmind'], ['语言模型推理引擎','vllm']
+];
+function matchesTerm(hay, query) {
+  if (hay.includes(query)) return true;
+  return TERM_GROUPS.some(group => group.includes(query) && group.some(alias => hay.includes(alias)));
+}
 function matchWatch(it, words) {
   if (!words || !words.length) return [];
   var hay = (it.title + ' ' + (it.summary || '') + ' ' + (it.ents || []).join(' ') + ' ' + (it.tags || []).join(' ')).toLowerCase();
   var hit = [];
-  for (var i = 0; i < words.length; i++) if (hay.indexOf(words[i]) >= 0) hit.push(words[i]);
+  for (var i = 0; i < words.length; i++) if (matchesTerm(hay, words[i])) hit.push(words[i]);
   return hit;
 }
 
@@ -1823,35 +1785,34 @@ function jaccard(a, b) {
 /* 跨平台标题用词几乎从不相同，「前 26 字精确匹配」实际命中率≈0。
    这里按同分类内的二元组集合相似度聚簇，只与已有簇头比较，代价近似 O(n·簇数) */
 function clusterItems(all) {
-  var groups = {}, n = 0, i, j;
-  for (i = 0; i < all.length; i++) {
-    var it = all[i];
-    it.clusterSize = 1;
-    it.clusterSrcs = [it.sourceId];
-    it.clusterHot = heatOf(it);
-    it.clusterParent = '';
-    if (!it._toks) it._toks = titleTokens(it.title);
-    it._sig = (it.ents && it.ents[0]) ? String(it.ents[0]).toLowerCase() : '';
-  }
-  for (i = 0; i < all.length; i++) {
-    var cur = all[i];
-    var heads = groups[cur.category] || (groups[cur.category] = []);
-    for (j = 0; j < heads.length; j++) {
-      var h = heads[j];
-      /* 同一平台榜单里的两条通常是两件事，不折叠 */
-      if (h.clusterSrcs.indexOf(cur.sourceId) >= 0) continue;
-      var sim = jaccard(h._toks, cur._toks);
-      var sameEnt = !!cur._sig && h._sig === cur._sig;
-      if (sim >= 0.5 || (sameEnt && sim >= 0.3)) {
-        cur.clusterParent = h.id;
-        h.clusterSize++;
-        h.clusterHot += heatOf(cur);
-        if (h.clusterSrcs.indexOf(cur.sourceId) < 0) h.clusterSrcs.push(cur.sourceId);
-        n++;
-        break;
-      }
+  var heads = [], n = 0;
+  for (var cur of all) {
+    cur.clusterSize = 1;
+    cur.clusterSrcs = [cur.sourceId];
+    cur.clusterParent = '';
+    cur.clusterHot = heatOf(cur);
+    cur.evidenceLinks = [];
+    cur._toks = titleTokens(cur.title);
+    var head = heads.find(function (h) {
+      if ((cur.url && cur.url === h.url) || (cur.eventKey && cur.eventKey === h.eventKey) || (cur.doi && cur.doi === h.doi)) return true;
+      if (cur.eventKey && h.eventKey && cur.sourceId.startsWith('release-') && h.sourceId.startsWith('release-')) return false;
+      if (h.category !== cur.category || h.clusterSrcs.includes(cur.sourceId)) return false;
+      // 不同论文、版本或数字结论即使标题近似，也保留独立事件。
+      if ((cur.eventKey && h.eventKey && /^(arxiv:|doi:)/.test(cur.eventKey) && /^(arxiv:|doi:)/.test(h.eventKey)) ||
+          (cur.title.match(/\d+(?:\.\d+)*/g) || []).join(',') !== (h.title.match(/\d+(?:\.\d+)*/g) || []).join(',')) return false;
+      return jaccard(h._toks, cur._toks) >= 0.72;
+    });
+    if (!head) { head = cur; heads.push(cur); }
+    else {
+      cur.clusterParent = head.id;
+      if (!head.clusterSrcs.includes(cur.sourceId)) head.clusterSrcs.push(cur.sourceId);
+      head.clusterSize = head.clusterSrcs.length;
+      n++;
     }
-    if (!cur.clusterParent) heads.push(cur);
+    for (var link of [{url:cur.url, label:cur.publisher}, {url:cur.recordUrl, label:'学术记录'},
+                      {url:cur.discoveryUrl, label:shortOf(cur.sourceId) + ' 收录'}]) {
+      if (link.url && !head.evidenceLinks.some(function (e) { return e.url === link.url; })) head.evidenceLinks.push(link);
+    }
   }
   state.mergedCount = n;
   return n;
@@ -1861,16 +1822,14 @@ function clusterItems(all) {
    跨平台热度量纲不可比（微博 780 万 vs 知乎 4 万），所以热度只按源内百分位计分 */
 function computeSignal(it) {
   var p = {}, a = it.ageH, f = it.evt ? facetById(it.evt) : null;
-  /* 热度先按源内百分位（微博 780 万与知乎 4 万不可直接比），再乘绝对量级系数：
-     否则夸克 6 个赞也能靠「本源第一」拿满热度项 */
-  var h = heatOf(it);
-  var abs = h > 0 ? Math.min(1, Math.log(h) / Math.log(1e6)) : 0;
-  p.热度 = h > 0 ? Math.round(32 * (it.hotPct || 0) * abs) : 5;
-  p.新鲜 = a < 0 ? 8 : (a < 3 ? 25 : (a < 12 ? 21 : (a < 24 ? 17 : (a < 72 ? 10 : 4))));
-  p.要素 = f ? Math.round(f.base * 0.75) : 0;
-  p.主体 = Math.min(8, (it.ents || []).length * 4);
-  p.同现 = Math.min(14, ((it.clusterSize || 1) - 1) * 7);
-  p.关注 = (it.watch && it.watch.length) ? 24 : 0;
+  p.出处 = it.url ? [0, 37, 24, 12, 3][it.tier] : 0;
+  p.新鲜 = a < 0 ? 0 : a < 6 ? 28 : a < 24 ? 24 : a < 48 ? 16 : a < 72 ? 6 : 0;
+  if (it.eventKind === '近期受关注' || it.eventKind === '发现') p.新鲜 = Math.min(5, p.新鲜);
+  if (it.eventKind === '论文修订') p.新鲜 = Math.min(8, p.新鲜);
+  p.要素 = f ? Math.min(12, Math.round(f.base * 0.6)) : 0;
+  p.主体 = Math.min(6, (it.ents || []).length * 2);
+  p.热度 = Math.round(4 * (it.hotPct || 0));
+  p.关注 = it.watch && it.watch.length ? 10 : 0;
   var sum = 0;
   for (var k in p) sum += p[k];
   it.signalParts = p;
@@ -1878,6 +1837,11 @@ function computeSignal(it) {
   return it.signal;
 }
 
+function eventPriority(it) {
+  if (['撤稿','更正'].includes(it.eventKind)) return 0;
+  if (['正式发表','重要更新'].includes(it.eventKind)) return 1;
+  return it.eventKind === '首次发布' || it.eventKind === '论文修订' ? 2 : 3;
+}
 function rebuildItems(buckets) {
   var all = [];
   Object.keys(buckets).forEach(function (id) {
@@ -1886,7 +1850,7 @@ function rebuildItems(buckets) {
   /* 同一来源出现重复标题时 id 会撞车（id = sourceId + 标题指纹），加序号兜底保证 DOM 唯一 */
   var seen = {};
   for (var i = 0; i < all.length; i++) {
-    all[i].id = all[i].sourceId + '-' + hash32(all[i].title);
+    all[i].id = all[i].sourceId + '-' + hash32(all[i].eventKey || all[i].title);
     all[i].ageH = ageHours(all[i].ts);
     if (seen[all[i].id] === undefined) { seen[all[i].id] = 0; continue; }
     seen[all[i].id]++;
@@ -1905,8 +1869,9 @@ function rebuildItems(buckets) {
       g[i].hotPct = heatOf(g[i]) > 0 ? Math.max(0.05, 1 - i / Math.max(1, g.length - 1)) : 0;
     }
   });
-  /* 先按热度排一次，让同事件的簇头落在最热的那条上（各平台榜单的原始热度最有代表性） */
-  all.sort(function (a, b) { return heatOf(b) - heatOf(a) || (b.ts || 0) - (a.ts || 0); });
+  // 同一事件优先展示更正和一手出处。
+  all.sort(function (a, b) {
+    return eventPriority(a) - eventPriority(b) || a.tier - b.tier || (b.ts || 0) - (a.ts || 0) || heatOf(b) - heatOf(a); });
   clusterItems(all);
   all.forEach(function (it) { computeSignal(it); });
   sortItems(all, null);
@@ -1943,7 +1908,7 @@ function snapshotSources(metas) {
   var seen = Object.create(null);
   return (Array.isArray(metas) ? metas : []).filter(function (m) {
     if (!m || !/^[a-z][a-z0-9-]{0,63}$/.test(m.id) || /^(constructor|prototype)$/.test(m.id) || seen[m.id]) return false;
-    if (SOURCES.some(function (src) { return src.id === m.id; })) return false;
+    if (!SNAPSHOT_IDS.has(m.id)) return false;
     seen[m.id] = true;
     return true;
   }).map(function (m) {
@@ -1959,8 +1924,20 @@ function snapshotSources(metas) {
   });
 }
 
+// 上游的采集结果保存在快照元数据中；快照下载失败只影响数据的新鲜度。
+function restoreSourceStatus() {
+  var cached = state.snap.fallback || !!state.snap.error;
+  state.snap.sources.forEach(function (m) {
+    var count = Math.min((state.buckets[m.id] || []).length, settings.perSourceLimit);
+    state.status[m.id] = {
+      ok: m.ok, failed: !m.ok, count: count, snap: true, stale: cached,
+      via: cached ? '上次快照' : '服务端快照', error: m.error
+    };
+  });
+}
+
 function ingestSnapshot(payload) {
-  if (!payload || payload.schema !== 1 || !Array.isArray(payload.items) || !Array.isArray(payload.sources)) throw new Error('快照结构或版本不支持');
+  if (!payload || payload.schema !== 2 || !Array.isArray(payload.items) || !Array.isArray(payload.sources)) throw new Error('快照结构或版本不支持');
   var at = saneTs(Number(payload.generatedAtMs));
   if (!at) throw new Error('快照生成时间无效');
   if (state.snap.loaded && at < state.snap.at) return false;
@@ -1976,30 +1953,19 @@ function ingestSnapshot(payload) {
       sourceId: meta.id, rank: buckets[meta.id].length + 1, title: row.title,
       summary: row.summary, hot: String(row.hot || ''), hotRaw: row.hotRaw,
       url: row.url, meta: tags.join(' · '), tags: tags,
-      ts: row.ts, src: meta, snap: true, snapAt: at
+      evidence: row, ts: row.ts, src: meta, snap: true, snapAt: at
     }));
   });
   // 完整解析后再替换，已删除或本轮失败的快照源不会残留旧条目。
   state.snap.sources.forEach(function (m) { delete state.buckets[m.id]; delete state.status[m.id]; });
   state.snap.sources = metas;
-  metas.forEach(function (m) {
-    state.buckets[m.id] = buckets[m.id];
-    var n = Math.min(buckets[m.id].length, settings.perSourceLimit);
-    state.status[m.id] = n
-      ? { ok: true, count: n, via: 'Actions 快照', snap: true }
-      : { ok: !!m.ok, failed: !m.ok, count: 0, snap: true,
-          error: m.ok ? '' : (m.error || '本轮快照里没有该源的条目') };
-  });
-  state.snap.fallback = !!payload.desktopFallback;
-  if (state.snap.fallback) metas.forEach(function (m) {
-    var st = state.status[m.id];
-    st.ok = false; st.failed = true; st.stale = st.count > 0;
-    st.via = '随应用附带的快照'; st.error = '离线快照：未连接到实时快照服务';
-  });
+  metas.forEach(function (m) { state.buckets[m.id] = buckets[m.id]; });
   state.snap.loaded = true;
   state.snap.at = at;
   state.snap.date = String(payload.date || '');
-  state.snap.error = '';
+  state.snap.fallback = !!payload.desktopFallback;
+  state.snap.error = state.snap.fallback ? cleanText(payload.snapshotError || '远端快照尚未取到') : '';
+  restoreSourceStatus();
   state.items = rebuildItems(state.buckets);
   if (!state.loading) updateMode();
   saveStore();
@@ -2007,18 +1973,34 @@ function ingestSnapshot(payload) {
   return true;
 }
 
+function readFileSnapshot() {
+  if (!/^file:/i.test(location.href) || settings.snapshotUrl) return Promise.resolve(false);
+  return new Promise(function (resolve) {
+    var script = document.createElement('script'), accepted = false;
+    window.readLocalBrief = function (snapshot) {
+      try { snapshot.desktopFallback = true; accepted = ingestSnapshot(snapshot); } catch (e) { state.snap.error = errText(e); }
+    };
+    script.onload = script.onerror = function () {
+      delete window.readLocalBrief;
+      script.remove();
+      resolve(accepted);
+    };
+    script.src = 'data/file-snapshot.js';
+    document.head.appendChild(script);
+  });
+}
+
 var _snapshotRequest = null;
 function loadSnapshot() {
   if (!settings.useSnapshot) return Promise.resolve(false);
   if (_snapshotRequest) return _snapshotRequest;
-  _snapshotRequest = fetchJson(snapshotUrl(), 10000).then(function (payload) {
+  _snapshotRequest = readFileSnapshot().then(function () {
+    return fetchJson(snapshotUrl(), 10000);
+  }).then(function (payload) {
     return ingestSnapshot(payload);
   }).catch(function (err) {
     state.snap.error = errText(err);
-    state.snap.sources.forEach(function (m) {
-      var count = (state.buckets[m.id] || []).length;
-      state.status[m.id] = { ok: false, failed: true, snap: true, stale: count > 0, count: count, error: state.snap.error };
-    });
+    restoreSourceStatus();
     if (!state.loading) updateMode();
     renderAll();
     return false;
@@ -2062,8 +2044,11 @@ function fetchOne(src, round) {
   return attemptOnce(1).then(function (res) {
     var r = res.r, raw = res.raw;
     if (raw.length) {
+      var prior = new Map((state.buckets[src.id] || []).map(it => [it.eventKey, it]));
       state.buckets[src.id] = raw.slice(0, limit).map(function (x, i) {
-        return normalizeItem(x, src, i);
+        var item = normalizeItem(x, src, i), old = prior.get(item.eventKey);
+        if (old) { item.firstSeenAt = old.firstSeenAt; item.eventSeenAt = old.eventSeenAt; }
+        return item;
       });
       state.status[src.id] = { ok: true, count: state.buckets[src.id].length, via: r.via };
     } else {
@@ -2110,7 +2095,8 @@ function finishRound(silent) {
   renderAll();
   setRefreshBtn(false);
   if (!silent) {
-    if (badCount === 0) toast('已更新 ' + state.items.length + ' 条（' + okCount + ' 个源）');
+    if (settings.useSnapshot && (state.snap.fallback || state.snap.error)) toast('远端快照未更新，已保留上次结果');
+    else if (badCount === 0) toast('已更新 ' + state.items.length + ' 条（' + okCount + ' 个源）');
     else toast('已更新 ' + state.items.length + ' 条：' + okCount + ' 个源正常，' + badCount + ' 个失败');
   }
 }
@@ -2182,7 +2168,7 @@ function retrySource(id) {
     toast('正在重新拉取服务端快照…');
     loadSnapshot().then(function (ok) {
       state.snap.retrying = false;
-      toast(ok ? '快照已更新' : '快照仍拉取失败：' + state.snap.error);
+      toast(ok && !state.snap.fallback ? '快照已更新' : '快照仍拉取失败：' + state.snap.error);
     });
     return;
   }
@@ -2223,7 +2209,7 @@ function visibleItems() {
     if (q) {
       var hay = (it.title + ' ' + (it.summary || '') + ' ' + (it.meta || '') + ' ' +
                  (it.ents || []).join(' ') + ' ' + (it.tags || []).join(' ')).toLowerCase();
-      if (hay.indexOf(q) < 0) return false;
+      if (!matchesTerm(hay, q)) return false;
     }
     return true;
   });
@@ -2251,8 +2237,19 @@ function freshHiddenCount() {
 }
 /* 同事件已聚成一个簇，代表条目就是簇头 */
 function topFlash(items, n) {
-  var out = settings.mergeSame ? collapseVisible(items) : items;
-  return out.slice(0, n);
+  var topics = Object.create(null), channels = Object.create(null), out = [];
+  for (var it of collapseVisible(items)) {
+    if ((it.academicStatus === '撤稿' && it.eventKind !== '撤稿') || !it.url || !it.ts || it.eventKind === '近期受关注' || ageHours(it.ts) > 48 || it.eventKind === '发现' || it.tier >= 4) continue;
+    if (it.eventKind === '论文修订' || /\/customer-stories\//.test(it.url)) continue;
+    if ((channels[it.sourceId] || 0) >= 3) continue;
+    var topic = it.category;
+    if ((topics[topic] || 0) >= 4) continue;
+    topics[topic] = (topics[topic] || 0) + 1;
+    channels[it.sourceId] = (channels[it.sourceId] || 0) + 1;
+    out.push(it);
+    if (out.length === n) break;
+  }
+  return out;
 }
 function isReleaseish(it) {
   var f = it.facets || [];
@@ -2261,7 +2258,7 @@ function isReleaseish(it) {
 }
 /* 今日新发布：不看热度，按时间倒序 —— 这正是「热度不高但想了解」那一类 */
 function newReleaseItems(items, n) {
-  var out = items.filter(function (it) { return isReleaseish(it) && it.ts; });
+  var out = items.filter(function (it) { return ['首次发布','重要更新','正式发表'].includes(it.eventKind) && isReleaseish(it) && it.ts && ageHours(it.ts) <= 24; });
   out.sort(function (a, b) { return (b.ts - a.ts) || (heatOf(b) - heatOf(a)); });
   return out.slice(0, n);
 }
@@ -2292,7 +2289,7 @@ function renderHeader() {
     var st = state.status[s.id];
     if (st && st.ok) { ok++; if (st.snap || s.isSnap) snapOk++; }
   });
-  $('srcText').textContent = ok + ' / ' + on.length + ' 在线 · ' + (ok - snapOk) + ' 实时 / ' + snapOk + ' 快照';
+  $('srcText').textContent = ok + ' / ' + on.length + ' 采集正常 · ' + (ok - snapOk) + ' 实时 / ' + snapOk + ' 快照';
 
   var b = $('stateBadge');
   var note = $('sourceNote');
@@ -2306,17 +2303,18 @@ function renderHeader() {
   } else if (!state.items.length) {
     b.className = 'state-badge state-demo';
     b.textContent = '▲ 无数据';
-    note.innerHTML = '所有数据源都没有返回数据（接口挂了 / 限流 / 断网）。下方每个源都写明了失败原因，可点「重试此源」逐个补。' + snapPart;
+    note.textContent = (ok ? '当前启用的来源在采集窗口内没有条目。' : '尚未取得内容，请查看下方的数据源状态。') + snapPart;
   } else if (state.mode === 'live') {
     b.className = 'state-badge state-live';
     b.textContent = ok === snapOk ? '● 服务端快照' : '● 实时数据';
-    note.textContent = '聚合公开热榜与发布动态。' + (settings.useSnapshot && state.snap.at ? ' ' + snapTip + '。' : '');
+    note.textContent = '收录公开研究与发布动态。' + (settings.useSnapshot && state.snap.at ? ' ' + snapTip + '。' : '');
   } else {
     var bad = 0;
     on.forEach(function (s) { var st = state.status[s.id]; if (!st || !st.ok) bad++; });
     b.className = 'state-badge state-mixed';
-    b.textContent = '◐ 部分源失败';
-    note.innerHTML = bad + ' 个源本次抓取失败，卡片上写明原因并可单独重试；<strong>保留的上次结果会标记为旧数据，不代表本次抓取成功</strong>。' + snapPart;
+    b.textContent = bad ? '◐ 部分源未更新' : '◐ 使用上次快照';
+    note.textContent = (bad ? bad + ' 个来源未取得本轮数据。' : '') +
+      (state.snap.error ? '远端快照未更新（' + state.snap.error + '）。' : '') + snapPart;
   }
 }
 
@@ -2430,7 +2428,7 @@ function shortOf(id) {
 function flashRowHtml(it, i, mode) {
   var s = sourceById(it.sourceId) || { short: '未知' };
   var n = it.clusterSize || 1;
-  var clump = n > 1 ? '<span class="clump">' + esc(it.clusterSrcs.map(shortOf).join('+')) + ' ' + n + ' 平台在热</span>' : '';
+  var clump = n > 1 ? '<span class="clump">' + esc(it.clusterSrcs.map(shortOf).join('+')) + ' ' + n + ' 个渠道收录</span>' : '';
   var lead = mode === 'release'
     ? '<span class="idx evt">' + (it.evt ? (facetById(it.evt) || {}).icon : '📌') + '</span>'
     : '<span class="idx">' + (i + 1) + '</span>';
@@ -2442,7 +2440,7 @@ function flashRowHtml(it, i, mode) {
     : '<span class="src">' + esc(s.short) + '</span>';
   return '<li>' + lead + title +
     (it.watch && it.watch.length ? '<span class="tag watch">⭐关注</span>' : '') +
-    (it.hot ? '<span class="hot">' + esc(it.hot) + '</span>' : '') + clump + tail + '</li>';
+    (it.eventKind ? '<span class="tag plain">' + esc(it.eventKind) + '</span>' : '') + clump + tail + '</li>';
 }
 function renderFlash() {
   var items = visibleItems();
@@ -2456,20 +2454,22 @@ function renderFlash() {
   var flashes = topFlash(items, 10);
   if (!flashes.length) {
     ul.innerHTML = (state.loading || state.booting) ? skelRows(4, 'flash')
-      : '<li style="color:var(--ink-3)">暂无条目。点「一键刷新」抓取实时热榜，或在设置里检查数据源与快照地址。</li>';
+      : '<li style="color:var(--ink-3)">暂无条目。可查看下方分类，或刷新以获取新发布。</li>';
   } else {
     ul.innerHTML = flashes.map(function (it, i) { return flashRowHtml(it, i, 'hot'); }).join('');
   }
 
   var rl = $('releaseList');
   if (rl) {
-    var rel = newReleaseItems(items, 8);
-    var low = lowHotSignalItems(items, 6);
-    var lowIds = {};
-    low.forEach(function (it) { lowIds[it.id] = 1; });
+    var shown = new Set(flashes.map(it => it.clusterParent || it.id));
+    var remaining = collapseVisible(items).filter(it => !shown.has(it.clusterParent || it.id));
+    var rel = newReleaseItems(remaining, 8);
+    rel.forEach(it => shown.add(it.clusterParent || it.id));
+    var low = lowHotSignalItems(remaining.filter(it => !shown.has(it.clusterParent || it.id) && it.ts && ageHours(it.ts) <= 48), 6);
+
     rl.innerHTML = rel.length
       ? rel.map(function (it, i) { return flashRowHtml(it, i, 'release'); }).join('')
-      : skelRows(3, 'flash');
+      : (state.loading ? skelRows(3, 'flash') : '<li>近 24 小时暂无其他新发布。</li>');
     var lo = $('lowHotList');
     if (lo) {
       lo.innerHTML = low.length
@@ -2495,17 +2495,20 @@ function itemHtml(it) {
   var c = categoryById(it.category) || { name: '未分类', icon: '📌', color: '#888' };
   var isOpen = !!state.expanded[it.id];
   var rankCls = it.rank <= 3 ? ' rank-' + it.rank : '';
+  var displayTime = it.ts ? fmtAge(it.ts) : '发现于 ' + fmtShort(it.firstSeenAt);
   var sumCls = 'item-sum' + (it.summary ? (isOpen ? ' open' : '') : ' none');
   var sumTxt = it.summary ? esc(it.summary)
     : '该数据源仅提供标题与热度值，未提供正文摘要，点「展开全文」可在本页直接抓取原文。';
   var f = it.evt ? facetById(it.evt) : null;
-  var chips = [];
+  var chips = ['<span class="tag plain">' + esc(it.eventKind) + ' · ' + ['','一手','专业收录','二手解读','社区线索'][it.tier] + '</span>'];
+  if (it.academicStatus && it.academicStatus !== it.eventKind) chips.push('<span class="tag plain">' + esc(it.academicStatus) + '</span>');
+  if (it.tier === 1 && /benchmark|outperform|accuracy|评测|准确率/i.test(it.title + ' ' + it.summary)) chips.push('<span class="tag plain">发布方报告</span>');
   if (f) chips.push('<span class="tag" style="--tg:' + f.color + '">' + f.icon + ' ' + esc(f.name) + '</span>');
   (it.ents || []).slice(0, 2).forEach(function (e) { chips.push('<span class="tag ent">' + esc(e) + '</span>'); });
   (it.nums || []).slice(0, 2).forEach(function (v) { chips.push('<span class="tag num">' + esc(v) + '</span>'); });
   if (it.watch && it.watch.length) chips.push('<span class="tag watch">⭐ 关注 ' + esc(it.watch.join('/')) + '</span>');
   var n = it.clusterSize || 1;
-  if (n > 1) chips.push('<span class="tag plain" title="' + esc(it.clusterSrcs.map(shortOf).join('、')) + '">🔗 ' + n + ' 平台在热</span>');
+  if (n > 1) chips.push('<span class="tag plain" title="' + esc(it.clusterSrcs.map(shortOf).join('、')) + '">🔗 ' + n + ' 个渠道收录</span>');
   if ((state.status[it.sourceId] || {}).stale) chips.push('<span class="tag plain">' + (it.snap && state.snap.fallback ? '离线快照' : '⚠ 上次结果') + '</span>');
   if (it.snap) chips.push('<span class="tag snap" title="' + esc(state.snap.at ? fmtShort(state.snap.at) : '') + '">📸 快照</span>');
   var sig = '<span class="sig" title="' + esc(sigTip(it)) + '"><i><s style="width:' + Math.max(6, it.signal || 0) + '%"></s></i><b>' + (it.signal || 0) + '</b></span>';
@@ -2518,12 +2521,13 @@ function itemHtml(it) {
         (it.hot ? '<span class="hot">' + esc(it.hot) + '</span>' : '') +
         '<span class="tag" style="--tg:' + s.color + '">' + esc(s.short) + '</span>' +
         '<span class="tag plain">' + c.icon + ' ' + esc(c.name) + '</span>' +
-        '<span class="age' + (it.ts ? '' : ' unk') + '">' + esc(fmtAge(it.ts)) + '</span>' +
+        '<span class="age' + (it.ts ? '' : ' unk') + '">' + esc(displayTime) + '</span>' +
         sig +
         chips.join('') +
         (it.meta ? '<span>' + esc(it.meta) + '</span>' : '') +
       '</div>' +
       '<div class="' + sumCls + '">' + sumTxt + '</div>' +
+      (isOpen ? '<div class="hint">' + esc(timeDetails(it)) + '</div>' + (it.evidenceLinks || []).map(e => '<a class="mini" href="' + esc(e.url) + '" target="_blank" rel="noopener noreferrer">' + esc(e.label) + ' ↗</a>').join(' ') : '') +
       (isOpen && it.url ? artHtml(it.id) : '') +
       '<div class="item-acts">' +
         (it.summary || it.url ? '<button class="mini" data-act="toggle" aria-expanded="' + isOpen + '">' + (isOpen ? '收起全文' : '展开全文') + '</button>' : '') +
@@ -2608,6 +2612,8 @@ function failedHtml(srcId, st) {
 function badgeFor(s) {
   var st = state.status[s.id];
   if (st && st.pending) return '<span class="badge b-wait"><span class="rot">↻</span> 抓取中</span>';
+  if (st && st.ok && st.stale) return '<span class="badge b-snap">上次快照</span>';
+  if (st && st.ok && !st.count) return '<span class="badge b-ok">暂无新增</span>';
   if (st && st.ok) return s.isSnap ? '<span class="badge b-snap">📸 快照</span>' : '<span class="badge b-ok">实时</span>';
   if (st && !st.ok && st.error) return '<span class="badge b-fail">' + (s.isSnap ? '快照缺数据' : '获取失败') + '</span>';
   if (s.isSnap) return '<span class="badge b-snap">📸 快照</span>';
@@ -2617,12 +2623,12 @@ function badgeFor(s) {
 
 function sortLabel() {
   return settings.sortMode === 'heat' ? '按热度'
-    : (settings.sortMode === 'time' ? '按发布时间' : '按信号分（热度 + 新鲜度 + 要素 + 关注）');
+    : (settings.sortMode === 'time' ? '按发布时间' : '按信号分（出处、时间、要素、关注与热度）');
 }
 /* 分类卡片内的三档分节：发布类按时间倒序、低热度高信号单独占一屏、其余按当前排序 */
 function sectionsFor(list) {
   var used = {}, rel = [], low = [], rest = [], i;
-  for (i = 0; i < list.length; i++) if (isReleaseish(list[i])) { rel.push(list[i]); used[list[i].id] = 1; }
+  for (i = 0; i < list.length; i++) if (isReleaseish(list[i]) && ['首次发布','正式发表','重要更新'].includes(list[i].eventKind)) { rel.push(list[i]); used[list[i].id] = 1; }
   sortItems(rel, 'time');
   low = lowHotSignalItems(list.filter(function (it) { return !used[it.id]; }), 4);
   for (i = 0; i < low.length; i++) used[low[i].id] = 1;
@@ -2729,7 +2735,10 @@ function renderStatus() {
     var okTxt, cls, act;
     if (!st) { okTxt = s.isSnap ? '快照未取到' : '未获取'; cls = 'b-err'; }
     else if (st.pending) { okTxt = '抓取中…'; cls = 'b-wait'; }
-    else if (st.ok) { okTxt = '正常（' + esc(st.via || '直连') + '）'; cls = 'b-ok'; }
+    else if (st.ok) {
+      okTxt = (st.stale ? '上次采集正常' : '正常') + (st.count ? '（' + esc(st.via || '直连') + '）' : ' · 窗口内暂无新增');
+      cls = st.stale ? 'b-snap' : 'b-ok';
+    }
     else { okTxt = '失败：' + esc(st.error || '未知原因'); cls = 'b-fail'; }
     act = (st && st.ok) ? '' : '<button class="mini" data-retry="' + esc(s.id) + '">重试此源</button>';
     return '<tr><td><span class="dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' +
@@ -2743,6 +2752,7 @@ function renderStatus() {
        (state.snap.loaded ? ' · 生成于 ' + esc(state.snap.at ? fmtShort(state.snap.at) : '') + '（' + esc(state.snap.at ? ago(state.snap.at) : '--') + '）'
                           : ' · 本次未取到' + (state.snap.error ? '（' + esc(state.snap.error) + '）' : '')))
     : '服务端快照已在设置里关闭';
+  if (settings.useSnapshot && state.snap.loaded && state.snap.error) snapLine += ' · 更新失败：' + esc(state.snap.error);
   $('srcStatus').innerHTML =
     '<div class="card" style="--c:#888"><div class="card-body" style="padding:10px 12px">' +
     '<table class="src-table"><thead><tr><th>数据源</th><th>接口</th><th>条目</th><th>状态 / 重试</th></tr></thead>' +
@@ -2799,6 +2809,10 @@ function copyText(text, tip) {
   } else { fallback(); }
 }
 
+function timeDetails(it) {
+  return [['原始发布', it.publishedAt], ['修订', it.updatedAt], ['入榜', it.attentionAt], ['首次发现', it.firstSeenAt]]
+    .filter(pair => pair[1]).map(pair => pair[0] + ' ' + fmtTime(new Date(pair[1]))).join(' · ');
+}
 function itemToText(it) {
   var s = sourceById(it.sourceId) || { short: '未知' };
   var c = categoryById(it.category) || { name: '未分类' };
@@ -2814,10 +2828,12 @@ function itemToText(it) {
   out += '\n时间：' + fmtAge(it.ts) + ' · 信号分：' + (it.signal || 0);
   if ((it.clusterSize || 1) > 1) out += '\n同事件：' + it.clusterSrcs.map(shortOf).join('+') + ' 共 ' + it.clusterSize + ' 个平台';
   if (it.meta) out += ' · ' + it.meta;
-  if ((state.status[it.sourceId] || {}).stale) out += '\n状态：上次结果，本次抓取失败';
+  if ((state.status[it.sourceId] || {}).stale) out += it.snap ? '\n状态：上次快照，远端更新未取得' : '\n状态：上次结果，本次抓取失败';
   if (it.summary) out += '\n摘要：' + it.summary;
   else out += '\n摘要：该数据源未提供正文摘要';
+  out += '\n' + it.eventKind + ' · ' + timeDetails(it);
   if (it.url) out += '\n原文：' + it.url;
+  (it.evidenceLinks || []).filter(e => e.url !== it.url).forEach(e => { out += '\n' + e.label + '：' + e.url; });
   return out;
 }
 
@@ -2850,10 +2866,13 @@ function buildReportText() {
       var s = sourceById(it.sourceId) || { short: '未知' };
       var n = it.clusterSize || 1;
       L.push(' ' + pad(i + 1) + '. ' + it.title + '　（' + s.short + (it.hot ? ' · ' + it.hot : '') +
-        (n > 1 ? ' · ' + it.clusterSrcs.map(shortOf).join('+') + ' ' + n + ' 平台在热' : '') + '）');
+        (n > 1 ? ' · ' + it.clusterSrcs.map(shortOf).join('+') + ' ' + n + ' 个渠道收录' : '') + '）');
     });
   }
-  var rel = newReleaseItems(items, 8);
+  var shown = new Set(flashes.map(it => it.clusterParent || it.id));
+    var remaining = collapseVisible(items).filter(it => !shown.has(it.clusterParent || it.id));
+    var rel = newReleaseItems(remaining, 8);
+    rel.forEach(it => shown.add(it.clusterParent || it.id));
   if (rel.length) {
     L.push('');
     L.push('【🆕 今日新发布 · 发布/开源/论文，按时间倒序，不看热度】');
@@ -2863,7 +2882,7 @@ function buildReportText() {
       if (it.url) L.push('      ' + it.url);
     });
   }
-  var low = lowHotSignalItems(items, 6);
+  var low = lowHotSignalItems(remaining.filter(it => !shown.has(it.clusterParent || it.id) && it.ts && ageHours(it.ts) <= 48), 6);
   if (low.length) {
     L.push('');
     L.push('【📌 热度不高但值得关注】');
@@ -2949,7 +2968,6 @@ function download(filename, text, mime) {
    ========================================================= */
 function renderSettingsForm() {
   $('setTheme').value = settings.theme;
-  $('setApiBase').value = settings.apiBase;
   $('setProxyMode').value = settings.proxyMode;
   $('setProxy').value = settings.proxy;
   $('setLimit').value = settings.perSourceLimit;
@@ -2994,7 +3012,6 @@ function closeSettings() {
 }
 function readSettingsForm() {
   var next = clone(settings);
-  next.apiBase = String($('setApiBase').value || '').trim() || DEFAULT_SETTINGS.apiBase;
   next.proxyMode = $('setProxyMode').value;
   next.proxy = String($('setProxy').value || '').trim();
   next.perSourceLimit = Math.min(50, Math.max(5, Number($('setLimit').value) || 15));
@@ -3143,13 +3160,13 @@ function bindEvents() {
   function addWatch() {
     var v = String(wIn.value || '').trim();
     if (!v) return;
-    var cur = settings.watch ? settings.watch.split(/[,，;；\s]+/) : [];
-    v.split(/[,，;；\s]+/).forEach(function (x) {
+    var cur = settings.watch ? settings.watch.split(/[,，;；\n]+/) : [];
+    v.split(/[,，;；\n]+/).forEach(function (x) {
       x = x.trim();
       if (!x) return;
       if (cur.map(function (y) { return y.toLowerCase(); }).indexOf(x.toLowerCase()) < 0) cur.push(x);
     });
-    settings.watch = cur.join(' ').slice(0, 240);
+    settings.watch = cur.join(', ').slice(0, 240);
     wIn.value = '';
     saveStore();
     recompute();
@@ -3164,9 +3181,9 @@ function bindEvents() {
     var b = e.target.closest('button[data-delw]');
     if (!b) return;
     var w = b.getAttribute('data-delw');
-    settings.watch = settings.watch.split(/[,，;；\s]+/).filter(function (x) {
-      return x && x.toLowerCase() !== w;
-    }).join(' ').slice(0, 240);
+    settings.watch = settings.watch.split(/[,，;；\n]+/).filter(function (x) {
+      return x && x.trim().toLowerCase() !== w;
+    }).join(', ').slice(0, 240);
     saveStore();
     recompute();
   });
@@ -3258,7 +3275,7 @@ function bindEvents() {
       freshOnly: !!settings.freshOnly,
       watch: watchWords(),
       mergedCount: state.mergedCount || 0,
-      settings: { apiBase: settings.apiBase, perSourceLimit: settings.perSourceLimit },
+      settings: { perSourceLimit: settings.perSourceLimit },
       sources: activeSources().map(function (s) {
         var st = state.status[s.id] || {};
         return { id: s.id, name: s.name, path: shortPath(s), snapshot: !!s.isSnap,
@@ -3270,7 +3287,9 @@ function bindEvents() {
           category: (categoryById(it.category) || {}).name || '',
           rank: it.rank, title: it.title, hot: it.hot, hotRaw: it.hotRaw,
           summary: it.summary, meta: it.meta, url: it.url,
-          ts: it.ts || 0, published: it.ts ? new Date(it.ts).toISOString() : '',
+          ts: it.ts || 0, published: it.publishedAt ? new Date(it.publishedAt).toISOString() : '',
+          eventKey: it.eventKey, eventKind: it.eventKind, tier: it.tier, publisher: it.publisher, academicStatus: it.academicStatus,
+          firstSeenAt: it.firstSeenAt, eventSeenAt: it.eventSeenAt, updatedAt: it.updatedAt, attentionAt: it.attentionAt, evidence: it.evidenceLinks,
           ageHours: it.ageH >= 0 ? Math.round(it.ageH * 10) / 10 : null,
           event: it.evt, facets: it.facets, entities: it.ents, numbers: it.nums,
           watch: it.watch, signal: it.signal, signalParts: it.signalParts,

@@ -32,7 +32,7 @@ function readClientSources() {
   const m = /var SOURCES = (\[[\s\S]*?\n\]);/.exec(src);
   if (!m) throw new Error('没在页面里找到 SOURCES 数组');
   const base = /apiBase:\s*'([^']+)'/.exec(src);
-  return { sources: new Function('return ' + m[1])(), apiBase: base ? base[1] : 'https://60s.viki.moe' };
+  return { sources: new Function('return ' + m[1])(), apiBase: base ? base[1] : '' };
 }
 
 /* 与页面 extractItems 保持同一套取数组规则 */
@@ -122,7 +122,7 @@ async function main() {
         const raws = await src.run();
         const done = finalize(src, raws, {});
         row.count = done.length;
-        row.ok = done.length > 0;
+        row.ok = done.length > 0 || !!src.allowEmpty;
         row.sample = done.length ? done[0].title.slice(0, 44) : '';
         row.note = done.length ? '通过' : '0 条';
         const noTs = done.filter((x) => !x.ts).length;

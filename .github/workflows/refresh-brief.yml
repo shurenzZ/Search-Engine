@@ -33,7 +33,19 @@ jobs:
       - name: 离线回归测试
         run: node --test tests/*.test.mjs
 
+      - name: 计算 HTTP 缓存日期
+        id: cache-day
+        run: echo "day=$(date -u +%F)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        with:
+          path: data/.http-cache
+          key: brief-http-v2-${{ steps.cache-day.outputs.day }}
+          restore-keys: brief-http-v2-
+
       - name: 抓取并生成快照
+        env:
+          BRAVE_SEARCH_API_KEY: ${{ secrets.BRAVE_SEARCH_API_KEY }}
         run: node tools/build-brief.mjs
 
       - name: 提交快照

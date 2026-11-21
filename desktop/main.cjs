@@ -5,7 +5,10 @@ const { APP_URL, isAppUrl, isExternalUrl, validateExport, contentSecurityPolicy 
 const { installReader, readerResponse, openArticle, closeReader } = require('./reader.cjs');
 
 const root = path.join(__dirname, '..');
-const snapshotUrl = 'https://raw.githubusercontent.com/shurenzZ/Search-Engine/main/data/latest.json';
+const snapshotUrls = [
+  'https://raw.githubusercontent.com/shurenzZ/Search-Engine/main/data/latest.json',
+  'https://api.github.com/repos/shurenzZ/Search-Engine/contents/data/latest.json?ref=main'
+];
 let mainWindow;
 
 protocol.registerSchemesAsPrivileged([{ scheme: 'brief', privileges: {
@@ -22,19 +25,22 @@ function readArticle(url) {
 }
 
 async function snapshotResponse() {
-  try {
-    const response = await net.fetch(snapshotUrl, { cache: 'no-store', signal: AbortSignal.timeout(6500) });
-    if (!response.ok) throw new Error('远程快照不可用');
-    const text = await response.text();
-    const payload = JSON.parse(text);
-    if (payload.schema !== 1 || !Array.isArray(payload.items)) throw new Error('快照格式无效');
-    return new Response(text, { headers: { 'Content-Type': 'application/json' } });
-  } catch {
-    // 断网时使用随应用分发的真实快照，保留原始时间并明确标记。
-    const payload = JSON.parse(await readFile(path.join(root, 'data/latest.json'), 'utf8'));
-    payload.desktopFallback = true;
-    return Response.json(payload);
+  let lastError;
+  for (const url of snapshotUrls) {
+    try {
+      const response = await net.fetch(url, {cache:'no-store', signal:AbortSignal.timeout(4000),
+        headers:{Accept:'application/vnd.github.raw+json'}});
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const payload = await response.json();
+      if (payload.schema !== 2 || !Array.isArray(payload.sources) || !Array.isArray(payload.items))
+        throw new Error('快照格式无效');
+      return Response.json(payload);
+    } catch (error) { lastError = error; }
   }
+  const payload = JSON.parse(await readFile(path.join(root, 'data/latest.json'), 'utf8'));
+  payload.desktopFallback = true;
+  payload.snapshotError = String(lastError?.message || '快照未取到').slice(0, 160);
+  return Response.json(payload);
 }
 
 async function createWindow() {

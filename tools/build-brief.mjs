@@ -2,12 +2,12 @@
 /* 服务端定时抓取：产出 data/latest.json 供页面直读（raw.githubusercontent 的 CORS 是全开的）。
    用法：node tools/build-brief.mjs [--dry] [--only id,id] [--gap 1500] [--out data] */
 
-import { writeFile, rename, mkdir, readdir, rm } from 'node:fs/promises';
+import { readFile, writeFile, rename, mkdir, readdir, rm } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SERVER_SOURCES, finalize, SNAPSHOT_SCHEMA } from './sources-server.mjs';
-import { sleep, fmtDate } from './lib.mjs';
+import { sleep, fmtDate, enableRequestCache } from './lib.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -29,7 +29,23 @@ async function main() {
   if (ONLY.length && !DRY && OUT_DIR === path.join(ROOT, 'data')) {
     throw new Error('--only 请配合 --dry 或独立 --out 目录，避免用部分数据覆盖完整快照');
   }
+  if (!DRY) await enableRequestCache(path.join(OUT_DIR, '.http-cache'));
   const now = Date.now();
+  const historyFile = path.join(OUT_DIR, 'observations.json');
+  const previous = new Map();
+  const cutoff = now - 90 * 86400000;
+  for (const filename of [historyFile, path.join(OUT_DIR, 'latest.json')]) {
+    try {
+      const file = JSON.parse(await readFile(filename, 'utf8'));
+      if (file.schema !== SNAPSHOT_SCHEMA || !Array.isArray(file.items)) continue;
+      for (const row of file.items) {
+        const lastSeenAt = row.lastSeenAt || file.generatedAtMs;
+        if (lastSeenAt >= cutoff) previous.set(row.id, {...previous.get(row.id), ...row, lastSeenAt});
+      }
+    } catch (error) {
+      if (error.code !== 'ENOENT' && !(error instanceof SyntaxError)) throw error;
+    }
+  }
   const sources = ONLY.length ? SERVER_SOURCES.filter((s) => ONLY.includes(s.id)) : SERVER_SOURCES;
   const srcMeta = [];
   const items = [];
@@ -43,16 +59,13 @@ async function main() {
       ok: false, count: 0, error: ''
     };
     try {
-      const raws = await src.run();
-      const done = finalize(src, raws, { now: now });
+      const raws = await src.run({papers: items, previous});
+      const done = finalize(src, raws, { now: Date.now(), previous });
       if (!done.length && !src.allowEmpty) {
-        /* 「接口没数据」和「有数据但全被时间窗滤掉」是两件不同的事，混成一条会误导排查 */
-        if (raws.length) {
-          const newest = Math.max.apply(null, raws.map((r) => r.ts || 0));
-          throw new Error('接口有 ' + raws.length + ' 条，但被 ' + src.maxAgeH + 'h 时间窗全部过滤' +
-            (newest ? '（最新一条 ' + new Date(newest).toISOString().slice(0, 10) + '）' : ''));
-        }
-        throw new Error('接口返回 0 条');
+        if (!raws.length) throw new Error('接口返回 0 条');
+        const outside = raws.every(r => r?.title && r.ts && src.maxAgeH &&
+          Math.max(r.ts, r.updatedAt || 0, r.attentionAt || 0) < now - src.maxAgeH * 3600e3);
+        if (!outside) throw new Error('上游条目均无法归一化，请检查标题与日期字段');
       }
       items.push(...done);
       meta.ok = true;
@@ -69,6 +82,21 @@ async function main() {
     if (i < sources.length - 1) await sleep(GAP);
   }
 
+  // 已核验的论文状态随原文展示，修订通知在当天的候选中另有对应展示。
+  const status = new Map();
+  for (const row of [...previous.values(), ...items]) {
+    if (row.sourceId !== 'crossref') continue;
+    const old = status.get(row.eventKey);
+    if (!old || row.ts >= old.ts) status.set(row.eventKey, row);
+  }
+  for (const row of items) {
+    const notice = status.get(row.eventKey);
+    if (notice) {
+      row.academicStatus = notice.eventKind;
+      row.recordUrl = notice.recordUrl;
+    }
+    previous.set(row.id, {...row, lastSeenAt: Date.now()});
+  }
   const payload = {
     schema: SNAPSHOT_SCHEMA,
     app: 'search-engine-brief',
@@ -83,7 +111,7 @@ async function main() {
   const hash = createHash('sha256').update(body).digest('hex').slice(0, 16);
   const manifest = {
     schema: SNAPSHOT_SCHEMA,
-    hash: hash,
+    hash,
     generatedAt: payload.generatedAt,
     generatedAtMs: now,
     itemCount: items.length,
@@ -91,7 +119,7 @@ async function main() {
     sources: srcMeta.map((s) => ({ id: s.id, ok: s.ok, count: s.count, error: s.error }))
   };
 
-  const live = items.filter((it) => !it.ts || now - it.ts <= 48 * 3600e3).length;
+  const live = items.filter((it) => it.ts && now - it.ts <= 48 * 3600e3).length;
   console.log('\n合计 ' + items.length + ' 条（其中 48h 内 ' + live + ' 条），' +
     manifest.okCount + '/' + srcMeta.length + ' 个源正常，hash ' + hash);
 
@@ -104,7 +132,16 @@ async function main() {
 
   if (!items.length && srcMeta.some((s) => !s.ok)) throw new Error('所有源均无可用条目，保留现有快照');
   await mkdir(path.join(OUT_DIR, 'archive'), { recursive: true });
+  const history = [...previous.values()].map(({id, sourceId, eventKey, firstSeenAt, eventSeenAt, ts,
+    eventKind, lastSeenAt, doi, title, url, publishedAt, recordUrl}) => ({
+    id, sourceId, eventKey, firstSeenAt, eventSeenAt, ts, eventKind, lastSeenAt,
+    ...(sourceId === 'arxiv' ? {doi, title, url, publishedAt} : {}),
+    ...(sourceId === 'crossref' ? {recordUrl} : {})
+  }));
+  await writeAtomic(historyFile, JSON.stringify({schema: SNAPSHOT_SCHEMA, items: history}));
   await writeAtomic(path.join(OUT_DIR, 'latest.json'), body);
+  // file:// 页面无法 fetch 同目录 JSON，用同一份已序列化数据提供本地离线入口。
+  await writeAtomic(path.join(OUT_DIR, 'file-snapshot.js'), 'window.readLocalBrief(' + body.replace(/</g, '\\u003c') + ');\n');
   await writeAtomic(path.join(OUT_DIR, 'archive', payload.date + '.json'), body);
   await writeAtomic(path.join(OUT_DIR, 'manifest.json'), JSON.stringify(manifest, null, 1));
   await pruneArchive();
@@ -126,7 +163,10 @@ async function pruneArchive() {
   for (const n of names) {
     const m = /^(\d{4}-\d{2}-\d{2})\.json$/.exec(n);
     if (!m) continue;
-    if (Date.parse(m[1] + 'T23:59:59Z') < cutoff) await rm(path.join(dir, n), { force: true });
+    if (Date.parse(m[1] + 'T23:59:59Z') >= cutoff) continue;
+    const file = path.join(dir, n);
+    // 旧数据集作为迁移前的对照，继续对本版的滚动快照执行原有保留期。
+    if (JSON.parse(await readFile(file, 'utf8')).schema === SNAPSHOT_SCHEMA) await rm(file, { force: true });
   }
 }
 
