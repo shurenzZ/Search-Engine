@@ -22,6 +22,21 @@ function seed(ctx) {
     }); state.items = rebuildItems(state.buckets);`);
 }
 
+test('侧栏隐藏空分类，选中分类清空时返回全部，重新有条目时恢复入口', () => {
+  const ctx = browser();
+  const draw = () => Array.from(ctx.run(`renderChips(); Array.from($('categoryChips').innerHTML.matchAll(/data-fc="([^"]+)"/g), m => m[1])`));
+  ctx.run("state.items = [{category:'ai'}, {category:'game'}]; state.fCategory = 'game'");
+  assert.deepEqual(draw(), ['all', 'ai', 'game']);
+  assert.equal(ctx.run('state.fCategory'), 'game');
+  ctx.run('state.items.pop()');
+  assert.deepEqual(draw(), ['all', 'ai']);
+  assert.equal(ctx.run('state.fCategory'), 'all');
+  ctx.run('state.items = []');
+  assert.deepEqual(draw(), ['all']);
+  ctx.run("state.items = [{category:'game'}]");
+  assert.deepEqual(draw(), ['all', 'game']);
+});
+
 test('时间及热度解析在浏览器和服务端一致', () => {
   const ctx = browser();
   for (const value of [946684800000, '2000-01-01T00:00:00Z', 1700000000, '', '1604', Infinity]) {
@@ -328,7 +343,7 @@ test('游戏和动漫独立分类，普通热榜也能识别 CS2', () => {
   assert.equal(ctx.run('categoryById("anime").name'), '动漫');
   assert.equal(ctx.run('classify("CS2 比赛", "", sourceById("hn"), []).id'), 'game');
   assert.equal(ctx.run('classify("动漫番剧新作公布", "", sourceById("hn"), []).id'), 'anime');
-  ctx.run('renderChips();');
+  ctx.run('state.items = [{category:"game"}, {category:"anime"}]; renderChips();');
   assert.match(ctx.document.getElementById('categoryChips').innerHTML, /data-fc="game">[\s\S]*?nav-name">游戏<\/span>/);
   assert.match(ctx.document.getElementById('categoryChips').innerHTML, /data-fc="anime">[\s\S]*?nav-name">动漫<\/span>/);
 });

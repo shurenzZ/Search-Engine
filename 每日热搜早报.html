@@ -661,7 +661,7 @@ details .body ul{margin:4px 0;padding-left:18px}
 var STORAGE_KEY = 'hot_daily_brief_v1';
 /* 缓存结构版本：与 APP_VERSION 分开，升版只作废条目、保留用户设置 */
 var CACHE_SCHEMA = 3;
-var APP_VERSION = '4.0.0';
+var APP_VERSION = '4.0.1';
 var WEEK = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
 
 /* 服务端快照的兜底仓库：页面从别处打开（file://）时用它拼出 raw 地址 */
@@ -2334,12 +2334,17 @@ function renderChips() {
   pc.innerHTML = html;
 
   var cc = $('categoryChips');
+  var categoryCounts = Object.create(null);
+  items.forEach(function (it) {
+    categoryCounts[it.category] = (categoryCounts[it.category] || 0) + 1;
+  });
+  if (state.fCategory !== 'all' && !categoryCounts[state.fCategory]) state.fCategory = 'all';
   var c2 = '<span class="filters-label">分类</span>';
   function navIcon(id) { return '<svg class="icon" aria-hidden="true"><use href="#i-' + id + '"></use></svg>'; }
   c2 += '<button class="chip' + (state.fCategory === 'all' ? ' on' : '') + '" data-fc="all">' + navIcon('all') + '<span class="nav-name">全部资讯</span><span class="nav-count">' + items.length + '</span></button>';
   CATEGORIES.forEach(function (c) {
-    var n = 0;
-    for (var i = 0; i < items.length; i++) if (items[i].category === c.id) n++;
+    var n = categoryCounts[c.id];
+    if (!n) return;
     c2 += '<button class="chip' + (state.fCategory === c.id ? ' on' : '') + '" data-fc="' + c.id + '">' +
       navIcon(c.id) + '<span class="nav-name">' + esc(c.name) + '</span><span class="nav-count">' + n + '</span></button>';
   });
@@ -2765,8 +2770,8 @@ function renderStatus() {
 }
 
 function renderAll() {
-  renderHeader();
   renderChips();
+  renderHeader();
   renderFlash();
   renderMain();
   renderStatus();

@@ -62,7 +62,12 @@ async function run() {
   assert.equal(await evaluate(() => typeof window.require), 'undefined');
   assert.equal(await evaluate(() => typeof window.process), 'undefined');
   assert.equal(await evaluate(() => Object.keys(window.desktop).sort().join(',')), 'copyText,platform,saveFile,setTheme');
-  assert.equal(await evaluate(() => document.querySelectorAll('#categoryChips [data-fc]').length), 12);
+  const categories = await evaluate(() => [...document.querySelectorAll('#categoryChips [data-fc]')].map(button => ({
+    id: button.dataset.fc, count: Number(button.querySelector('.nav-count').textContent)
+  })));
+  assert.equal(categories[0].id, 'all');
+  assert.ok(categories.length > 1 && categories.slice(1).every(category => category.count > 0));
+  assert.equal(categories[0].count, categories.slice(1).reduce((total, category) => total + category.count, 0));
   assert.equal(await evaluate(() => document.body.classList.contains('desktop')), true);
   assert.ok(await evaluate(() => {
     const select = document.getElementById('sortSel');
@@ -81,8 +86,8 @@ async function run() {
   await evaluate(() => document.querySelector('[data-theme-choice="system"]').click());
   await until(() => nativeTheme.themeSource === 'system', '原生系统主题');
 
-  await evaluate(() => document.querySelector('[data-fc="game"]').click());
-  assert.equal(await evaluate(() => document.querySelector('[data-fc="game"]').classList.contains('on')), true);
+  await evaluate(id => document.querySelector('[data-fc="' + id + '"]').click(), categories[1].id);
+  assert.equal(await evaluate(() => document.querySelector('#categoryChips .on').dataset.fc), categories[1].id);
   await evaluate(() => document.querySelector('[data-fc="all"]').click());
   const firstTitle = await evaluate(() => document.querySelector('#main .item-title').textContent);
   await evaluate((q) => { const input = document.getElementById('q'); input.value = q; input.dispatchEvent(new Event('input')); }, firstTitle);
