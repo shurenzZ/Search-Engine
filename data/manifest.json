@@ -1,9 +1,9 @@
 {
  "schema": 2,
- "hash": "a3e96ac736243cfd",
- "generatedAt": "2026-11-21T04:17:04.462Z",
- "generatedAtMs": 1795234624462,
- "itemCount": 218,
+ "hash": "173eab4a52a83b15",
+ "generatedAt": "2026-11-21T13:01:08.698Z",
+ "generatedAtMs": 1795266068698,
+ "itemCount": 181,
  "okCount": 23,
  "sources": [
   {
@@ -75,19 +75,19 @@
   {
    "id": "arxiv-math",
    "ok": true,
-   "count": 12,
+   "count": 0,
    "error": ""
   },
   {
    "id": "arxiv-physics",
    "ok": true,
-   "count": 12,
+   "count": 0,
    "error": ""
   },
   {
    "id": "arxiv-cs",
    "ok": true,
-   "count": 12,
+   "count": 0,
    "error": ""
   },
   {
@@ -105,7 +105,7 @@
   {
    "id": "release-transformers",
    "ok": true,
-   "count": 0,
+   "count": 1,
    "error": ""
   },
   {
@@ -135,7 +135,7 @@
   {
    "id": "cs2matches",
    "ok": true,
-   "count": 3,
+   "count": 1,
    "error": ""
   },
   {
