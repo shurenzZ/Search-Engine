@@ -578,3 +578,32 @@ test('离线回退逐源保留成功、正常零条和上游错误，恢复远�
   assert.equal(ctx.run('state.status.hf.stale'),false);
   assert.equal(ctx.run('state.snap.error'),'');
 });
+
+test('新增机构目录、Claude 日期锚点和学科公告进入真实页面', async () => {
+  const {anthropicDirectory, claudeNotes, metaBlog, preprintAnnouncements} = await import('../tools/research-sources.mjs');
+  const cards = '<main><div data-listing-row="1"><time>Jan 2, 2025</time><a href="/model-release"><h3>New model</h3></a></div></main>';
+  assert.equal(anthropicDirectory(cards,'官方公告')[0].url, 'https://www.anthropic.com/model-release');
+  assert.throws(() => anthropicDirectory('<main></main>','研究'), /未解析/);
+  const meta = metaBlog('<div><a href="https://ai.meta.com/blog/example/">Meta release</a></div><div>Jan 2, 2025</div>');
+  assert.equal(meta[0].title, 'Meta release');
+  const notes = claudeNotes('### January 2, 2025\n\n* Added GPU support.\n\n### January 1, 2025\n\n* Added batching.');
+  const at = Date.UTC(2025,0,3);
+  const source = id => SERVER_SOURCES.find(s => s.id === id);
+  const changes = finalize(source('anthropic'),notes,{now:at});
+  assert.equal(changes.length,2);
+  assert.ok(changes[0].url.endsWith('#january-2-2025'));
+  const item = type => '<item><title>New theorem</title><link>https://arxiv.org/abs/2501.00001</link><category>math.NT</category><pubDate>Thu, 2 Jan 2025 05:00:00 GMT</pubDate><arxiv:announce_type>'+type+'</arxiv:announce_type></item>';
+  const rss = '<rss><channel><title>math updates on arXiv.org</title>'+item('replace')+item('new')+'</channel></rss>';
+  const papers = finalize(source('arxiv-math'),preprintAnnouncements(rss,'数学'),{now:at});
+  assert.equal(papers.length,1);
+  assert.equal(papers[0].publishedAt,0);
+  assert.equal(papers[0].ts,papers[0].attentionAt);
+  assert.equal(papers[0].eventKind,'新稿公告');
+  const ctx = browser();
+  const metas = SERVER_SOURCES.map(s=>({...s,ok:true}));
+  ingest(ctx,{schema:2,generatedAtMs:Date.now(),sources:metas,items:[...changes,...papers]});
+  assert.equal(ctx.run('state.snap.sources.length'),metas.length);
+  assert.equal(ctx.run('state.items.find(x=>x.sourceId==="arxiv-math").category'),'math');
+  assert.equal(ctx.run('state.items.find(x=>x.sourceId==="arxiv-math").publishedAt'),0);
+  assert.equal(ctx.run('state.items.filter(x=>x.sourceId==="anthropic" && !x.clusterParent).length'),2);
+});

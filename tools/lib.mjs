@@ -20,7 +20,7 @@ export function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms);
 
 async function request(url, asText) {
   const endpoint = new URL(url);
-  const cacheable = cacheDir && ['api.github.com','export.arxiv.org','openai.com','blog.google','deepmind.google'].includes(endpoint.hostname);
+  const cacheable = cacheDir && ['api.github.com','export.arxiv.org','rss.arxiv.org','openai.com','blog.google','deepmind.google','www.anthropic.com','platform.claude.com','www.microsoft.com','ai.meta.com','engineering.fb.com','feeds.aps.org','annals.math.princeton.edu'].includes(endpoint.hostname);
   const file = cacheable && path.join(cacheDir, createHash('sha256').update(url).digest('hex') + '.json');
   let old;
   if (file) {
@@ -200,9 +200,9 @@ export function parseFeed(xml) {
       fieldOf(b, 'content:encoded') || fieldOf(b, 'description') ||
       fieldOf(b, 'summary') || fieldOf(b, 'content') || '', 600);
     const publishedAt = parseTime(fieldOf(b, 'pubDate') || fieldOf(b, 'published') ||
-      fieldOf(b, 'dc:date') || fieldOf(b, 'date'));
+      fieldOf(b, 'prism:publicationDate') || fieldOf(b, 'dc:date') || fieldOf(b, 'date'));
     return { title, url, summary, ts: publishedAt, publishedAt,
-      updatedAt: parseTime(fieldOf(b, 'updated')), doi: fieldOf(b, 'arxiv:doi'),
+      updatedAt: parseTime(fieldOf(b, 'updated')), doi: fieldOf(b, 'arxiv:doi') || fieldOf(b, 'prism:doi'),
       primaryCategory: attrOfFirst(b, 'arxiv:primary_category', 'term') };
   }).filter(function (x) { return x.title; });
 }

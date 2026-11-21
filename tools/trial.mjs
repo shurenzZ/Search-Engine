@@ -24,10 +24,12 @@ function comparable(url) {
 }
 
 // 独立保留发布方的目录条目，方便每日复核所有候选之外的漏报。
-async function referenceIndexes() {
-  const indexes = ['https://openai.com/news/', 'https://arxiv.org/list/cs.LG/recent',
+const publisherIndexes = ['https://openai.com/news/', 'https://arxiv.org/list/cs.LG/recent',
     'https://github.com/pytorch/pytorch/releases', 'https://github.com/huggingface/transformers/releases',
-    'https://github.com/vllm-project/vllm/releases'];
+    'https://github.com/vllm-project/vllm/releases','https://www.anthropic.com/news','https://www.anthropic.com/research',
+    'https://www.anthropic.com/engineering','https://platform.claude.com/docs/en/release-notes/overview',
+    'https://arxiv.org/list/math/new','https://arxiv.org/list/physics/new','https://arxiv.org/list/cs.DS/new'];
+async function referenceIndexes(indexes) {
   return Promise.all(indexes.map(async index => {
     try {
       const html = await getText(index);
@@ -36,11 +38,17 @@ async function referenceIndexes() {
         const entries = [...new Set([...html.matchAll(/\/abs\/(\d{4}\.\d{4,5})/g)].map(m => m[1]))];
         if (entries.length) return {index, records:entries.slice(0,15).map(id => ({url:origin+'/abs/'+id, label:'arXiv:'+id}))};
       }
+      if (origin === 'https://platform.claude.com') {
+        const dates = [...new Set([...html.matchAll(/\bid="([a-z]+-\d{1,2}-20\d{2})"/g)].map(m => m[1]))];
+        if (dates.length) return {index, records:dates.slice(0,15).map(date => ({url:index+'#'+date,label:date}))};
+      }
       const links = [...html.matchAll(/<a\b[^>]*\bhref\s*=\s*["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)];
       const seen = new Set(), records = [];
       for (const [, href, body] of links) {
         const url = new URL(href, index);
-        if (url.origin !== origin || !/\/abs\/\d|\/index\/|\/releases\/tag\//.test(url.pathname) || seen.has(url.pathname)) continue;
+        const article = origin === 'https://www.anthropic.com' ? /<h[23]\b/i.test(body) || /^\/(research|engineering|news)\/[\w-]+$/.test(url.pathname) && clean(body,140).length > 25
+          : /\/abs\/\d|\/index\/|\/releases\/tag\//.test(url.pathname);
+        if (url.origin !== origin || !article || seen.has(url.pathname)) continue;
         seen.add(url.pathname);
         records.push({url:url.href, label:clean(body, 140)});
         if (records.length === 15) break;
@@ -85,11 +93,13 @@ async function sample() {
   }
   const indexFile = path.join(folder, 'indexes.json');
   const indexes = await load(indexFile, []);
-  if (!indexes.length || indexes.some(i => i.error)) {
-    const fresh = await referenceIndexes();
-    await save(indexFile, fresh.map(i => indexes.find(old => old.index === i.index && !old.error) || i));
+  const missing = publisherIndexes.filter(url => !indexes.some(i => i.index === url && !i.error));
+  if (missing.length) {
+    const fresh = await referenceIndexes(missing);
+    await save(indexFile, [...indexes.filter(i => !missing.includes(i.index)), ...fresh]);
   }
   record.runs.push({at, snapshotAt:snapshot.generatedAtMs, itemCount:snapshot.items.length,
+    warnings:Object.fromEntries(snapshot.sources.filter(s=>s.warning).map(s=>[s.id,s.warning])),
     errors:{...Object.fromEntries(snapshot.sources.filter(s=>!s.ok).map(s=>[s.id,s.error])), ...errors}});
   const priority = new Set(['openai','googleai','deepmind','release-pytorch','release-transformers','release-vllm']);
   for (const row of ctx.run('state.items')) {

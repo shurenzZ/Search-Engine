@@ -1,3 +1,4 @@
+import { CLAUDE_NOTES, preprintAnnouncements, RESEARCH_SOURCES } from './research-sources.mjs';
 import { getJson, getText, parseFeed, parseTime, parseHot, clean, fmtNum, fmtDate, hash8, sleep } from './lib.mjs';
 
 /* GitHub Trending 是 HTML 页，没有 API；按 article 切块解析，不受 REST 配额限制 */
@@ -65,6 +66,35 @@ async function cs2Matches() {
   }).sort((a, b) => b.ts - a.ts);
 }
 
+async function aiPreprints() {
+  const categories = ['cs.AI', 'cs.CL', 'cs.LG', 'cs.CV'];
+  const rows = [], seen = new Set();
+  // 轮流从四个分类取条目，包含修订版；重叠分类只占一个名额。
+  for (const category of categories) {
+    if (rows.length) await sleep(3100);
+    const query = new URLSearchParams({search_query:'cat:' + category,
+      sortBy:'lastUpdatedDate', sortOrder:'descending', max_results:'50'});
+    const xml = await getText('https://export.arxiv.org/api/query?' + query);
+    const records = parseFeed(xml).filter(x => /arxiv\.org\/abs\//i.test(x.url) && x.primaryCategory === category);
+    if (!records.length) throw new Error(category + ' 未取得有效 Atom 条目');
+    const initial = records.filter(x => /v1$/.test(x.url));
+    const revised = records.filter(x => !/v1$/.test(x.url));
+    const order = [];
+    while (initial.length || revised.length) order.push(...initial.splice(0,3), ...revised.splice(0,1));
+    rows.push(order);
+  }
+  const result = [];
+  for (let i = 0; i < 50; i++) {
+    for (const group of rows) {
+      const x = group[i];
+      if (!x || seen.has(x.url)) continue;
+      seen.add(x.url);
+      result.push({...x, updatedAt:/v(?:[2-9]|\d{2,})$/.test(x.url) ? x.updatedAt : 0, tags:['论文','预印本']});
+    }
+  }
+  return result;
+}
+
 export const SERVER_SOURCES = [
   {
     id: 'hf', tier: 2, name: 'HuggingFace 每日论文', short: 'HF论文', icon: '📄', color: '#f59e0b',
@@ -95,32 +125,15 @@ export const SERVER_SOURCES = [
   {
     id: 'arxiv', name: 'arXiv 最新投稿', short: 'arXiv', icon: '🔬', color: '#b45309',
     fallbackCat: 'academic', max: 40, maxAgeH: 72,
-    async run() {
-      const categories = ['cs.AI', 'cs.CL', 'cs.LG', 'cs.CV'];
-      const rows = [], seen = new Set();
-      // 轮流从四个分类取条目，包含修订版；重叠分类只占一个名额。
-      for (const category of categories) {
-        if (rows.length) await sleep(3100);
-        const query = new URLSearchParams({search_query:'cat:' + category,
-          sortBy:'lastUpdatedDate', sortOrder:'descending', max_results:'50'});
-        const xml = await getText('https://export.arxiv.org/api/query?' + query);
-        const records = parseFeed(xml).filter(x => /arxiv\.org\/abs\//i.test(x.url) && x.primaryCategory === category);
-        const initial = records.filter(x => /v1$/.test(x.url));
-        const revised = records.filter(x => !/v1$/.test(x.url));
-        const order = [];
-        while (initial.length || revised.length) order.push(...initial.splice(0,3), ...revised.splice(0,1));
-        rows.push(order);
+    allowEmpty:true,
+    async run({warnings = []} = {}) {
+      try { return await aiPreprints(); }
+      catch (error) {
+        const feed = await getText('https://rss.arxiv.org/rss/cs.AI+cs.CL+cs.LG+cs.CV');
+        const rows = preprintAnnouncements(feed, 'AI');
+        warnings.push('Atom 接口暂不可用，已从官方 RSS 收录新稿：' + error.message);
+        return rows;
       }
-      const result = [];
-      for (let i = 0; i < 50; i++) {
-        for (const group of rows) {
-          const x = group[i];
-          if (!x || seen.has(x.url)) continue;
-          seen.add(x.url);
-          result.push({...x, updatedAt:/v(?:[2-9]|\d{2,})$/.test(x.url) ? x.updatedAt : 0, tags:['论文','预印本']});
-        }
-      }
-      return result;
     }
   },
   {
@@ -138,6 +151,32 @@ export const SERVER_SOURCES = [
     id: 'deepmind', name: 'DeepMind 博客', short: 'DeepMind', icon: '🟣', color: '#5f2fb4',
     fallbackCat: 'ai', max: 12, maxAgeH: 336,
     async run() { return officialRss('https://deepmind.google/blog/rss.xml', '官方'); }
+  },
+  ...RESEARCH_SOURCES,
+  ...[
+    ['arxiv-math','数学','math','math'],
+    ['arxiv-physics','物理','physics','physics+quant-ph+cond-mat+gr-qc+astro-ph'],
+    ['arxiv-cs','计算机科学','cs','cs.DS+cs.CC+cs.OS+cs.DC+cs.PL+cs.DB']
+  ].map(([id, label, category, feed]) => ({
+    id, name:'arXiv · ' + label, short:'arXiv ' + label, icon:'📄', color:'#8a483a',
+    category, fallbackCat:category, max:12, maxAgeH:120, allowEmpty:true,
+    async run() { return preprintAnnouncements(await getText('https://rss.arxiv.org/rss/' + feed), label); }
+  })),
+  {id:'jacm', name:'Journal of the ACM · 出版社论文记录', short:'JACM', icon:'📘', color:'#075985',
+    category:'cs', fallbackCat:'cs', max:8, maxAgeH:1440,
+    async run() {
+      const filter = 'type:journal-article,until-pub-date:' + new Date().toISOString().slice(0,10);
+      const query = new URLSearchParams({filter,sort:'published',order:'desc',rows:'12',select:'title,DOI,published-online,published'});
+      const works = (await crossrefJson('https://api.crossref.org/journals/1557-735X/works?' + query)).message.items;
+      const rows = works.flatMap(w => {
+        const parts = (w['published-online'] || w.published)?.['date-parts']?.[0];
+        if (parts?.length !== 3 || !w.title?.[0] || !/^10\.1145\//i.test(w.DOI)) return [];
+        return [{title:w.title[0],url:'https://doi.org/' + w.DOI, doi:w.DOI, ts:Date.UTC(parts[0],parts[1]-1,parts[2]),
+          updateType:'正式发表', publisher:'ACM', tags:['计算机科学','期刊论文']}];
+      });
+      if (!rows.length) throw new Error('JACM 未解析到日期完整的论文记录');
+      return rows.sort((a,b) => b.ts-a.ts);
+    }
   },
   ...['pytorch/pytorch', 'huggingface/transformers', 'vllm-project/vllm'].map(repo => ({
     id: 'release-' + repo.split('/')[1], name: repo + ' 正式版本', short: repo.split('/')[1],
@@ -222,7 +261,7 @@ async function crossrefJson(url) {
 async function verifyPapers({ papers = [], previous = new Map() } = {}) {
   const tracked = new Map();
   for (const row of [...papers, ...previous.values()]) {
-    if (row.sourceId === 'arxiv' && /^arxiv:[\w./-]+$/.test(row.eventKey)) tracked.set(row.eventKey, row);
+    if (row.sourceId === 'arxiv' && row.publishedAt && /^arxiv:[\w./-]+$/.test(row.eventKey)) tracked.set(row.eventKey, row);
   }
   const list = [...tracked.values()].sort((a,b) => a.eventKey.localeCompare(b.eventKey));
   const start = list.length ? Math.floor(Date.now() / 1800000) * 4 % list.length : 0;
@@ -289,7 +328,7 @@ export function finalize(src, raws, opts) {
     const attentionAt = parseTime(row.attentionAt);
     const update = updatedAt > 0 && (row.updateType || (src.id === 'cs2matches' ? '比赛赛果' : updatedAt > publishedAt && src.id === 'arxiv'));
     const eventKind = row.updateType || (src.id === 'cs2matches' ? '比赛赛果' : update ? '论文修订' : attentionAt > publishedAt || src.dayList ? '近期受关注' : publishedAt ? '首次发布' : '发现');
-    const ts = update ? updatedAt : eventKind === '近期受关注' ? attentionAt : publishedAt;
+    const ts = update ? updatedAt : ['近期受关注','新稿公告'].includes(eventKind) ? attentionAt : publishedAt;
     if (ts > now || (ts && src.maxAgeH && now - ts > src.maxAgeH * 3600e3)) continue;
     seen.add(key);
     const id = src.id + '-' + hash8(key);
@@ -317,7 +356,7 @@ function canonicalUrl(value) {
     for (const key of [...url.searchParams.keys()]) {
       if (/^(utm_|fbclid$|gclid$)/i.test(key)) url.searchParams.delete(key);
     }
-    url.hash = '';
+    if (url.origin + url.pathname !== CLAUDE_NOTES || !/^#[a-z]+-\d{1,2}-20\d{2}$/.test(url.hash)) url.hash = '';
     return url.href.replace(/\/(?=$)/, '').replace(/^http:\/\/arxiv\.org\//, 'https://arxiv.org/');
   } catch { return ''; }
 }

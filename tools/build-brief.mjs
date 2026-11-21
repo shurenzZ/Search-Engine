@@ -59,7 +59,9 @@ async function main() {
       ok: false, count: 0, error: ''
     };
     try {
-      const raws = await src.run({papers: items, previous});
+      const warnings = [];
+      const raws = await src.run({papers: items, previous, warnings});
+      if (warnings.length) meta.warning = warnings.join('；');
       const done = finalize(src, raws, { now: Date.now(), previous });
       if (!done.length && !src.allowEmpty) {
         if (!raws.length) throw new Error('接口返回 0 条');
@@ -116,7 +118,7 @@ async function main() {
     generatedAtMs: now,
     itemCount: items.length,
     okCount: srcMeta.filter((s) => s.ok).length,
-    sources: srcMeta.map((s) => ({ id: s.id, ok: s.ok, count: s.count, error: s.error }))
+    sources: srcMeta.map((s) => ({ id: s.id, ok: s.ok, count: s.count, error: s.error, ...(s.warning ? {warning:s.warning} : {}) }))
   };
 
   const live = items.filter((it) => it.ts && now - it.ts <= 48 * 3600e3).length;

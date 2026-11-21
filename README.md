@@ -74,11 +74,16 @@ HTTP 部署默认读取页面同目录的 `data/latest.json`；GitHub Pages / ra
 | 入口 | 数据与用途 |
 | --- | --- |
 | 浏览器直连 | GitHub REST 检索近期新仓库，HN Search 读取 Hacker News 讨论。 |
-| 机构原文 | OpenAI、Google AI、DeepMind 官方 Feed；机构原文检索以搜索结果定位网页，回读原站标题与日期。 |
+| 机构原文 | OpenAI、Google AI、DeepMind、Microsoft Research、Meta AI 和 Meta 机器学习工程博客。Anthropic 合并监控新闻、研究、工程和 Claude API 更新日志，各日期使用独立原文锚点。机构原文检索以搜索结果定位网页，回读原站标题与日期。 |
 | 检索提供方 | 默认使用免密钥的 HN Search 检索指定机构 URL，覆盖其已收录网页。采集环境显式配置 `BRAVE_SEARCH_API_KEY` 后使用 Brave Web Search。密钥只在服务端读取。 |
 | 论文 | arXiv 按分类轮流收录首发与修订，保留 DOI。HF Papers 记录入榜日期并链接 arXiv 原文。Crossref 按 DOI 或出版社登记的预印本关系轮查正式发表、更正与撤稿；未登记或尚未检查的关系可能遗漏。 |
+| 数学 | arXiv 数学新稿公告与《Annals of Mathematics》期刊原文。 |
+| 物理 | Physical Review Letters 出版社订阅，及 arXiv 的普通物理、量子、凝聚态、广义相对论和天体物理公告。 |
+| 计算机科学 | arXiv 的算法与数据结构、计算复杂性、操作系统、分布式计算、编程语言、数据库；Journal of the ACM 通过 Crossref 获取出版社登记的论文日期和 DOI。 |
 | 开源 | PyTorch、Transformers、vLLM 的 GitHub Releases 仅采正式版本。GitHub Trending 供发现项目。 |
 | 赛事 | BO3.gg 最近七天的 Tier 1 已结束 CS2 比赛。空赛程和无新正式版本均可正常返回零条。 |
+
+arXiv 学科 RSS 只取新稿，按小类轮流抽样，公告日期与作者投稿时间分开显示。AI 的 Atom 检索临时失效时使用官方 RSS 的新稿公告作为备用。
 
 服务端每半小时刷新。公开源支持 ETag 或 Last-Modified 时复用响应，原始条目的首次发现时间跨轮保存 90 天。HTTP 快取保存在 `data/.http-cache/`。付费 X 接口未接入。网页仅识别新版信源和新版快照，升级恢复用户偏好时清除旧条目。
 

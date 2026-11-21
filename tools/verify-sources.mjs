@@ -119,15 +119,19 @@ async function main() {
       if (ONLY.length && !ONLY.includes(src.id)) continue;
       let row = { id: src.id, ok: false, count: 0, note: '', sample: '' };
       try {
-        const raws = await src.run();
+        const warnings = [];
+        const raws = await src.run({warnings});
         const done = finalize(src, raws, {});
         row.count = done.length;
-        row.ok = done.length > 0 || !!src.allowEmpty;
+        const cutoff = Date.now() - src.maxAgeH * 3600e3;
+        const outside = src.maxAgeH && raws.length && raws.every(r => r.ts && Math.max(r.ts,r.updatedAt || 0,r.attentionAt || 0) < cutoff);
+        row.ok = done.length > 0 || !!src.allowEmpty || !!outside;
         row.sample = done.length ? done[0].title.slice(0, 44) : '';
         row.note = done.length ? '通过' : '0 条';
         const noTs = done.filter((x) => !x.ts).length;
         if (noTs === done.length && done.length) row.note = '通过（全部无发布时间）';
         else if (noTs) row.note = '通过（' + noTs + ' 条无时间）';
+        if (warnings.length) row.note += ' · ' + warnings.join('；');
       } catch (e) {
         const cause = e && e.cause ? (e.cause.code || e.cause.message || '') : '';
         const base = String(e.message || e);
