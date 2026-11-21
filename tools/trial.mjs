@@ -52,7 +52,12 @@ async function referenceIndexes() {
 async function sample() {
   const snapshot = await load(path.join(root, 'data/latest.json'));
   if (snapshot?.schema !== 2 || Date.now() - snapshot.generatedAtMs > 3600000) throw new Error('需要一小时内的新版快照');
-  const day = fmtDate(new Date()), folder = path.join(dir, day);
+  const window = await load(path.join(dir, 'window.json'));
+  const capturedAt = Date.now();
+  if (window && (capturedAt < window.startedAt || capturedAt >= window.endsAt)) throw new Error('当前时间在七天验收窗口之外');
+  // 例如上午启动，最后一个自然日的凌晨仍属于第七个观测日。
+  const dayStart = window ? window.startedAt + Math.floor((capturedAt - window.startedAt) / 86400000) * 86400000 : capturedAt;
+  const day = fmtDate(new Date(dayStart)), folder = path.join(dir, day);
   await mkdir(folder, {recursive:true});
   const ctx = browser();
   ctx.snapshot = snapshot;
@@ -71,7 +76,7 @@ async function sample() {
     ({title,url,eventKey,eventKind,sourceId,ts,summary,signal}));
   const file = path.join(folder, 'observed.json');
   const record = await load(file, {day, runs:[], events:{}, top:null});
-  const at = Date.now();
+  const at = capturedAt;
   if (!record.top) {
     record.top = top;
     record.sampledAt = at;
@@ -97,10 +102,13 @@ async function sample() {
   console.log(day, '轮次', record.runs.length, '首页抽样', record.top.length, '源错误', record.runs.at(-1).errors);
 }
 async function report(firstDay) {
-  const names = (await readdir(dir)).filter(n=>/^\d{4}-\d{2}-\d{2}$/.test(n) && n >= firstDay).sort().slice(0,7);
+  const state = await load(path.join(dir, 'window.json'), {});
+  const initial = state.startedAt ? fmtDate(new Date(state.startedAt)) : '';
+  const final = state.endsAt ? fmtDate(new Date(state.endsAt - 86400000)) : '9999-12-31';
+  const names = (await readdir(dir)).filter(n=>/^\d{4}-\d{2}-\d{2}$/.test(n) &&
+    n >= initial && n >= firstDay && n <= final).sort();
   const days = [], delays = new Map();
   let valid = 0, reviewed = 0, total = 0, covered = 0;
-  const state = await load(path.join(dir, 'window.json'), {});
   for (const name of names) {
     const folder = path.join(dir, name), data = await load(path.join(folder, 'observed.json'));
     if (!data) continue;
@@ -111,15 +119,21 @@ async function report(firstDay) {
     valid += judgments.filter(r=>r.valid === true).length;
     reviewed += judgments.length; total += refs.length; covered += refs.length - misses.length;
     for (const [key,item] of Object.entries(data.events)) {
-      if (item.latency !== null && item.latency >= 0 && item.event >= state.startedAt) delays.set(key, item.latency);
+      if (Number.isFinite(item.latency) && item.latency >= 0 && item.event >= state.startedAt && item.seen < state.endsAt)
+        delays.set(key, Math.min(item.latency, delays.get(key) ?? Infinity));
     }
-    days.push({day:name, rounds:data.runs.length, slots:data.top.length, reviewed:judgments.length,
+    const rounds = data.runs.filter(r => r.at >= (state.startedAt || 0) && r.at < (state.endsAt || Infinity));
+    days.push({day:name, rounds:rounds.length, baselineRounds:data.runs.length-rounds.length,
+      slots:data.top.length, baselineHomepage:data.sampledAt < state.startedAt, reviewed:judgments.length,
       duplicates:judgments.filter(r=>r.duplicate).length, stale:judgments.filter(r=>r.stale).map(r=>r.url),
       references:refs.length, misses});
   }
   const values = [...delays.values()].sort((a,b)=>a-b);
-  const percentile = p => values.length ? Math.round(10 * values[Math.ceil(p*values.length)-1])/10 : null;
-  return {days, valid, reviewed, references:total, covered, delaySample:values.length, medianMinutes:percentile(.5), p90Minutes:percentile(.9)};
+  const middle = Math.floor(values.length / 2);
+  const median = values.length % 2 ? values[middle] : (values[middle - 1] + values[middle]) / 2;
+  const p90 = values[Math.ceil(values.length * 0.9) - 1];
+  const rounded = value => Number.isFinite(value) ? Math.round(value * 10) / 10 : null;
+  return {days, valid, reviewed, references:total, covered, delaySample:values.length, medianMinutes:rounded(median), p90Minutes:rounded(p90)};
 }
 const mode = process.argv[2] || 'sample';
 if (mode === 'sample') await sample();
