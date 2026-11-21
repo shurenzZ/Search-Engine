@@ -1,9 +1,9 @@
 {
  "schema": 2,
- "hash": "349dface73fa779a",
- "generatedAt": "2026-11-21T02:17:10.286Z",
- "generatedAtMs": 1795227430286,
- "itemCount": 218,
+ "hash": "78082d01ec208028",
+ "generatedAt": "2026-11-21T02:19:35.205Z",
+ "generatedAtMs": 1795227575205,
+ "itemCount": 217,
  "okCount": 22,
  "sources": [
   {
@@ -117,7 +117,7 @@
   {
    "id": "research-search",
    "ok": true,
-   "count": 7,
+   "count": 6,
    "error": ""
   },
   {
