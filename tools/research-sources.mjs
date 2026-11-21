@@ -55,7 +55,13 @@ async function fetchAnthropic({warnings = []} = {}) {
     else warnings.push(labels[i] + '：' + r.reason.message);
   });
   if (!rows.length) throw new Error(warnings.join('；'));
-  return rows.sort((a,b) => b.ts-a.ts);
+  const articles = new Map();
+  for (const row of rows) {
+    const prior = articles.get(row.url);
+    if (prior) prior.tags = [...new Set([...prior.tags, ...row.tags])];
+    else articles.set(row.url, row);
+  }
+  return [...articles.values()].sort((a,b) => b.ts-a.ts);
 }
 
 export function metaBlog(html) {
