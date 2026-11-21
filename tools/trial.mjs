@@ -80,6 +80,8 @@ async function sample() {
   if (!record.top) {
     record.top = top;
     record.sampledAt = at;
+  } else if (window && record.sampledAt < window.startedAt && !record.windowHomepage) {
+    record.windowHomepage = {at, top};
   }
   const indexFile = path.join(folder, 'indexes.json');
   const indexes = await load(indexFile, []);
@@ -99,7 +101,7 @@ async function sample() {
       record.events[key] = {title:row.title, source:row.sourceId, seen:row.eventSeenAt, event:row.ts, latency};
   }
   await save(file, record);
-  console.log(day, '轮次', record.runs.length, '首页抽样', record.top.length, '源错误', record.runs.at(-1).errors);
+  console.log(day, '轮次', record.runs.length, '首页抽样', (record.windowHomepage?.top ?? record.top).length, '源错误', record.runs.at(-1).errors);
 }
 async function report(firstDay) {
   const state = await load(path.join(dir, 'window.json'), {});
@@ -113,9 +115,11 @@ async function report(firstDay) {
     const folder = path.join(dir, name), data = await load(path.join(folder, 'observed.json'));
     if (!data) continue;
     const refs = await load(path.join(folder,'reference.json'), []);
-    const reviews = await load(path.join(folder,'review.json'), []);
+    const baselineHomepage = data.sampledAt < state.startedAt;
+    const top = baselineHomepage ? (data.windowHomepage?.top ?? []) : data.top;
+    const reviews = await load(path.join(folder,baselineHomepage ? 'window-review.json' : 'review.json'), []);
     const misses = refs.filter(ref => !data.events[comparable(ref.url)]);
-    const judgments = data.top.map(it => reviews.find(r => comparable(r.url) === comparable(it.url))).filter(Boolean);
+    const judgments = top.map(it => reviews.find(r => comparable(r.url) === comparable(it.url))).filter(Boolean);
     valid += judgments.filter(r=>r.valid === true).length;
     reviewed += judgments.length; total += refs.length; covered += refs.length - misses.length;
     for (const [key,item] of Object.entries(data.events)) {
@@ -124,7 +128,8 @@ async function report(firstDay) {
     }
     const rounds = data.runs.filter(r => r.at >= (state.startedAt || 0) && r.at < (state.endsAt || Infinity));
     days.push({day:name, rounds:rounds.length, baselineRounds:data.runs.length-rounds.length,
-      slots:data.top.length, baselineHomepage:data.sampledAt < state.startedAt, reviewed:judgments.length,
+      slots:top.length, sampledAt:baselineHomepage ? (data.windowHomepage?.at ?? null) : data.sampledAt,
+      baselineSlots:baselineHomepage ? data.top.length : 0, reviewed:judgments.length,
       duplicates:judgments.filter(r=>r.duplicate).length, stale:judgments.filter(r=>r.stale).map(r=>r.url),
       references:refs.length, misses});
   }
