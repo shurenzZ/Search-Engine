@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { browser } from '../tools/page-context.mjs';
 import { spawnSync } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 import { parseTime, parseHot, parseFeed, fmtDate } from '../tools/lib.mjs';
 import { finalize, SERVER_SOURCES, normalizeCs2Match } from '../tools/sources-server.mjs';
 
@@ -254,7 +255,7 @@ test('所有源失败时保留磁盘快照，成功时 manifest 与正文哈希�
     const latest = join(dir, 'latest.json');
     await writeFile(latest, 'existing snapshot');
     await writeFile(mock, 'globalThis.fetch = async () => new Response("[]");');
-    const args = ['--import', mock, 'tools/build-brief.mjs', '--only', 'hf', '--gap', '0', '--out', dir];
+    const args = ['--import', pathToFileURL(mock).href, 'tools/build-brief.mjs', '--only', 'hf', '--gap', '0', '--out', dir];
     const failed = spawnSync(process.execPath, args, { cwd: new URL('..', import.meta.url), encoding: 'utf8' });
     assert.equal(failed.status, 1);
     assert.equal(await readFile(latest, 'utf8'), 'existing snapshot');
