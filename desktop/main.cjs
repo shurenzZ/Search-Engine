@@ -75,6 +75,8 @@ const ready = singleInstance ? app.whenReady().then(async () => {
       'Content-Type': 'text/html; charset=utf-8', 'Content-Security-Policy': contentSecurityPolicy(html)
     } });
     if (url.pathname === '/data/latest.json') return snapshotResponse();
+    if (url.pathname === '/web/translation.js') return new Response(await readFile(path.join(root,'web/translation.js')),
+      {headers:{'Content-Type':'application/javascript; charset=utf-8'}});
     if (url.pathname === '/reader') return readerResponse();
     return new Response('Not found', { status: 404 });
   });

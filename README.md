@@ -9,6 +9,8 @@
 - 打开条目可分别查看原始发布时间、修订时间、入榜时间和首次发现时间。关注词及搜索支持常用中英文术语，例如“推理模型”“开放权重”。支持按来源、主题和要素过滤，以及导出 TXT 和 JSON。
 - 保留游戏与动漫分类、BO3.gg Tier 1 已结束赛事、深浅色模式和应用内原文阅读。
 
+首页默认显示简体中文标题和摘要。在搜索栏旁的「资讯内容语言」选择「原文」可来回对照，应用会记住选择。已取得的译文随快照保存在本地，断网也能阅读。新抓到的公开标题和摘要使用 Google 翻译，翻译暂缺时保留原文。点击「原文 ↗」仍打开发布方页面。
+
 ## 🖥 桌面版
 
 桌面版下载：[GitHub Releases 最新版本](https://github.com/shurenzZ/Search-Engine/releases/latest)。
@@ -93,27 +95,20 @@ arXiv 学科 RSS 只取新稿，按小类轮流抽样，公告日期与作者投
 
 独立事件清单存于每日的 `reference.json`，记录来源目录、选取理由和原文。`review.json` 逐条记录相关性、实质新增、原文出处、重复和旧闻。如果首日已经留有启动前的首页样本，保留这份样本和评阅，再用 `windowHomepage` 冻结下一次定时采集的首页，用 `window-review.json` 评阅。七天首页指标只汇总窗口内冻结的样本。启动前已发布的存量内容不参与发现延迟统计。验收参考线为有效率 80%、重点事件覆盖率 90%、指定机构与正式版本的发现延迟中位数 45 分钟，以及每天首页重复不超过一条。没有观测值的指标显示空值。
 
-## 📁 目录
+## 项目文件
 
-```
-每日热搜早报.html              共用界面（浏览器可直接打开）
-package.json / package-lock.json  桌面运行、测试、双端打包配置
-desktop/main.cjs              桌面窗口、应用协议、系统剪贴板与保存对话框
-desktop/preload.cjs           最小原生桥接
-desktop/security.cjs          外链、导出校验与 CSP
-desktop/assets/               图标 SVG / PNG / ICO / ICNS
-tools/smoke-desktop.cjs        真实 Electron 窗口验证与预览截图
-tests/desktop.test.mjs         桌面边界检查
-tools/build-brief.mjs          服务端快照生成器（Node ESM，零依赖）
-tools/sources-server.mjs       快照源注册表与字段映射
-tools/verify-sources.mjs       源契约自检
-tools/lib.mjs                  抓取 / 解析共用工具
-tests/regression.test.mjs      零依赖离线回归测试
-.github/workflows/check.yml    推送与 PR 的回归检查
-.github/workflows/desktop.yml  Windows / macOS 原生构建与产物上传
-.github/workflows/refresh-brief.yml  每 30 分钟抓取并提交快照
-data/                          latest.json + archive/ + manifest.json（由机器人提交）
-```
+| 路径 | 内容 |
+| --- | --- |
+| [每日热搜早报.html](./每日热搜早报.html) | 网页与桌面端共用的阅读入口。 |
+| [web/](./web/) | 网页与采集器共用的中文翻译模块。 |
+| [desktop/](./desktop/) | Electron 主窗口、原文阅读窗口、原生桥接及应用图标。 |
+| [tools/](./tools/) | 信源、快照生成、源检查、图标构建与七天观测工具。 |
+| [tests/](./tests/) | 离线回归测试与真实 Electron 窗口检查。 |
+| [data/](./data/) | 最新资讯快照、按日归档及采集记录。 |
+| [media/](./media/) | 项目宣传片。 |
+| [.github/workflows/](./.github/workflows/) | 定时采集、测试和跨平台构建。 |
+| `dist/current/`、`dist/releases/<版本>/` | 本机当前桌面构建、按版本归档的安装包。 |
+| `trial/` | 本机验收样本与人工评阅，按观测日期保存。 |
 
 ## v2.1 优化记录
 

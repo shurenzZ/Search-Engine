@@ -26,7 +26,8 @@ function contentSecurityPolicy(html) {
   const script = html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
   if (!script) throw new Error('页面缺少入口脚本');
   const hash = createHash('sha256').update(script).digest('base64');
-  return `default-src 'none'; script-src 'sha256-${hash}'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https: http: brief:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'`;
+  const helper = html.includes('<script src="web/translation.js"></script>') ? ' brief://app/web/translation.js' : '';
+  return `default-src 'none'; script-src 'sha256-${hash}'${helper}; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https: http: brief:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'`;
 }
 
 module.exports = { APP_URL, isAppUrl, isExternalUrl, validateExport, contentSecurityPolicy };

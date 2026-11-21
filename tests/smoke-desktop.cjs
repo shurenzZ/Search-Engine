@@ -59,6 +59,20 @@ async function run() {
   wc.reload();
   await loaded;
   await until(() => evaluate(() => document.getElementById('sourceNote').textContent.includes('离线快照')), '离线缓存恢复');
+  assert.equal(await evaluate(() => typeof window.BriefTranslation?.translate), 'function');
+  assert.equal(await evaluate(() => document.getElementById('contentLanguage').value), 'zh');
+  const headlines = () => evaluate(() => [...document.querySelectorAll('#main .item-title')].map(el => el.textContent));
+  const translated = await headlines();
+  const changeLanguage = value => evaluate(v => {
+    const select = document.getElementById('contentLanguage');
+    select.value = v; select.dispatchEvent(new Event('change'));
+  }, value);
+  await changeLanguage('original');
+  const originals = await headlines();
+  assert.ok(translated.some((title,i) => title !== originals[i] && /[\u3400-\u9fff]/.test(title)), '离线快照确有中文标题');
+  assert.equal(await evaluate(() => JSON.parse(localStorage.getItem('hot_daily_brief_v1')).settings.contentLanguage), 'original');
+  await changeLanguage('zh');
+  assert.deepEqual(await headlines(), translated);
   assert.equal(await evaluate(() => typeof window.require), 'undefined');
   assert.equal(await evaluate(() => typeof window.process), 'undefined');
   assert.equal(await evaluate(() => Object.keys(window.desktop).sort().join(',')), 'copyText,platform,saveFile,setTheme');

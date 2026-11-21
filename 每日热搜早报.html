@@ -158,10 +158,10 @@ input::placeholder{color:var(--ink-4)}
 .view-tabs button:hover{color:var(--ink)}
 .view-tabs button.on{background:var(--surface);color:var(--ink);font-weight:550;box-shadow:0 1px 2px rgba(26,35,64,.1)}
 .sort-control{position:relative;display:inline-block;flex:0 0 120px;width:120px;height:42px;color:var(--ink-2)}
-.sort-control #sortSel{appearance:none;-webkit-appearance:none;display:block;width:100%;height:100%;padding:0 32px 0 14px;border:1px solid var(--line-2);border-radius:var(--r-ctl);background:var(--surface);color:var(--ink);font-family:inherit;font-size:13px;font-weight:500;line-height:normal;text-align:left;cursor:pointer}
-.sort-control #sortSel:hover{border-color:var(--ink-3)}
+.sort-control select{appearance:none;-webkit-appearance:none;display:block;width:100%;height:100%;padding:0 32px 0 14px;border:1px solid var(--line-2);border-radius:var(--r-ctl);background:var(--surface);color:var(--ink);font-family:inherit;font-size:13px;font-weight:500;line-height:normal;text-align:left;cursor:pointer}
+.sort-control select:hover{border-color:var(--ink-3)}
 .sort-control:after{content:"";position:absolute;right:15px;top:16px;width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg);pointer-events:none}
-.sort-control:focus-within #sortSel{border-color:var(--ink);outline:2px solid var(--ink);outline-offset:2px}
+.sort-control:focus-within select{border-color:var(--ink);outline:2px solid var(--ink);outline-offset:2px}
 .export-menu{position:relative;padding:0;margin:0;border:0;background:transparent;border-radius:0}
 .export-menu>summary{list-style:none;cursor:pointer}
 .export-menu>summary::-webkit-details-marker{display:none}
@@ -490,6 +490,8 @@ details .body ul{margin:4px 0;padding-left:18px}
     <div class="toolbar-row commandbar">
       <div class="search"><svg class="icon" aria-hidden="true"><use href="#i-search"></use></svg><input id="q" aria-label="搜索早报" type="text" placeholder="搜索标题、摘要、公司或模型…" autocomplete="off"><button class="clr" id="qClear" title="清空" aria-label="清空搜索">×</button><kbd>/</kbd></div>
       <div class="view-tabs" id="viewTabs" aria-label="分组方式"><button data-view="category" class="on" aria-pressed="true">按分类</button><button data-view="platform" aria-pressed="false">按平台</button></div>
+      <span class="sort-control"><select id="contentLanguage" aria-label="资讯内容语言" title="资讯标题与摘要的显示语言"><option value="zh">中文（机译）</option><option value="original">原文</option></select></span>
+      <span class="filters-hint" id="translationNote" role="status" hidden></span>
       <span class="sort-control"><select id="sortSel" title="排序方式" aria-label="排序方式"><option value="signal">信号优先</option><option value="heat">热度优先</option><option value="time">时间优先</option></select></span>
       <button class="btn primary" id="btnRefresh"><svg class="icon" aria-hidden="true"><use href="#i-refresh"></use></svg><span>一键刷新</span></button>
       <details class="export-menu"><summary class="btn"><svg class="icon" aria-hidden="true"><use href="#i-export"></use></svg>导出早报</summary><div class="export-options"><button class="btn" id="btnCopyAll">复制整份早报</button><button class="btn" id="btnTxt">导出 TXT 文本</button><button class="btn" id="btnJson">导出 JSON 数据</button></div></details>
@@ -651,6 +653,7 @@ details .body ul{margin:4px 0;padding-left:18px}
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <noscript><div class="wrap"><p>本页面需要启用 JavaScript 才能运行。</p></div></noscript>
 
+<script src="web/translation.js"></script>
 <script>
 (function(){
 'use strict';
@@ -661,7 +664,7 @@ details .body ul{margin:4px 0;padding-left:18px}
 var STORAGE_KEY = 'hot_daily_brief_v1';
 /* 缓存结构版本：与 APP_VERSION 分开，升版只作废条目、保留用户设置 */
 var CACHE_SCHEMA = 3;
-var APP_VERSION = '4.1.0';
+var APP_VERSION = '4.2.0';
 var WEEK = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
 
 /* 服务端快照的兜底仓库：页面从别处打开（file://）时用它拼出 raw 地址 */
@@ -669,6 +672,7 @@ var SNAPSHOT_REPO = 'shurenzz/Search-Engine';
 
 var DEFAULT_SETTINGS = {
   theme: 'system',
+  contentLanguage: 'zh',
 
   proxyMode: 'auto',
   proxy: '',
@@ -1111,6 +1115,7 @@ function mergeSettings(s) {
   out.cacheMinutes = Math.min(720, Math.max(1, Number(out.cacheMinutes) || 30));
   out.proxy = safeUrl(out.proxy);
   if (['light', 'dark', 'system'].indexOf(out.theme) < 0) out.theme = 'system';
+  out.contentLanguage = out.contentLanguage === 'original' ? 'original' : 'zh';
   out.autoRefresh = out.autoRefresh !== false;
   if (['auto', 'off', 'custom'].indexOf(out.proxyMode) < 0) out.proxyMode = 'auto';
   if (['signal', 'heat', 'time'].indexOf(out.sortMode) < 0) out.sortMode = 'signal';
@@ -1670,6 +1675,8 @@ function makeItem(o) {
     discoveryUrl: safeUrl(e.discoveryUrl), recordUrl: safeUrl(e.recordUrl),
     rank: o.rank,
     title: title,
+    titleZh: cleanText(e.titleZh || '').slice(0, 800),
+    summaryZh: cleanText(e.summaryZh || '').slice(0, 2400),
     hot: o.hot,
     hotRaw: o.hotRaw,
     summary: o.summary,
@@ -1759,7 +1766,7 @@ function matchesTerm(hay, query) {
 }
 function matchWatch(it, words) {
   if (!words || !words.length) return [];
-  var hay = (it.title + ' ' + (it.summary || '') + ' ' + (it.ents || []).join(' ') + ' ' + (it.tags || []).join(' ')).toLowerCase();
+  var hay = (it.title + ' ' + (it.titleZh || '') + ' ' + (it.summaryZh || '') + ' ' + (it.summary || '') + ' ' + (it.ents || []).join(' ') + ' ' + (it.tags || []).join(' ')).toLowerCase();
   var hit = [];
   for (var i = 0; i < words.length; i++) if (matchesTerm(hay, words[i])) hit.push(words[i]);
   return hit;
@@ -2051,7 +2058,11 @@ function fetchOne(src, round) {
       var prior = new Map((state.buckets[src.id] || []).map(it => [it.eventKey, it]));
       state.buckets[src.id] = raw.slice(0, limit).map(function (x, i) {
         var item = normalizeItem(x, src, i), old = prior.get(item.eventKey);
-        if (old) { item.firstSeenAt = old.firstSeenAt; item.eventSeenAt = old.eventSeenAt; }
+        if (old) {
+          item.firstSeenAt = old.firstSeenAt; item.eventSeenAt = old.eventSeenAt;
+          if (item.title === old.title) item.titleZh = old.titleZh;
+          if (item.summary === old.summary) item.summaryZh = old.summaryZh;
+        }
         return item;
       });
       state.status[src.id] = { ok: true, count: state.buckets[src.id].length, via: r.via };
@@ -2211,7 +2222,7 @@ function visibleItems() {
     if (state.onlyWatch && !(it.watch && it.watch.length)) return false;
     if (settings.freshOnly && !isFreshDay(it)) return false;
     if (q) {
-      var hay = (it.title + ' ' + (it.summary || '') + ' ' + (it.meta || '') + ' ' +
+      var hay = (it.title + ' ' + (it.titleZh || '') + ' ' + (it.summaryZh || '') + ' ' + (it.summary || '') + ' ' + (it.meta || '') + ' ' +
                  (it.ents || []).join(' ') + ' ' + (it.tags || []).join(' ')).toLowerCase();
       if (!matchesTerm(hay, q)) return false;
     }
@@ -2355,6 +2366,7 @@ function renderChips() {
   cc.innerHTML = c2;
 
   /* 工具栏控件与设置保持一致：renderChips 每次全量刷新时顺带同步 */
+  $('contentLanguage').value = settings.contentLanguage;
   var ss = $('sortSel'); if (ss) ss.value = settings.sortMode;
   var ft = $('freshToggle'); if (ft) ft.classList.toggle('on', !!settings.freshOnly);
   var mt = $('mergeToggle'); if (mt) mt.classList.toggle('on', !!settings.mergeSame);
@@ -2434,6 +2446,38 @@ function shortOf(id) {
   var s = sourceById(id);
   return s ? s.short : id;
 }
+function displayed(item, field) {
+  return (settings.contentLanguage === 'zh' && item[field + 'Zh']) || item[field] || '';
+}
+
+var translating = false, translateRetryAt = 0;
+var translationCache = new Map();
+async function translateLiveItems() {
+  var engine = globalThis.BriefTranslation;
+  var note = $('translationNote');
+  if (settings.contentLanguage !== 'zh') { note.hidden = true; return; }
+  if (!engine || translating || Date.now() < translateRetryAt) return;
+  var rows = state.items.filter(it => (!it.snap || !settings.snapshotUrl) && ['title','summary'].some(field =>
+    !it[field + 'Zh'] && engine.needsTranslation(it[field])));
+  if (!rows.length) { note.hidden = true; return; }
+  note.textContent = '正在翻译新资讯…'; note.hidden = false;
+  translating = true;
+  try {
+    await engine.translate(rows, {known:translationCache, active:() => settings.contentLanguage === 'zh'});
+  } catch (error) {
+    translateRetryAt = Date.now() + 60000;
+  } finally {
+    translating = false;
+    var missing = rows.some(it => ['title','summary'].some(field => !it[field + 'Zh'] && engine.needsTranslation(it[field])));
+    note.textContent = missing ? '部分译文暂缺，显示原文' : '';
+    note.hidden = !missing || settings.contentLanguage !== 'zh';
+    if (translationCache.size > 1800) translationCache.clear();
+    if (rows.some(it => it.titleZh || it.summaryZh)) {
+      saveStore(); renderHeader(); renderFlash(); renderMain();
+    }
+  }
+}
+
 function flashRowHtml(it, i, mode) {
   var s = sourceById(it.sourceId) || { short: '未知' };
   var n = it.clusterSize || 1;
@@ -2442,8 +2486,8 @@ function flashRowHtml(it, i, mode) {
     ? '<span class="idx evt">' + (it.evt ? (facetById(it.evt) || {}).icon : '📌') + '</span>'
     : '<span class="idx">' + (i + 1) + '</span>';
   var title = safeUrl(it.url)
-    ? '<a class="tt" href="' + esc(safeUrl(it.url)) + '" target="_blank" rel="noopener noreferrer">' + esc(it.title) + '</a>'
-    : '<span class="tt">' + esc(it.title) + '</span>';
+    ? '<a class="tt" href="' + esc(safeUrl(it.url)) + '" target="_blank" rel="noopener noreferrer">' + esc(displayed(it,'title')) + '</a>'
+    : '<span class="tt">' + esc(displayed(it,'title')) + '</span>';
   var tail = mode === 'release'
     ? '<span class="src age">' + esc(fmtAge(it.ts)) + ' · ' + esc(s.short) + '</span>'
     : '<span class="src">' + esc(s.short) + '</span>';
@@ -2484,8 +2528,8 @@ function renderFlash() {
       lo.innerHTML = low.length
         ? low.map(function (it) {
             return '<li><span class="idx evt">' + (it.evt ? (facetById(it.evt) || {}).icon : '📌') + '</span>' +
-              (safeUrl(it.url) ? '<a class="tt" href="' + esc(safeUrl(it.url)) + '" target="_blank" rel="noopener noreferrer">' + esc(it.title) + '</a>'
-                     : '<span class="tt">' + esc(it.title) + '</span>') +
+              (safeUrl(it.url) ? '<a class="tt" href="' + esc(safeUrl(it.url)) + '" target="_blank" rel="noopener noreferrer">' + esc(displayed(it,'title')) + '</a>'
+                     : '<span class="tt">' + esc(displayed(it,'title')) + '</span>') +
               '<span class="sig" title="' + esc(sigTip(it)) + '">信号 ' + it.signal + '</span>' +
               '<span class="src">' + esc(shortOf(it.sourceId)) + '</span></li>';
           }).join('')
@@ -2506,7 +2550,7 @@ function itemHtml(it) {
   var rankCls = it.rank <= 3 ? ' rank-' + it.rank : '';
   var displayTime = it.ts ? fmtAge(it.ts) : '发现于 ' + fmtShort(it.firstSeenAt);
   var sumCls = 'item-sum' + (it.summary ? (isOpen ? ' open' : '') : ' none');
-  var sumTxt = it.summary ? esc(it.summary)
+  var sumTxt = it.summary ? esc(displayed(it,'summary'))
     : '该数据源仅提供标题与热度值，未提供正文摘要，点「展开全文」可在本页直接抓取原文。';
   var f = it.evt ? facetById(it.evt) : null;
   var chips = ['<span class="tag plain">' + esc(it.eventKind) + ' · ' + ['','一手','专业收录','二手解读','社区线索'][it.tier] + '</span>'];
@@ -2525,7 +2569,7 @@ function itemHtml(it) {
       (it.clusterParent ? ' data-parent="' + esc(it.clusterParent) + '"' : '') + '>' +
     '<span class="rank' + rankCls + '">' + it.rank + '</span>' +
     '<div class="item-main">' +
-      '<div class="item-title">' + esc(it.title) + '</div>' +
+      '<div class="item-title">' + esc(displayed(it,'title')) + '</div>' +
       '<div class="item-meta">' +
         (it.hot ? '<span class="hot">' + esc(it.hot) + '</span>' : '') +
         '<span class="tag" style="--tg:' + s.color + '">' + esc(s.short) + '</span>' +
@@ -2781,6 +2825,7 @@ function renderAll() {
   renderFlash();
   renderMain();
   renderStatus();
+  if (!state.loading) translateLiveItems();
 }
 
 /* =========================================================
@@ -2827,7 +2872,7 @@ function timeDetails(it) {
 function itemToText(it) {
   var s = sourceById(it.sourceId) || { short: '未知' };
   var c = categoryById(it.category) || { name: '未分类' };
-  var out = '【' + s.short + ' #' + it.rank + '】' + it.title;
+  var out = '【' + s.short + ' #' + it.rank + '】' + displayed(it,'title');
   if (it.hot) out += '（热度 ' + it.hot + '）';
   out += '\n分类：' + c.name;
   var tags = [];
@@ -2840,7 +2885,7 @@ function itemToText(it) {
   if ((it.clusterSize || 1) > 1) out += '\n同事件：' + it.clusterSrcs.map(shortOf).join('+') + ' 共 ' + it.clusterSize + ' 个平台';
   if (it.meta) out += ' · ' + it.meta;
   if ((state.status[it.sourceId] || {}).stale) out += it.snap ? '\n状态：上次快照，远端更新未取得' : '\n状态：上次结果，本次抓取失败';
-  if (it.summary) out += '\n摘要：' + it.summary;
+  if (it.summary) out += '\n摘要：' + displayed(it,'summary');
   else out += '\n摘要：该数据源未提供正文摘要';
   out += '\n' + it.eventKind + ' · ' + timeDetails(it);
   if (it.url) out += '\n原文：' + it.url;
@@ -2876,7 +2921,7 @@ function buildReportText() {
     flashes.forEach(function (it, i) {
       var s = sourceById(it.sourceId) || { short: '未知' };
       var n = it.clusterSize || 1;
-      L.push(' ' + pad(i + 1) + '. ' + it.title + '　（' + s.short + (it.hot ? ' · ' + it.hot : '') +
+      L.push(' ' + pad(i + 1) + '. ' + displayed(it,'title') + '　（' + s.short + (it.hot ? ' · ' + it.hot : '') +
         (n > 1 ? ' · ' + it.clusterSrcs.map(shortOf).join('+') + ' ' + n + ' 个渠道收录' : '') + '）');
     });
   }
@@ -2889,7 +2934,7 @@ function buildReportText() {
     L.push('【🆕 今日新发布 · 发布/开源/论文，按时间倒序，不看热度】');
     rel.forEach(function (it, i) {
       var f = it.evt ? (facetById(it.evt) || {}).name : '';
-      L.push(' ' + pad(i + 1) + '. [' + f + '] ' + it.title + '　（' + shortOf(it.sourceId) + ' · ' + fmtAge(it.ts) + '）');
+      L.push(' ' + pad(i + 1) + '. [' + f + '] ' + displayed(it,'title') + '　（' + shortOf(it.sourceId) + ' · ' + fmtAge(it.ts) + '）');
       if (it.url) L.push('      ' + it.url);
     });
   }
@@ -2898,7 +2943,7 @@ function buildReportText() {
     L.push('');
     L.push('【📌 热度不高但值得关注】');
     low.forEach(function (it) {
-      L.push(' · [信号 ' + it.signal + '] ' + it.title + '　（' + shortOf(it.sourceId) + (it.hot ? ' · ' + it.hot : '') + '）');
+      L.push(' · [信号 ' + it.signal + '] ' + displayed(it,'title') + '　（' + shortOf(it.sourceId) + (it.hot ? ' · ' + it.hot : '') + '）');
     });
   }
 
@@ -2913,12 +2958,12 @@ function buildReportText() {
         L.push('  ' + sec.icon + ' ' + sec.label + '（' + sec.items.length + '）');
         sec.items.forEach(function (it) {
           var s = sourceById(it.sourceId) || { short: '未知' };
-          L.push('    ' + (it.rank <= 3 ? '★ ' : '') + it.title +
+          L.push('    ' + (it.rank <= 3 ? '★ ' : '') + displayed(it,'title') +
             '　[' + s.short + (it.hot ? ' · ' + it.hot : '') + ' · ' + fmtAge(it.ts) + ' · 信号 ' + it.signal + ']' +
             (it.evt ? '〔' + (facetById(it.evt) || {}).name + '〕' : '') +
             ((it.ents || []).length ? '〔' + it.ents.join('/') + '〕' : '') +
             (it.watch && it.watch.length ? '⭐' : ''));
-          if (it.summary) L.push('      摘要：' + it.summary);
+          if (it.summary) L.push('      摘要：' + displayed(it,'summary'));
           if (it.url) L.push('      原文：' + it.url);
         });
       });
@@ -2935,8 +2980,8 @@ function buildReportText() {
       L.push('━━━ ' + s.name + '（' + (total || list.length) + ' 条' +
         (st && !st.ok ? ' · 本次抓取失败：' + (st.error || '') : '') + '）━━━');
       list.forEach(function (it) {
-        L.push(it.rank + '. ' + it.title + (it.hot ? '　[' + it.hot + ']' : '') + '　[' + fmtAge(it.ts) + ']');
-        if (it.summary) L.push('   摘要：' + it.summary);
+        L.push(it.rank + '. ' + displayed(it,'title') + (it.hot ? '　[' + it.hot + ']' : '') + '　[' + fmtAge(it.ts) + ']');
+        if (it.summary) L.push('   摘要：' + displayed(it,'summary'));
         if (it.meta) L.push('   ' + it.meta);
         if (it.url) L.push('   原文：' + it.url);
       });
@@ -3139,6 +3184,11 @@ function bindEvents() {
   });
 
   /* 排序模式 / 只看 24h / 同事件合并 / 只看关注 */
+  $('contentLanguage').addEventListener('change', function () {
+    settings.contentLanguage = $('contentLanguage').value === 'original' ? 'original' : 'zh';
+    saveStore();
+    renderAll();
+  });
   $('sortSel').addEventListener('change', function () {
     var next = clone(settings);
     next.sortMode = $('sortSel').value;
@@ -3297,7 +3347,7 @@ function bindEvents() {
           source: (sourceById(it.sourceId) || {}).short || '',
           category: (categoryById(it.category) || {}).name || '',
           rank: it.rank, title: it.title, hot: it.hot, hotRaw: it.hotRaw,
-          summary: it.summary, meta: it.meta, url: it.url,
+          summary: it.summary, titleZh: it.titleZh, summaryZh: it.summaryZh, meta: it.meta, url: it.url,
           ts: it.ts || 0, published: it.publishedAt ? new Date(it.publishedAt).toISOString() : '',
           eventKey: it.eventKey, eventKind: it.eventKind, tier: it.tier, publisher: it.publisher, academicStatus: it.academicStatus,
           firstSeenAt: it.firstSeenAt, eventSeenAt: it.eventSeenAt, updatedAt: it.updatedAt, attentionAt: it.attentionAt, evidence: it.evidenceLinks,

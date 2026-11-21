@@ -2,6 +2,7 @@
 /* 服务端定时抓取：产出 data/latest.json 供页面直读（raw.githubusercontent 的 CORS 是全开的）。
    用法：node tools/build-brief.mjs [--dry] [--only id,id] [--gap 1500] [--out data] */
 
+import translation from '../web/translation.js';
 import { readFile, writeFile, rename, mkdir, readdir, rm } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
@@ -82,6 +83,17 @@ async function main() {
     }
     srcMeta.push(meta);
     if (i < sources.length - 1) await sleep(GAP);
+  }
+
+  if (!DRY) {
+    const known = new Map();
+    for (const old of previous.values()) {
+      for (const key of ['title','summary']) {
+        if (old[key] && old[key + 'Zh']) known.set(old[key], old[key + 'Zh']);
+      }
+    }
+    try { await translation.translate(items, {known}); }
+    catch (error) { console.warn('中文翻译暂缺，保留原文：' + error.message); }
   }
 
   // 已核验的论文状态随原文展示，修订通知在当天的候选中另有对应展示。
