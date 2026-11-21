@@ -150,7 +150,7 @@ async function main() {
     eventKind, lastSeenAt, doi, title, url, publishedAt, recordUrl}) => ({
     id, sourceId, eventKey, firstSeenAt, eventSeenAt, ts, eventKind, lastSeenAt,
     ...(sourceId === 'arxiv' ? {doi, title, url, publishedAt} : {}),
-    ...(sourceId === 'crossref' ? {recordUrl} : {})
+    ...(['crossref','research-verification'].includes(sourceId) ? {recordUrl} : {})
   }));
   await writeAtomic(historyFile, JSON.stringify({schema: SNAPSHOT_SCHEMA, items: history}));
   await writeAtomic(path.join(OUT_DIR, 'latest.json'), body);

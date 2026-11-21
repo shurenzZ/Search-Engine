@@ -664,7 +664,7 @@ details .body ul{margin:4px 0;padding-left:18px}
 var STORAGE_KEY = 'hot_daily_brief_v1';
 /* 缓存结构版本：与 APP_VERSION 分开，升版只作废条目、保留用户设置 */
 var CACHE_SCHEMA = 3;
-var APP_VERSION = '4.2.0';
+var APP_VERSION = '4.3.0';
 var WEEK = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
 
 /* 服务端快照的兜底仓库：页面从别处打开（file://）时用它拼出 raw 地址 */
@@ -719,7 +719,7 @@ function easeGap() { REQ_GAP = Math.max(REQ_GAP_MIN, REQ_GAP - 200); }
    hotField/timeField=声明期望字段（tools/verify-sources.mjs 会逐源断言）；
    noProxy+cacheKey+cacheTtl=有配额上限的接口不走代理、本轮与 TTL 内只取一次
    --------------------------------------------------------- */
-var SNAPSHOT_IDS = new Set(['hf','arxiv','openai','googleai','deepmind','release-pytorch','release-transformers','release-vllm','anthropic','ms-research','meta-ai','meta-ml','annals-math','prl','arxiv-math','arxiv-physics','arxiv-cs','jacm','research-search','crossref','cs2matches','ghtrend']);
+var SNAPSHOT_IDS = new Set(['hf','arxiv','openai','googleai','deepmind','release-pytorch','release-transformers','release-vllm','anthropic','ms-research','meta-ai','meta-ml','annals-math','prl','arxiv-math','arxiv-physics','arxiv-cs','jacm','research-search','crossref','research-verification','cs2matches','ghtrend']);
 var SOURCES = [
   { id:'hn', name:'Hacker News · 技术讨论', short:'HN', icon:'🌐', color:'#cc5500',
     path:'https://hn.algolia.com/api/v1/search?tags=front_page&hitsPerPage=30', pick:'hits', kind:'list',
@@ -736,7 +736,7 @@ var SOURCES = [
 var CATEGORIES = [
   { id:'ai', name:'AI 前沿', icon:'🤖', color:'#7c3aed',
     kw:'人工智能|大模型|AIGC|生成式|GPT|ChatGPT|OpenAI|DeepSeek|Claude|Gemini|Llama|豆包|通义|文心|混元|星火|智能体|多模态|算力|英伟达|Nvidia|机器学习|深度学习|神经网络|\\bLLM\\b|推理|训练模型|语料|具身智能|机器人|\\brobot|自动驾驶|\\bAI\\b|算法模型|提示词' },
-  { id:'math', name:'数学', icon:'📐', color:'#256055', kw:'数学|数论|微分几何|代数几何|泛函分析|number theory|algebraic geometry|functional analysis' },
+  { id:'math', name:'数学', icon:'📐', color:'#256055', kw:'数学|数论|黎曼猜想|riemann hypothesis|微分几何|代数几何|泛函分析|number theory|algebraic geometry|functional analysis' },
   { id:'physics', name:'物理', icon:'⚛️', color:'#745098', kw:'物理|量子力学|凝聚态|引力波|粒子物理|black holes?|condensed matter|particle physics' },
   { id:'cs', name:'计算机科学', icon:'💻', color:'#275f88', kw:'算法复杂度|形式化验证|分布式计算|计算理论|computational complexity|distributed computing|formal verification' },
   { id:'tech', name:'科技数码', icon:'💻', color:'#0f766e',
@@ -1655,7 +1655,7 @@ function makeItem(o) {
   var title = cleanText(o.title).slice(0, 200);
   var e = o.evidence || {};
   var tier = [1, 2, 3, 4].includes(e.tier) ? e.tier : (o.src && o.src.tier) || 4;
-  var eventKind = ['首次发布','新稿公告','论文修订','重要更新','近期受关注','正式发表','更正','撤稿','比赛赛果','发现'].includes(e.eventKind)
+  var eventKind = ['首次发布','新稿公告','独立核验更新','论文修订','重要更新','近期受关注','正式发表','更正','撤稿','比赛赛果','发现'].includes(e.eventKind)
     ? e.eventKind : o.sourceId === 'ghnew' ? '首次发布' : '发现';
   var f = extractFacets(title, o.summary, o.tags);
   var cat = classify(title, o.summary, o.src, f.ents);
@@ -1673,6 +1673,13 @@ function makeItem(o) {
     firstSeenAt: parseTimeLoose(e.firstSeenAt) || o.snapAt || Date.now(),
     eventSeenAt: parseTimeLoose(e.eventSeenAt) || o.snapAt || Date.now(),
     discoveryUrl: safeUrl(e.discoveryUrl), recordUrl: safeUrl(e.recordUrl),
+    verification: o.sourceId === 'research-verification' && safeUrl(e.recordUrl) && e.verification &&
+      Array.isArray(e.verification.checks) && e.verification.checks.length ? {
+        reviewer:cleanText(e.verification.reviewer),
+        checks:e.verification.checks.filter(c => c && c.name && c.status).map(c => ({
+          name:cleanText(c.name), status:cleanText(c.status), result:cleanText(c.result), detail:cleanText(c.detail)
+        }))
+      } : null,
     rank: o.rank,
     title: title,
     titleZh: cleanText(e.titleZh || '').slice(0, 800),
@@ -1714,6 +1721,7 @@ function normalizeItem(raw, src, idx) {
     hot: h.hotText, hotRaw: h.hotRaw, url: url, meta: buildMeta(raw, src),
     tags: pickTags(raw), ts: src.id === 'hn' ? 0 : pickTime(raw), src: src,
     evidence: {eventKind:src.id === 'hn' ? '近期受关注' : '首次发布', tier:src.id === 'ghnew' ? 2 : 4,
+      discoveryUrl:src.id === 'hn' && /^\d+$/.test(raw.objectID) ? 'https://news.ycombinator.com/item?id=' + raw.objectID : '',
       attentionAt:src.id === 'hn' ? parseTimeLoose(raw.created_at) : 0,
       publisher:src.id === 'ghnew' ? raw.owner && raw.owner.login : 'Hacker News'}
   });
@@ -1793,8 +1801,14 @@ function jaccard(a, b) {
   for (i = 0; i < b.length; i++) if (map[b[i]]) hit++;
   return hit / (a.length + b.length - hit);
 }
-/* 跨平台标题用词几乎从不相同，「前 26 字精确匹配」实际命中率≈0。
-   这里按同分类内的二元组集合相似度聚簇，只与已有簇头比较，代价近似 O(n·簇数) */
+/* 核验报告只按原件或报告链接关联。同题目的其他声明保留独立记录。 */
+function evidenceKey(value) {
+  try {
+    var u = new URL(value);
+    for (var k of Array.from(u.searchParams.keys())) if (/^(utm_|fbclid$|gclid$)/i.test(k)) u.searchParams.delete(k);
+    return u.href.replace(/\/$/, '');
+  } catch { return ''; }
+}
 function clusterItems(all) {
   var heads = [], n = 0;
   for (var cur of all) {
@@ -1806,6 +1820,10 @@ function clusterItems(all) {
     cur._toks = titleTokens(cur.title);
     var head = heads.find(function (h) {
       if ((cur.url && cur.url === h.url) || (cur.eventKey && cur.eventKey === h.eventKey) || (cur.doi && cur.doi === h.doi)) return true;
+      if (h.verification || cur.verification) {
+        var report = h.verification ? h : cur, other = h.verification ? cur : h;
+        return !!other.url && [report.url, report.recordUrl].some(u => evidenceKey(u) === evidenceKey(other.url));
+      }
       if (cur.eventKey && h.eventKey && cur.sourceId.startsWith('release-') && h.sourceId.startsWith('release-')) return false;
       if (h.category !== cur.category || h.clusterSrcs.includes(cur.sourceId)) return false;
       // 不同论文、版本或数字结论即使标题近似，也保留独立事件。
@@ -1820,8 +1838,8 @@ function clusterItems(all) {
       head.clusterSize = head.clusterSrcs.length;
       n++;
     }
-    for (var link of [{url:cur.url, label:cur.publisher}, {url:cur.recordUrl, label:'学术记录'},
-                      {url:cur.discoveryUrl, label:shortOf(cur.sourceId) + ' 收录'}]) {
+    for (var link of [{url:cur.url, label:cur.verification ? '作者声明 · ' + cur.publisher : cur.publisher}, {url:cur.recordUrl, label:cur.verification ? '独立核验 · ' + cur.verification.reviewer : '学术记录'},
+                      {url:cur.discoveryUrl, label:cur.verification || cur.sourceId === 'hn' ? '发现渠道 · Hacker News' : shortOf(cur.sourceId) + ' 收录'}]) {
       if (link.url && !head.evidenceLinks.some(function (e) { return e.url === link.url; })) head.evidenceLinks.push(link);
     }
   }
@@ -1839,6 +1857,7 @@ function computeSignal(it) {
   if (it.eventKind === '论文修订') p.新鲜 = Math.min(8, p.新鲜);
   p.要素 = f ? Math.min(12, Math.round(f.base * 0.6)) : 0;
   p.主体 = Math.min(6, (it.ents || []).length * 2);
+  if (it.verification) p.核验记录 = 10;
   p.热度 = Math.round(4 * (it.hotPct || 0));
   p.关注 = it.watch && it.watch.length ? 10 : 0;
   var sum = 0;
@@ -1850,7 +1869,7 @@ function computeSignal(it) {
 
 function eventPriority(it) {
   if (['撤稿','更正'].includes(it.eventKind)) return 0;
-  if (['正式发表','重要更新'].includes(it.eventKind)) return 1;
+  if (['正式发表','重要更新','独立核验更新'].includes(it.eventKind)) return 1;
   return it.eventKind === '首次发布' || it.eventKind === '论文修订' ? 2 : 3;
 }
 function rebuildItems(buckets) {
@@ -2488,6 +2507,10 @@ function flashRowHtml(it, i, mode) {
   var title = safeUrl(it.url)
     ? '<a class="tt" href="' + esc(safeUrl(it.url)) + '" target="_blank" rel="noopener noreferrer">' + esc(displayed(it,'title')) + '</a>'
     : '<span class="tt">' + esc(displayed(it,'title')) + '</span>';
+  if (it.verification) {
+    title = '<div class="tt">' + title + '<div class="hint">' + esc(it.summary) + ' ' +
+      '<a href="' + esc(it.recordUrl) + '" target="_blank" rel="noopener noreferrer">核验报告 ↗</a></div></div>';
+  }
   var tail = mode === 'release'
     ? '<span class="src age">' + esc(fmtAge(it.ts)) + ' · ' + esc(s.short) + '</span>'
     : '<span class="src">' + esc(s.short) + '</span>';
@@ -2581,6 +2604,8 @@ function itemHtml(it) {
       '</div>' +
       '<div class="' + sumCls + '">' + sumTxt + '</div>' +
       (isOpen ? '<div class="hint">' + esc(timeDetails(it)) + '</div>' + (it.evidenceLinks || []).map(e => '<a class="mini" href="' + esc(e.url) + '" target="_blank" rel="noopener noreferrer">' + esc(e.label) + ' ↗</a>').join(' ') : '') +
+      (isOpen && it.verification ? '<ul class="verification-checks">' + it.verification.checks.map(c =>
+        '<li><strong>' + esc(c.status) + '</strong> · ' + esc(c.name) + '（' + esc(c.result) + '）<br>' + esc(c.detail) + '</li>').join('') + '</ul>' : '') +
       (isOpen && it.url ? artHtml(it.id) : '') +
       '<div class="item-acts">' +
         (it.summary || it.url ? '<button class="mini" data-act="toggle" aria-expanded="' + isOpen + '">' + (isOpen ? '收起全文' : '展开全文') + '</button>' : '') +
@@ -2866,8 +2891,8 @@ function copyText(text, tip) {
 }
 
 function timeDetails(it) {
-  return [['原始发布', it.publishedAt], ['修订', it.updatedAt], [it.eventKind === '新稿公告' ? '新稿公告' : '入榜', it.attentionAt], ['首次发现', it.firstSeenAt]]
-    .filter(pair => pair[1]).map(pair => pair[0] + ' ' + fmtTime(new Date(pair[1]))).join(' · ');
+  return [['原始发布', it.publishedAt], [it.verification ? '核验报告更新' : '修订', it.updatedAt], [it.eventKind === '新稿公告' ? '新稿公告' : it.verification ? '社区收录' : '入榜', it.attentionAt], ['首次发现', it.firstSeenAt]]
+    .filter(pair => pair[1]).map(pair => pair[0] + ' ' + (it.verification && pair[0] === '原始发布' ? new Date(pair[1]).toISOString().slice(0,10) : fmtTime(new Date(pair[1])))).join(' · ');
 }
 function itemToText(it) {
   var s = sourceById(it.sourceId) || { short: '未知' };
@@ -2888,6 +2913,7 @@ function itemToText(it) {
   if (it.summary) out += '\n摘要：' + displayed(it,'summary');
   else out += '\n摘要：该数据源未提供正文摘要';
   out += '\n' + it.eventKind + ' · ' + timeDetails(it);
+  if (it.verification) it.verification.checks.forEach(c => { out += '\n' + c.status + ' · ' + c.name + ' (' + c.result + ') ' + c.detail; });
   if (it.url) out += '\n原文：' + it.url;
   (it.evidenceLinks || []).filter(e => e.url !== it.url).forEach(e => { out += '\n' + e.label + '：' + e.url; });
   return out;
@@ -3350,7 +3376,7 @@ function bindEvents() {
           summary: it.summary, titleZh: it.titleZh, summaryZh: it.summaryZh, meta: it.meta, url: it.url,
           ts: it.ts || 0, published: it.publishedAt ? new Date(it.publishedAt).toISOString() : '',
           eventKey: it.eventKey, eventKind: it.eventKind, tier: it.tier, publisher: it.publisher, academicStatus: it.academicStatus,
-          firstSeenAt: it.firstSeenAt, eventSeenAt: it.eventSeenAt, updatedAt: it.updatedAt, attentionAt: it.attentionAt, evidence: it.evidenceLinks,
+          firstSeenAt: it.firstSeenAt, eventSeenAt: it.eventSeenAt, updatedAt: it.updatedAt, attentionAt: it.attentionAt, evidence: it.evidenceLinks, verification: it.verification,
           ageHours: it.ageH >= 0 ? Math.round(it.ageH * 10) / 10 : null,
           event: it.evt, facets: it.facets, entities: it.ents, numbers: it.nums,
           watch: it.watch, signal: it.signal, signalParts: it.signalParts,

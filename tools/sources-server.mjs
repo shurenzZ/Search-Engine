@@ -1,3 +1,4 @@
+import { verificationReports } from './research-verification.mjs';
 import { CLAUDE_NOTES, preprintAnnouncements, RESEARCH_SOURCES } from './research-sources.mjs';
 import { getJson, getText, parseFeed, parseTime, parseHot, clean, fmtNum, fmtDate, hash8, sleep } from './lib.mjs';
 
@@ -192,6 +193,8 @@ export const SERVER_SOURCES = [
   })),
   { id: 'research-search', name: '机构原文检索', short: '机构原文', icon: '🔍', color: '#405b8a',
     fallbackCat: 'tech', max: 10, maxAgeH: 48, allowEmpty: true, run: searchOriginals },
+  { id:'research-verification', name:'研究成果独立核验', short:'研究核验', icon:'🔎', color:'#486b70',
+    fallbackCat:'academic', max:12, maxAgeH:336, allowEmpty:true, run:verificationReports },
   { id: 'crossref', name: 'Crossref 学术核验', short: 'Crossref', icon: '📑', color: '#486b70',
     fallbackCat: 'academic', tier: 2, max: 24, maxAgeH: 0, allowEmpty: true, run: verifyPapers },
   {
@@ -340,7 +343,8 @@ export function finalize(src, raws, opts) {
       id, sourceId: src.id, rank: items.length + 1, title: clean(row.title, 200), url,
       summary: clean(row.summary, 600), hot: row.hotText || fmtNum(hotRaw), hotRaw,
       eventKey, doi, eventKind, publishedAt, updatedAt, attentionAt, firstSeenAt, eventSeenAt, ts,
-      discoveryUrl: canonicalUrl(row.discoveryUrl), recordUrl: canonicalUrl(row.recordUrl),
+      discoveryUrl: canonicalUrl(row.discoveryUrl), recordUrl: row.verification ? row.recordUrl : canonicalUrl(row.recordUrl),
+      ...(row.verification ? {verification:row.verification, titleZh:clean(row.titleZh,200)} : {}),
       tier: row.tier || src.tier || 1, publisher: clean(row.publisher || (src.id === 'hf' ? 'arXiv 预印本' : '') || src.short || src.id, 100),
       tags: (Array.isArray(row.tags) ? row.tags : []).map(tag => clean(tag, 60)).filter(Boolean).slice(0, 4)
     });
