@@ -1,10 +1,10 @@
 {
  "schema": 2,
- "hash": "746893f94517fd9c",
- "generatedAt": "2026-11-22T00:19:10.690Z",
- "generatedAtMs": 1795306750690,
- "itemCount": 179,
- "okCount": 23,
+ "hash": "840097bf0e4bbe18",
+ "generatedAt": "2026-11-22T07:27:38.882Z",
+ "generatedAtMs": 1795332458882,
+ "itemCount": 178,
+ "okCount": 22,
  "sources": [
   {
    "id": "hf",
@@ -110,14 +110,14 @@
   },
   {
    "id": "release-vllm",
-   "ok": true,
+   "ok": false,
    "count": 0,
-   "error": ""
+   "error": "HTTP 403"
   },
   {
    "id": "research-search",
    "ok": true,
-   "count": 4,
+   "count": 3,
    "error": ""
   },
   {
