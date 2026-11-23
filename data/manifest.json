@@ -1,10 +1,10 @@
 {
  "schema": 2,
- "hash": "291a9a2f98e87c85",
- "generatedAt": "2026-11-22T21:16:12.361Z",
- "generatedAtMs": 1795382172361,
- "itemCount": 135,
- "okCount": 20,
+ "hash": "bf8fefe6418550f3",
+ "generatedAt": "2026-11-23T01:58:32.198Z",
+ "generatedAtMs": 1795399112198,
+ "itemCount": 136,
+ "okCount": 23,
  "sources": [
   {
    "id": "hf",
@@ -98,21 +98,21 @@
   },
   {
    "id": "release-pytorch",
-   "ok": false,
+   "ok": true,
    "count": 0,
-   "error": "HTTP 403"
+   "error": ""
   },
   {
    "id": "release-transformers",
-   "ok": false,
-   "count": 0,
-   "error": "HTTP 403"
+   "ok": true,
+   "count": 1,
+   "error": ""
   },
   {
    "id": "release-vllm",
-   "ok": false,
+   "ok": true,
    "count": 0,
-   "error": "HTTP 403"
+   "error": ""
   },
   {
    "id": "research-search",
