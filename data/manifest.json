@@ -1,9 +1,9 @@
 {
  "schema": 2,
- "hash": "bf8fefe6418550f3",
- "generatedAt": "2026-11-23T01:58:32.198Z",
- "generatedAtMs": 1795399112198,
- "itemCount": 136,
+ "hash": "13c43297c1d7c9f7",
+ "generatedAt": "2026-11-23T10:43:15.942Z",
+ "generatedAtMs": 1795430595942,
+ "itemCount": 211,
  "okCount": 23,
  "sources": [
   {
@@ -15,8 +15,9 @@
   {
    "id": "arxiv",
    "ok": true,
-   "count": 0,
-   "error": ""
+   "count": 40,
+   "error": "",
+   "warning": "Atom 接口暂不可用，已从官方 RSS 收录新稿：HTTP 429"
   },
   {
    "id": "openai",
@@ -75,19 +76,19 @@
   {
    "id": "arxiv-math",
    "ok": true,
-   "count": 0,
+   "count": 12,
    "error": ""
   },
   {
    "id": "arxiv-physics",
    "ok": true,
-   "count": 0,
+   "count": 12,
    "error": ""
   },
   {
    "id": "arxiv-cs",
    "ok": true,
-   "count": 0,
+   "count": 12,
    "error": ""
   },
   {
@@ -117,7 +118,7 @@
   {
    "id": "research-search",
    "ok": true,
-   "count": 2,
+   "count": 1,
    "error": ""
   },
   {
