@@ -1,10 +1,10 @@
 {
  "schema": 2,
- "hash": "13c43297c1d7c9f7",
- "generatedAt": "2026-11-23T10:43:15.942Z",
- "generatedAtMs": 1795430595942,
- "itemCount": 211,
- "okCount": 23,
+ "hash": "bed8580004bb6d55",
+ "generatedAt": "2026-11-23T22:15:01.220Z",
+ "generatedAtMs": 1795472101220,
+ "itemCount": 174,
+ "okCount": 20,
  "sources": [
   {
    "id": "hf",
@@ -15,9 +15,8 @@
   {
    "id": "arxiv",
    "ok": true,
-   "count": 40,
-   "error": "",
-   "warning": "Atom 接口暂不可用，已从官方 RSS 收录新稿：HTTP 429"
+   "count": 0,
+   "error": ""
   },
   {
    "id": "openai",
@@ -99,26 +98,26 @@
   },
   {
    "id": "release-pytorch",
-   "ok": true,
+   "ok": false,
    "count": 0,
-   "error": ""
+   "error": "HTTP 403"
   },
   {
    "id": "release-transformers",
-   "ok": true,
-   "count": 1,
-   "error": ""
+   "ok": false,
+   "count": 0,
+   "error": "HTTP 403"
   },
   {
    "id": "release-vllm",
-   "ok": true,
+   "ok": false,
    "count": 0,
-   "error": ""
+   "error": "HTTP 403"
   },
   {
    "id": "research-search",
    "ok": true,
-   "count": 1,
+   "count": 5,
    "error": ""
   },
   {
