@@ -1,10 +1,10 @@
 {
  "schema": 2,
- "hash": "834a65a9b355088a",
- "generatedAt": "2026-11-24T06:06:14.326Z",
- "generatedAtMs": 1795500374326,
- "itemCount": 180,
- "okCount": 22,
+ "hash": "c1bcfaa79a487681",
+ "generatedAt": "2026-11-24T17:39:14.694Z",
+ "generatedAtMs": 1795541954694,
+ "itemCount": 228,
+ "okCount": 23,
  "sources": [
   {
    "id": "hf",
@@ -33,7 +33,7 @@
   {
    "id": "deepmind",
    "ok": true,
-   "count": 8,
+   "count": 5,
    "error": ""
   },
   {
@@ -44,9 +44,9 @@
   },
   {
    "id": "ms-research",
-   "ok": false,
-   "count": 0,
-   "error": "The operation was aborted due to timeout"
+   "ok": true,
+   "count": 2,
+   "error": ""
   },
   {
    "id": "meta-ai",
@@ -75,19 +75,19 @@
   {
    "id": "arxiv-math",
    "ok": true,
-   "count": 0,
+   "count": 12,
    "error": ""
   },
   {
    "id": "arxiv-physics",
    "ok": true,
-   "count": 0,
+   "count": 12,
    "error": ""
   },
   {
    "id": "arxiv-cs",
    "ok": true,
-   "count": 0,
+   "count": 12,
    "error": ""
   },
   {
@@ -105,7 +105,7 @@
   {
    "id": "release-transformers",
    "ok": true,
-   "count": 0,
+   "count": 1,
    "error": ""
   },
   {
@@ -117,7 +117,7 @@
   {
    "id": "research-search",
    "ok": true,
-   "count": 6,
+   "count": 5,
    "error": ""
   },
   {
@@ -135,7 +135,7 @@
   {
    "id": "cs2matches",
    "ok": true,
-   "count": 3,
+   "count": 16,
    "error": ""
   },
   {
