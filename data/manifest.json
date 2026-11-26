@@ -1,9 +1,9 @@
 {
  "schema": 2,
- "hash": "192b3b2693a86089",
- "generatedAt": "2026-11-25T20:11:32.140Z",
- "generatedAtMs": 1795637492140,
- "itemCount": 230,
+ "hash": "e432a8dc063faafa",
+ "generatedAt": "2026-11-26T02:50:58.249Z",
+ "generatedAtMs": 1795661458249,
+ "itemCount": 231,
  "okCount": 23,
  "sources": [
   {
@@ -117,14 +117,15 @@
   {
    "id": "research-search",
    "ok": true,
-   "count": 4,
+   "count": 5,
    "error": ""
   },
   {
    "id": "research-verification",
    "ok": true,
    "count": 1,
-   "error": ""
+   "error": "",
+   "warning": "https://math.mit.edu/~drew/shortgrh/：报告缺少可核对的署名、声明日期或更新时间；https://math.mit.edu/~drew/grhexplorer/：报告缺少可核对的署名、声明日期或更新时间"
   },
   {
    "id": "crossref",
