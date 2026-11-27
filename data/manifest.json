@@ -1,9 +1,9 @@
 {
  "schema": 2,
- "hash": "144aa709f703ae60",
- "generatedAt": "2026-11-27T04:13:55.997Z",
- "generatedAtMs": 1795752835997,
- "itemCount": 230,
+ "hash": "369d1c0a7562f233",
+ "generatedAt": "2026-11-27T13:54:55.200Z",
+ "generatedAtMs": 1795787695200,
+ "itemCount": 194,
  "okCount": 23,
  "sources": [
   {
@@ -75,19 +75,19 @@
   {
    "id": "arxiv-math",
    "ok": true,
-   "count": 12,
+   "count": 0,
    "error": ""
   },
   {
    "id": "arxiv-physics",
    "ok": true,
-   "count": 12,
+   "count": 0,
    "error": ""
   },
   {
    "id": "arxiv-cs",
    "ok": true,
-   "count": 12,
+   "count": 0,
    "error": ""
   },
   {
